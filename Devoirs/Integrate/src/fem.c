@@ -14,8 +14,7 @@ double femMin(double *x, int n)
 {
     double myMin = x[0];
     int i;
-    for (i=1 ;i < n; i++) 
-        myMin = fmin(myMin,x[i]);
+    for (i=1 ;i < n; i++) myMin = fmin(myMin,x[i]);
     return myMin;
 }
 
@@ -23,8 +22,7 @@ double femMax(double *x, int n)
 {
     double myMax = x[0];
     int i;
-    for (i=1 ;i < n; i++) 
-        myMax = fmax(myMax,x[i]);
+    for (i=1 ;i < n; i++) myMax = fmax(myMax,x[i]);
     return myMax;
 }
 
@@ -52,6 +50,3 @@ void femWarning(char *text, int line, char *file)
     printf("\n  Warning in %s at line %d : \n  %s\n", file, line, text);
     printf("--------------------------------------------------------------------- Yek Yek !! \n\n");                                              
 }
-
-
-

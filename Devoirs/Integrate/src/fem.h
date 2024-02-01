@@ -15,14 +15,10 @@
 #include <math.h>
 #include <string.h>
 
+double femMin(double *x, int n);
+double femMax(double *x, int n);
+void femError(char *text, int line, char *file);
+void femErrorScan(int test, int line, char *file);
+void femWarning(char *text, int line, char *file);
 
-
-double       femMin(double *x, int n);
-double       femMax(double *x, int n);
-void         femError(char *text, int line, char *file);
-void         femErrorScan(int test, int line, char *file);
-void         femWarning(char *text, int line, char *file);
-
-
-
-#endif
+#endif /* _FEM_H_ */

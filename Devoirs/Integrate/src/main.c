@@ -5,7 +5,6 @@
 #include "glfem.h"
 
 
-
 double integrate(double x[3],double y[3],double(*f)(double,double));
 double integrateRecursive(double x[3],double y[3],double(*f)(double,double),int n);
 
@@ -15,7 +14,6 @@ double stupid(double x,double y)   { return 1.0; }
 
 int main(int argc, char* argv[])
 {
-
     char   theMessage[256];
    
     double x[3] = { 0, 1, 0};
@@ -36,5 +34,3 @@ int main(int argc, char* argv[])
     exit(EXIT_SUCCESS);
     return 0;
 }
-
-

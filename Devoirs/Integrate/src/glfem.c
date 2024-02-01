@@ -13,10 +13,10 @@
 #include <string.h>
 
 
-double   zoom_init;
-double   translate_init[2];
-float    current_text_color[4] = {1.0,0.0,0.0,1.0};
-float    current_color[4]      = {0.0,0.0,0.0,1.0};
+double zoom_init;
+double translate_init[2];
+float current_text_color[4] = {1.0,0.0,0.0,1.0};
+float current_color[4]      = {0.0,0.0,0.0,1.0};
 
 
 GLFWwindow* theCurrentWindow = NULL;
@@ -145,22 +145,20 @@ void glfemReshape(double x[3],double y[3], int n){
 
 void glfemSetColor(float color[4]) 
 {
-    for(int i = 0; i < 4; ++i) {
-        current_color[i] = color[i]; }
+    for(int i = 0; i < 4; ++i) current_color[i] = color[i];
 }
 
 void glfemSetTextColor(float color[4]) 
 {
-    for(int i = 0; i < 4; ++i) {
-        current_text_color[i] = color[i]; }
+    for(int i = 0; i < 4; ++i) current_text_color[i] = color[i];
 }
 
-void glfemWindowCreate(const char *windowName,int w, int h,int n,double *x, double *y){
+void glfemWindowCreate(const char *windowName,int w, int h,int n,double *x, double *y)
+{
   glfwInit();
   GLFWwindow* window = glfwCreateWindow(w,h,windowName, NULL, NULL);
-  if (theCurrentWindow != NULL){
-    glfemWindowFree();
-  }
+  if (theCurrentWindow != NULL) glfemWindowFree();
+
   theCurrentWindow = window;
   glfwMakeContextCurrent(theCurrentWindow);
   glfemSetRasterSize(w,h);
@@ -170,7 +168,6 @@ void glfemWindowCreate(const char *windowName,int w, int h,int n,double *x, doub
   glfwMakeContextCurrent(theCurrentWindow);
 }
 
-
 void glfemWindowUpdate() 
 {
     glfwSwapBuffers(theCurrentWindow);
@@ -178,10 +175,7 @@ void glfemWindowUpdate()
 }
 
 
-void glfemWindowFree() 
-{
-    glfwDestroyWindow(theCurrentWindow);
-}
+void glfemWindowFree() { glfwDestroyWindow(theCurrentWindow); }
 
 int glfemWindowShouldClose()
 {   
@@ -269,7 +263,6 @@ void glfemDrawSolution(double *x, double *y, double* u, int n)
 // ======================================================================================
 
 
-
 void glMakeRasterFont(void)
 {
     GLuint i, j;
@@ -306,8 +299,6 @@ void glfemSetRasterSize(int h, int v)
 }
 
 
-
-
 void getColor(double value, int numberOfColors, float* r, float* g, float* b)
 {
     if (value > 1) value = 1;
@@ -329,7 +320,6 @@ double glScale(double minimum, double maximum, double value)
     if (minimum == maximum)     return minimum;
     return (value - minimum) / fabs(maximum - minimum);
 }
-
 
 
 void glfemReshapeWindows(double *x, double *y, int n, int w, int h)
@@ -356,7 +346,6 @@ void glfemReshapeWindows(double *x, double *y, int n, int w, int h)
         right = meanX + size/ratio;
         bottom = meanY - size;
         top = meanY + size;  }   
-
         
     glViewport(0,0,w,h);    
     glClearColor( 0.9f, 0.9f, 0.8f, 0.0f );

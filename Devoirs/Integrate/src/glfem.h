@@ -27,22 +27,20 @@ static float GLFEM_BLUE[4]  = {0.0,0.0,1.0,1.0};
 static float GLFEM_RED[4]   = {1.0,0.0,0.0,1.0};
 
 
-void          glfemWindowCreate(const char *windowName,int w,int h,int n,double *x,double *y); 
-void          glfemWindowFree(); 
-void          glfemWindowUpdate();
-int           glfemWindowShouldClose();
-void          glfemReshape(double x[3],double y[3], int n);
+void glfemWindowCreate(const char *windowName,int w,int h,int n,double *x,double *y); 
+void glfemWindowFree(); 
+void glfemWindowUpdate();
+int glfemWindowShouldClose();
+void glfemReshape(double x[3],double y[3], int n);
 
-void          glfemSetColor(float color[4]);
-void          glfemSetTextColor(float color[4]);
-void          glfemDrawMessage(char *message, double pos[2]);
-void          glfemDrawNodes(double *x, double *y, int n);
-void          glfemDrawElement(double *x, double *y, int n);
-void          glfemDrawSolution(double *x, double *y, double* u, int n);
+void glfemSetColor(float color[4]);
+void glfemSetTextColor(float color[4]);
+void glfemDrawMessage(char *message, double pos[2]);
+void glfemDrawNodes(double *x, double *y, int n);
+void glfemDrawElement(double *x, double *y, int n);
+void glfemDrawSolution(double *x, double *y, double* u, int n);
 
-static void   glfemKeyCallback(GLFWwindow* self,int key,int scancode,int action,int mods);
-
-
-#endif
+static void glfemKeyCallback(GLFWwindow* self,int key,int scancode,int action,int mods);
 
 
+#endif /* _GLFEM_H_ */

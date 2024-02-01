@@ -9,35 +9,28 @@ double integrate(double x[3], double y[3], double (*f) (double, double))
     double xLoc[3];
     double yLoc[3];
 
-//
-// ... A modifier :-)
-//
-//
-// Pour dessiner l'element, les sommets du triangle :-)
-// Decommenter la ligne pour dessiner aussi les points d'integration
-//
+    // TODO: BEGIN
 
-  glfemSetColor(GLFEM_BLACK); glfemDrawElement(x,y,3);
-  glfemSetColor(GLFEM_BLUE);  glfemDrawNodes(x,y,3);
-//  glfemSetColor(GLFEM_RED);   glfemDrawNodes(xLoc,yLoc,3);
-    
+    // Pour dessiner l'element, les sommets du triangle :-)
+    glfemSetColor(GLFEM_BLACK); glfemDrawElement(x,y,3);
+    glfemSetColor(GLFEM_BLUE);  glfemDrawNodes(x,y,3);
 
+    // Decommenter la ligne pour dessiner aussi les points d'integration
+    // glfemSetColor(GLFEM_RED);   glfemDrawNodes(xLoc,yLoc,3);
+
+    // TODO: END
 
     return I;
 }
 
 double integrateRecursive(double x[3], double y[3], double (*f)(double,double), int n)
 {
+    // TODO: BEGIN
 
-//
-// ... A modifier :-)
-// y-compris la ligne juste en dessous :-)
-//
+    // Modifier cette ligne aussi !
     double I = integrate(x,y,f);
     
-//
-//
-//    
-     
+    // TODO: END
+
     return I;
 }
