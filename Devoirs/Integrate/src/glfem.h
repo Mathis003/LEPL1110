@@ -21,7 +21,6 @@
 #include <GLFW/glfw3.h>
 #include "fem.h"
 
-
 static float GLFEM_BLACK[4] = {0.0,0.0,0.0,1.0};
 static float GLFEM_BLUE[4]  = {0.0,0.0,1.0,1.0};
 static float GLFEM_RED[4]   = {1.0,0.0,0.0,1.0};
