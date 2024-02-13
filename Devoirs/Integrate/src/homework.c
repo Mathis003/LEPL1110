@@ -2,33 +2,36 @@
 #include "glfem.h"
 
 // Strip BEGIN
-double interpolate(double u[3], double xi, double eta) { return u[0] * xi + u[1] * eta + u[2] * (1 - xi - eta); }
+double interpolate(double v[3], double xi, double eta) { return v[0] * (1 - xi - eta) + v[1] * eta + v[2] * xi; }
 
 double getJacobien(double x[3], double y[3]) { return (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0]); }
 // Strip END
 
 double integrate(double x[3], double y[3], double (*f) (double, double))
 {
+    // Strip BEGIN
+    // Const values for the integration points (see guidelines)
+    const double value = 1.0 / 6.0;
+    const double xi[3]  = { value, 4 * value, value };
+    const double eta[3] = { value, value, 4 * value };
+    const double weight      = value; // All the weights are the same
+
+    const double jacobien = getJacobien(x, y);
+
     double I = 0.0;
     double xLoc[3];
     double yLoc[3];
 
-    // Strip BEGIN
-    const double value = 1.0 / 6.0;
-    const double xi[3]     = { value, 4 * value, value };
-    const double eta[3]    = { value, value, 4 * value };
-    const double weight[3] = { value, value, value };
-
-    double jacobien = getJacobien(x, y);
-
+    // Calculate the approximate integral
     for (int i = 0; i < 3; i++)
     {
         xLoc[i] = interpolate(x, xi[i], eta[i]);
         yLoc[i] = interpolate(y, xi[i], eta[i]);
-        I += weight[i] * f(xLoc[i], yLoc[i]);
+        I += f(xLoc[i], yLoc[i]);
     }
 
-    I *= fabs(jacobien);
+    // Multiply by the jacobien for the change of variable
+    I *= weight * fabs(jacobien);
     // Strip END
 
     // Pour dessiner l'element, les sommets du triangle :-)
@@ -46,16 +49,21 @@ double integrateRecursive(double x[3], double y[3], double (*f)(double,double), 
     // Strip BEGIN
     if (n <= 0) { return integrate(x, y, f); }
     
-    // Calcul des nouveaux points (milieux des côtés du triangle)
-    double a[2] = { fabs((x[1] + x[2]) / 2), fabs((y[1] + y[2]) / 2) };
-    double b[2] = { fabs((x[2] + x[0]) / 2), fabs((y[2] + y[0]) / 2) };
-    double c[2] = { fabs((x[1] + x[0]) / 2), fabs((y[1] + y[0]) / 2) };
+    // Calculate the new points (= middle of the edges of the triangle)
+    const double a_x = (x[1] + x[2]) / 2;
+    const double a_y = (y[1] + y[2]) / 2;
+    const double b_x = (x[2] + x[0]) / 2;
+    const double b_y = (y[2] + y[0]) / 2;
+    const double c_x = (x[1] + x[0]) / 2;
+    const double c_y = (y[1] + y[0]) / 2;
     
-    // Calcul des coordonnées des quatres triangle
-    double newPtsX[4][3] = {{x[0], c[0], b[0]}, {c[0], x[1], a[0]}, {b[0], a[0], x[2]}, {b[0], a[0], c[0]}};
-    double newPtsY[4][3] = {{y[0], c[1], b[1]}, {c[1], y[1], a[1]}, {b[1], a[1], y[2]}, {b[1], a[1], c[1]}};
+    // Calculate new coordinates for the 4 new triangles
+    double newPtsX[4][3] = {{x[0], c_x, b_x}, {c_x, x[1], a_x}, {b_x, a_x, x[2]}, {b_x, a_x, c_x}};
+    double newPtsY[4][3] = {{y[0], c_y, b_y}, {c_y, y[1], a_y}, {b_y, a_y, y[2]}, {b_y, a_y, c_y}};
 
     double I = 0.0;
+
+    // Calculate the integral for each of the 4 new triangles recursively
     for (int i = 0; i < 4; i++) { I += integrateRecursive(newPtsX[i], newPtsY[i], f, n - 1); }
     // Strip END
 
