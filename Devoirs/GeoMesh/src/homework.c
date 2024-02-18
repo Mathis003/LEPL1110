@@ -1,5 +1,24 @@
 #include "fem.h"
 
+// Strip : BEGIN
+double hermiteInterpolation(double x, double d_star, double h_star, double h_0)
+{
+    double d_star_squared = d_star * d_star;
+    double d_star_cubed = d_star_squared * d_star;
+
+    double a = - 2 * (x - h_0) / d_star_cubed;
+    double b = 3 * (h_star - h_0) / d_star_squared;
+    int c = 0;
+    double d = h_0;
+
+    double x_squared = x * x;
+    double x_cubed = x_squared * x;
+
+    double h = a * x_cubed + b * x_squared + c * x + d;
+    return h;
+}
+// Strip : END
+
 double geoSize(double x, double y)
 {
     femGeo* theGeometry = geoGetGeometry();
@@ -17,9 +36,14 @@ double geoSize(double x, double y)
     double h1 = theGeometry->hHole;
     double d1 = theGeometry->dHole;
 
-
     // Strip : BEGIN
-    h = 0.02;
+    double d_Notch = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0)) - r0;
+    double d_Hole  = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1)) - r1;
+
+    double h_Notch = hermiteInterpolation(d_Notch, d0, h, h0);
+    double h_Hole  = hermiteInterpolation(d_Hole, d1, h, h1);
+
+    h = fmin(h_Notch, h_Hole);
     // Strip : END
      
     return h;
