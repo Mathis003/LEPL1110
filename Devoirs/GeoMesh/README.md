@@ -1,4 +1,4 @@
-### Instructions to Compile the Homework
+### Instructions to Compile this Homework (Geomesh)
 
 ## To compile this homework, follow these steps:
 
@@ -8,13 +8,11 @@ For example, for MACOS ARM: `gmsh-4.12.2-MacOSARM-sdk`.
 This directory should be placed in the root directory of the homework, ./Geomesh.
 
 # 2. Create Build Directory:
-Create a directory named# 2. `build` with the command `mkdir build`.
+Create a directory named `build` with the command `mkdir build`.
 
 # 3. Run CMake:
 Navigate into the `build` directory and run `cmake ..`.
 
-# 4. Compile:
-Run `make` to compile the project.
-
-# 5.Execute:
+# 4. Compile and Execute:
+Run `make` inside the `build` directory to compile the project.
 Finally, run `./myFem` to execute the compiled program.
