@@ -1,29 +1,37 @@
 #include "fem.h"
 
 // Strip : BEGIN
-double hermiteInterpolation(double x, double d_star, double h_star, double h_0)
+double hermiteInterpolation(double x, double h_max, double h_min, double dist_interp)
 {
-    double d_star_squared = d_star * d_star;
-    double d_star_cubed = d_star_squared * d_star;
+    // if (x >= dist_interp) return h_max;
+    // if (x <= 0)           return h_min;
 
-    double a = - 2 * (x - h_0) / d_star_cubed;
-    double b = 3 * (h_star - h_0) / d_star_squared;
-    int c = 0;
-    double d = h_0;
+    // double dist_interp_squared = dist_interp * dist_interp;
+    // double dist_interp_cubed = dist_interp_squared * dist_interp;
 
-    double x_squared = x * x;
-    double x_cubed = x_squared * x;
+    // double a = - 2 * (h_max - h_min) / dist_interp_cubed;
+    // double b = 3 * (h_max - h_min) / dist_interp_squared;
+    // double d = h_min;
+    // // int c = 0
 
-    double h = a * x_cubed + b * x_squared + c * x + d;
-    return h;
+    // double x_squared = x * x;
+    // double x_cubed = x_squared * x;
+
+    // double h = a * x_cubed + b * x_squared + d;
+    // return h;
+
+    if (x >= dist_interp) return h_max;
+    if (x <= 0)           return h_min;
+    return (1 / (dist_interp * dist_interp)) * (h_max - h_min) * x * x * (- 2 * x / dist_interp + 3) + h_min;
 }
 // Strip : END
 
 double geoSize(double x, double y)
 {
-    femGeo* theGeometry = geoGetGeometry();
+    femGeo *theGeometry = geoGetGeometry();
     
     double h = theGeometry->h;
+
     double x0 = theGeometry->xNotch;
     double y0 = theGeometry->yNotch;
     double r0 = theGeometry->rNotch;
@@ -37,11 +45,11 @@ double geoSize(double x, double y)
     double d1 = theGeometry->dHole;
 
     // Strip : BEGIN
-    double d_Notch = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0)) - r0;
-    double d_Hole  = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1)) - r1;
+    double d_Notch = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0));
+    double d_Hole  = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
 
-    double h_Notch = hermiteInterpolation(d_Notch, d0, h, h0);
-    double h_Hole  = hermiteInterpolation(d_Hole, d1, h, h1);
+    double h_Notch = hermiteInterpolation(d_Notch - r0, h, h0, d0);
+    double h_Hole  = hermiteInterpolation(d_Hole - r1, h, h1, d1);
 
     h = fmin(h_Notch, h_Hole);
     // Strip : END
