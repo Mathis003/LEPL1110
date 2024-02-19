@@ -1,31 +1,70 @@
 #include "fem.h"
 
 // Strip : BEGIN
+/*
+This function is a 1D hermite interpolation function.
+It is used to interpolate the value of a function at a given point, given the value of the
+function at two other points and the distance at which the function reaches its maximum value.
+
+More explicitely, the Hermite interpolation is mathematically defined as follows:
+
+    Conditions:
+        1: h(0) = h_min
+        2: h(dist_interp) = h_max
+        3: h'(0) = 0
+        4: h'(dist_interp) = 0
+
+    Resolution:
+        double a = - 2 * (h_max - h_min) / pow(dist_interp, 3);
+        double b =   3 * (h_max - h_min) / pow(dist_interp, 2);
+        double c = 0.0;
+        double d = h_min;
+
+        double h = a * pow(x, 3) + b * pow(x, 2) + c * x + d;
+
+@params:
+    - x:           the distance at which we want to interpolate the value of the function.
+    - h_max:       the maximum value that the function can reach.
+    - h_min:       the minimum value that the function can reach.
+    - dist_interp: the distance at which the function reaches its maximum value.
+                   Between [0, dist_interp], the function is interpolated using the hermite interpolation, defined above.
+
+@returns:
+    - the value of the hermite interpolation at the point x.
+*/
 double hermiteInterpolation(double x, double h_max, double h_min, double dist_interp)
 {
-    // if (x >= dist_interp) return h_max;
-    // if (x <= 0)           return h_min;
-
-    // double dist_interp_squared = dist_interp * dist_interp;
-    // double dist_interp_cubed = dist_interp_squared * dist_interp;
-
-    // double a = - 2 * (h_max - h_min) / dist_interp_cubed;
-    // double b = 3 * (h_max - h_min) / dist_interp_squared;
-    // double d = h_min;
-    // // int c = 0
-
-    // double x_squared = x * x;
-    // double x_cubed = x_squared * x;
-
-    // double h = a * x_cubed + b * x_squared + d;
-    // return h;
-
     if (x >= dist_interp) return h_max;
     if (x <= 0)           return h_min;
+
     return (1 / (dist_interp * dist_interp)) * (h_max - h_min) * x * x * (- 2 * x / dist_interp + 3) + h_min;
 }
+
+/*
+This function is used to calculate the euclidian distance between two points (x, y) and (x_ref, y_ref).
+
+@params:
+    - x1:  the x coordinate of the first point.
+    - y1:  the y coordinate of the first point.
+    - x2:  the x coordinate of the second point.
+    - y2:  the y coordinate of the second point.
+
+@returns:
+    - the euclidian distance between (x1, y1) and (x2, y2).
+*/
+double getEuclidianDistance(double x1, double y1, double x2, double y2) { return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)); }
 // Strip : END
 
+/*
+This function is used to get the geometry size of the plate at a given point.
+
+@params:
+    - x: the x coordinate of the point at which we want to get the geometry size.
+    - y: the y coordinate of the point at which we want to get the geometry size.
+
+@returns:
+    - the geometry size of the plate at the point (x, y).
+*/
 double geoSize(double x, double y)
 {
     femGeo *theGeometry = geoGetGeometry();
@@ -45,11 +84,11 @@ double geoSize(double x, double y)
     double d1 = theGeometry->dHole;
 
     // Strip : BEGIN
-    double d_Notch = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0));
-    double d_Hole  = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
+    double d_EuclNotch = getEuclidianDistance(x, y, x0, y0);
+    double d_EuclHole  = getEuclidianDistance(x, y, x1, y1);
 
-    double h_Notch = hermiteInterpolation(d_Notch - r0, h, h0, d0);
-    double h_Hole  = hermiteInterpolation(d_Hole - r1, h, h1, d1);
+    double h_Notch = hermiteInterpolation(d_EuclNotch - r0, h, h0, d0);
+    double h_Hole  = hermiteInterpolation(d_EuclHole - r1, h, h1, d1);
 
     h = fmin(h_Notch, h_Hole);
     // Strip : END
@@ -60,6 +99,15 @@ double geoSize(double x, double y)
 
 #define ___ 0
 
+/*
+Generate the mesh of the plate.
+
+@params:
+    - None
+
+@returns:
+    - the mesh of the plate.
+*/
 void geoMeshGenerate()
 {
     femGeo* theGeometry = geoGetGeometry();
