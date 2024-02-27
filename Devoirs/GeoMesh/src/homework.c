@@ -90,14 +90,12 @@ double geoSize(double x, double y)
     double h_Notch = hermiteInterpolation(d_EuclNotch - r0, h, h0, d0);
     double h_Hole  = hermiteInterpolation(d_EuclHole - r1, h, h1, d1);
 
-    h = fmin(h_Notch, h_Hole);
+    return fmin(h_Notch, h_Hole);
     // Strip : END
-     
-    return h;
 }
 
 
-#define ___ 0
+// #define ___ 0
 
 /*
 Generate the mesh of the plate.
@@ -110,7 +108,7 @@ Generate the mesh of the plate.
 */
 void geoMeshGenerate()
 {
-    femGeo* theGeometry = geoGetGeometry();
+    femGeo *theGeometry = geoGetGeometry();
 
     double w = theGeometry->LxPlate;
     double h = theGeometry->LyPlate;
