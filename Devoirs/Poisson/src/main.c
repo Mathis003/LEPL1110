@@ -13,11 +13,11 @@
 
 int main(void)
 {   
-    char *path_filename = "../data/mesh2520.txt";
+    // char *path_filename = "../data/mesh2520.txt";
     // char *path_filename = "../data/tiny.txt";
     // char *path_filename = "../data/example.txt";
     // char *path_filename = "../data/mesh254.txt";
-    // char *path_filename = "../data/quads418.txt";
+    char *path_filename = "../data/quads418.txt";
 
  
     femPoissonProblem *theProblem = femPoissonCreate(path_filename);
