@@ -31,11 +31,33 @@ femPoissonProblem *femPoissonCreate(const char *filename)
 void femPoissonFindBoundaryNodes(femPoissonProblem *theProblem)
 {
     femGeo *theGeometry = theProblem->geo;  
-    femMesh *theEdges = theGeometry->theEdges; 
-    int nBoundary = 0;
-    
+    femMesh *theEdges = theGeometry->theEdges;
+
     // Strip : BEGIN
-    nBoundary = theEdges->nElem * theEdges->nLocalNode;
+    int size = theProblem->system->size;
+    int *map = malloc(size * sizeof(int));
+    for (int i = 0; i < size; i++) { map[i] = 0; }
+
+    int nDomains = theGeometry->nDomains;
+    for (int iDomain = 0; iDomain < nDomains; iDomain++)
+    {
+        femDomain *theDomain = theGeometry->theDomains[iDomain];
+        for (int i = 0; i < theDomain->nElem; i++)
+        {
+           int iEdge = theDomain->elem[i];
+            for (int j = 0; j < 2; j++)
+            {
+               int iNode = theEdges->elem[iEdge * 2 + j];
+               map[iNode] = 1;
+            }
+        }
+    }
+
+    int nBoundary = 0;
+    for (int i=0; i < size; i++)
+    {
+        if (map[i] == 1) nBoundary++;
+    }
     // Strip : END
 
     femDomain *theBoundary = malloc(sizeof(femDomain));
@@ -45,12 +67,17 @@ void femPoissonFindBoundaryNodes(femPoissonProblem *theProblem)
     theBoundary->nElem = nBoundary;
     theBoundary->elem = malloc(nBoundary * sizeof(int));
 
-    // Strip : BEGIN
-    for (int i = 0; i < nBoundary; i++) { theBoundary->elem[i] = theEdges->elem[i]; }
-    // Strip : END
-
     theBoundary->mesh = NULL;
     sprintf(theBoundary->name, "Boundary");
+
+    // Strip : BEGIN
+    int index = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (map[i] == 1) { theBoundary->elem[index++] = i; printf("%d\n", i);}
+    }
+    free(map);
+    // Strip : END
 }
     
 # endif
