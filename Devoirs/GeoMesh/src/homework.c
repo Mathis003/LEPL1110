@@ -136,13 +136,13 @@ void geoMeshGenerate()
     int ierr;
 
     int idPlate = gmshModelOccAddRectangle(x0, y0, 0.0, w, h, -1, 0, &ierr);
-    ErrorGmsh(ierr);
+    // ErrorGmsh(ierr);
 
     int idNotch  = gmshModelOccAddDisk(x0, y0, 0.0, r0, r0, -1, NULL, 0, NULL, 0, &ierr);    
-    ErrorGmsh(ierr);
+    // ErrorGmsh(ierr);
 
     int idHole = gmshModelOccAddDisk(x1, y1, 0.0, r1, r1, -1, NULL, 0, NULL, 0, &ierr);
-    ErrorGmsh(ierr);
+    // ErrorGmsh(ierr);
 
     // First parameter is the dimension : 2 because 2D
     // Second parameter is the id of the object (the tag of the object in Gmsh's memory)
@@ -151,10 +151,10 @@ void geoMeshGenerate()
     int hole[]  = {2, idHole};
 
     gmshModelOccCut(plate, 2, notch, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    ErrorGmsh(ierr);
+    // ErrorGmsh(ierr);
 
     gmshModelOccCut(plate, 2, hole, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    ErrorGmsh(ierr);
+    // ErrorGmsh(ierr);
     // Strip : END
 
     //
