@@ -81,4 +81,10 @@ CMakeFiles/myFem.dir/src/homework.c.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_errno_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_strings.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_string.h
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_string.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/machine/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/arm/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/arm/_limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/syslimits.h

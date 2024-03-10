@@ -1,4 +1,5 @@
-#include"fem.h"
+#include "fem.h"
+#include <limits.h>
 
 // Strip : BEGIN
 
@@ -67,8 +68,8 @@ int femMeshComputeBand(femMesh *theMesh)
     for (int iElem = 0; iElem < theMesh->nElem; iElem++)
     {   
         // Initializing the max and min numbers
-        maxNum = INT32_MIN;
-        minNum = INT32_MAX;
+        maxNum = INT_MIN;
+        minNum = INT_MAX;
 
         // Looping through all nodes of the element
         for (int j = 0; j < theMesh->nLocalNode; j++)

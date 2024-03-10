@@ -166,7 +166,7 @@ void geoMeshGenerate()
     gmshModelOccSynchronize(&ierr);       
     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
     gmshModelMeshGenerate(2, &ierr);  
-       
+
     //
     //  Generation de quads :-)
     //
