@@ -11,7 +11,8 @@ int comparPosNode(const void *a, const void *b)
     const int *nodePos_a = (const int *) a;
     const int *nodePos_b = (const int *) b;
     
-    return posMeshNodes[*nodePos_a] - posMeshNodes[*nodePos_b];
+    double diff = posMeshNodes[*nodePos_a] - posMeshNodes[*nodePos_b];
+    return (diff < 0) - (diff > 0);
 }
 // Strip : END
 
@@ -24,8 +25,8 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
     // Strip : BEGIN
 
     int nNodes = theMesh->nodes->nNodes;
-    int *vect_unit = (int *) malloc(nNodes * sizeof(int));
-    for (int i = 0; i < nNodes; i++) { vect_unit[i] = i; }
+    int *mapper = (int *) malloc(nNodes * sizeof(int));
+    for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
 
     switch (renumType)
     {        
@@ -35,22 +36,22 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
         // Sorting the nodes along the x-direction
         case FEM_XNUM :
             posMeshNodes = theMesh->nodes->X;
-            qsort(vect_unit, nNodes, sizeof(int), &comparPosNode);
+            qsort(mapper, nNodes, sizeof(int), comparPosNode);
             break;
 
         // Sorting the nodes along the y-direction
         case FEM_YNUM :
             posMeshNodes = theMesh->nodes->Y;
-            qsort(vect_unit, nNodes, sizeof(int), &comparPosNode);
+            qsort(mapper, nNodes, sizeof(int), comparPosNode);
             break;    
 
         default : Error("Unexpected renumbering option"); }
 
     // Renumbering the nodes
-    for (i = 0; i < nNodes; i++) { theMesh->nodes->number[vect_unit[i]] = i; }
+    for (i = 0; i < nNodes; i++) { theMesh->nodes->number[mapper[i]] = i; }
 
     // Free the memory
-    free(vect_unit);
+    free(mapper);
 
     // Strip : END   
 }
