@@ -1,4 +1,5 @@
 #include "fem.h"
+#include <math.h>
 
 // Strip : BEGIN
 /*
@@ -190,42 +191,187 @@ Generate the mesh of the plate.
 
 double geoSize(double x, double y)
 {
-    return 0.08;
+    return 0.8;
 }
 
 
 void geoMeshGenerate()
 {
-    double Lx = 3.0;
-    double Ly = 4.0;
+    double rxLittleArcs = 5.0;
+    double rxBigArcs = 2 * rxLittleArcs;
+    double ryLittleArcs = 5.0;
+    double ryBigArcs = 4.0;
 
-    double w = Lx;
-    double h = Ly;
-     
-    double x0 = -Lx / 2.0;
-    double y0 = -Ly / 2.0;
-    double r0 = Lx / 2.0;
-    
-    double x1 = Lx / 4.0;
-    double y1 = Ly / 4.0;
-    double r1 = Lx / 8.0;
+    double widthPillier = 3.0;
+    double offsetPont = 4.0;
+
+    double Lx = 2 * rxBigArcs + 6 * rxLittleArcs + 4 * widthPillier;
+    double Ly = ryLittleArcs + offsetPont;
  
-    // Create geometry
-
     int ierr;
-    int idPlate = gmshModelOccAddRectangle(x0, y0, 0.0, w, h, -1, 0, &ierr);
-    int idNotch = gmshModelOccAddDisk(x0, y0, 0.0, r0, r0, -1, NULL, 0, NULL, 0, &ierr);    
-    int idHole  = gmshModelOccAddDisk(x1, y1, 0.0, r1, r1, -1, NULL, 0, NULL, 0, &ierr);
 
-    // First parameter is the dimension : 2 because 2D
-    // Second parameter is the id of the object (the tag of the object in Gmsh's memory)
-    int plate[] = {2, idPlate};
-    int notch[] = {2, idNotch};
-    int hole[]  = {2, idHole};
+    // Ajout du plateau de base
 
-    gmshModelOccCut(plate, 2, notch, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    int idPlate = gmshModelOccAddRectangle(- Lx / 2, - Ly, 0.0, Lx, Ly, -1, 0, &ierr);
 
-    gmshModelOccCut(plate, 2, hole, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    // Ajout des arcs
+
+    double xLittleArc1 = - Lx / 2;
+    double yLittleArc1 = - Ly;
+
+    double xLittleArc2 = - widthPillier - rxBigArcs - rxLittleArcs;
+    double yLittleArc2 = - Ly;
+
+    double xBigArc = 0;
+    double yBigArc = - Ly;
+
+    double xLittleArc3 = widthPillier + rxBigArcs + rxLittleArcs;
+    double yLittleArc3 = - Ly;
+
+    double xLittleArc4 = Lx / 2;
+    double yLittleArc4 = - Ly;
+
+    int idLittleArc1 = gmshModelOccAddDisk(xLittleArc1, yLittleArc1, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
+    int idLittleArc2 = gmshModelOccAddDisk(xLittleArc2, yLittleArc2, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
+    int idBigArc = gmshModelOccAddDisk(xBigArc, yBigArc, 0.0, rxBigArcs, ryBigArcs, -1, NULL, 0, NULL, 0, &ierr);
+    int idLittleArc3 = gmshModelOccAddDisk(xLittleArc3, yLittleArc3, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
+    int idLittleArc4 = gmshModelOccAddDisk(xLittleArc4, yLittleArc4, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
+
+    // Ajout des piliers
+
+    double depthPillier = 5.0;
+
+    double xPillier1 = - Lx / 2 + rxLittleArcs;
+    double yPillier1 = - Ly - depthPillier;
+
+    double xPillier2 = - rxBigArcs - widthPillier;
+    double yPillier2 = - Ly - depthPillier;
+
+    double xPillier3 = rxBigArcs;
+    double yPillier3 = - Ly - depthPillier;
+
+    double xPillier4 = Lx / 2 - rxLittleArcs - widthPillier;
+    double yPillier4 = - Ly - depthPillier;
+
+    int idPillier1 = gmshModelOccAddRectangle(xPillier1, yPillier1, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
+    int idPillier2 = gmshModelOccAddRectangle(xPillier2, yPillier2, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
+    int idPillier3 = gmshModelOccAddRectangle(xPillier3, yPillier3, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
+    int idPillier4 = gmshModelOccAddRectangle(xPillier4, yPillier4, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
+
+    // Ajout des colonnes
+
+    double widthBigColumn = 1.5;
+    double heightBigColumn = 15.0;
+
+    double xBigColumn1 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 2;
+    double yBigColumn1 = 0.0;
+
+    double xBigColumn2 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 2;
+    double yBigColumn2 = 0.0;
+
+    int idBigColumn1 = gmshModelOccAddRectangle(xBigColumn1, yBigColumn1, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
+    int idBigColumn2 = gmshModelOccAddRectangle(xBigColumn2, yBigColumn2, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
+
+    // Ajout du second plateau
+
+    double widthPlate2 = Lx;
+    double heightPlate2 = 1.0;
+
+    double xPlate2 = - Lx / 2;
+    double yPlate2 = - Ly;
+
+    int idPlate2 = gmshModelOccAddRectangle(xPlate2, yPlate2, 0.0, widthPlate2, heightPlate2, -1, 0, &ierr);
+
+    // Ajout des colonnes du second plateau
+
+    double widthLittleColumn = 0.5;
+    double heightLittleColumn = 4;
+
+    double xLittleColumn1 = - Lx / 2 + rxLittleArcs / 2 - widthLittleColumn / 2;
+    double yLittleColumn1 = - Ly + heightPlate2;
+
+    double xLittleColumn2 = - rxBigArcs - widthPillier - 3 * rxLittleArcs / 2 - widthLittleColumn / 2;
+    double yLittleColumn2 = - Ly + heightPlate2;
+
+    double xLittleColumn3 = - rxBigArcs - widthPillier - rxLittleArcs / 2 - widthLittleColumn / 2;
+    double yLittleColumn3 = - Ly + heightPlate2;
+
+    double xLittleColumn4 = - rxBigArcs / 4 - widthLittleColumn / 2;
+    double yLittleColumn4 = - Ly + heightPlate2;
+
+    double xLittleColumn5 = - 3 * rxBigArcs / 4 - widthLittleColumn / 2;
+    double yLittleColumn5 = - Ly + heightPlate2;
+
+    double xLittleColumn6 =  rxBigArcs / 4 - widthLittleColumn / 2;
+    double yLittleColumn6 = - Ly + heightPlate2;
+
+    double xLittleColumn7 = 3 * rxBigArcs / 4 - widthLittleColumn / 2;
+    double yLittleColumn7 = - Ly + heightPlate2;
+
+    double xLittleColumn8 = rxBigArcs + widthPillier + rxLittleArcs / 2 - widthLittleColumn / 2;
+    double yLittleColumn8 = - Ly + heightPlate2;
+
+    double xLittleColumn9 = rxBigArcs + widthPillier + 3 *rxLittleArcs / 2 - widthLittleColumn / 2;
+    double yLittleColumn9 = - Ly + heightPlate2;
+
+    double xLittleColumn10 = Lx / 2 - rxLittleArcs / 2 - widthLittleColumn / 2;
+    double yLittleColumn10 = - Ly + heightPlate2;
+
+    int idLittleColumn1 = gmshModelOccAddRectangle(xLittleColumn1, yLittleColumn1, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn2 = gmshModelOccAddRectangle(xLittleColumn2, yLittleColumn2, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn3 = gmshModelOccAddRectangle(xLittleColumn3, yLittleColumn3, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn4 = gmshModelOccAddRectangle(xLittleColumn4, yLittleColumn4, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn5 = gmshModelOccAddRectangle(xLittleColumn5, yLittleColumn5, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn6 = gmshModelOccAddRectangle(xLittleColumn6, yLittleColumn6, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn7 = gmshModelOccAddRectangle(xLittleColumn7, yLittleColumn7, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn8 = gmshModelOccAddRectangle(xLittleColumn8, yLittleColumn8, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn9 = gmshModelOccAddRectangle(xLittleColumn9, yLittleColumn9, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+    int idLittleColumn10 = gmshModelOccAddRectangle(xLittleColumn10, yLittleColumn10, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
+
+    // TODO : Ajouter les fils entre les deux grosses colonnes ici !
+
+    
+    // TODO : Ajouter aussi les fils verticaux entre les fils et le plateau de base ici !
+
+
+    int plate[]       = {2, idPlate};
+    int plate2[]      = {2, idPlate2};
+
+    int littleArc1[]  = {2, idLittleArc1};
+    int littleArc2[]  = {2, idLittleArc2};
+    int bigArc[]      = {2, idBigArc};
+    int littleArc3[]  = {2, idLittleArc3};
+    int littleArc4[]  = {2, idLittleArc4};
+
+    int pillier1[]    = {2, idPillier1};
+    int pillier2[]    = {2, idPillier2};
+    int pillier3[]    = {2, idPillier3};
+    int pillier4[]    = {2, idPillier4};
+
+    int littleColumn1[]  = {2, idLittleColumn1};
+    int littleColumn2[]  = {2, idLittleColumn2};
+    int littleColumn3[]  = {2, idLittleColumn3};
+    int littleColumn4[]  = {2, idLittleColumn4};
+    int littleColumn5[]  = {2, idLittleColumn5};
+    int littleColumn6[]  = {2, idLittleColumn6};
+    int littleColumn7[]  = {2, idLittleColumn7};
+    int littleColumn8[]  = {2, idLittleColumn8};
+    int littleColumn9[]  = {2, idLittleColumn9};
+    int littleColumn10[] = {2, idLittleColumn10};
+    
+
+    // TODO : Faire l'union entre les petites colonnes et les arcs ici !
+
+    // On soustrait les arcs du plateau de base
+    gmshModelOccCut(plate, 2, littleArc1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, littleArc2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, bigArc, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, littleArc3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, littleArc4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
+    // Garder qu'une des deux parties qui sont intersectées par les deux plateaux
+    gmshModelOccFragment(plate2, 2, plate, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    
 
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr);       
