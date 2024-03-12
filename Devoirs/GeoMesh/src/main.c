@@ -62,13 +62,12 @@ int main(void)
     geoMeshWrite(filename);
 
     //
-    //  -3- Champ de la taille de r�f�rence du maillage
+    //  -3- Champ de la taille de référence du maillage
     //
 
     double *meshSizeField = malloc(theGeometry->theNodes->nNodes*sizeof(double));
     femNodes *theNodes = theGeometry->theNodes;
-    for(int i=0; i < theNodes->nNodes; ++i)
-        meshSizeField[i] = geoSize(theNodes->X[i], theNodes->Y[i]);
+    for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = geoSize(theNodes->X[i], theNodes->Y[i]); }
     double hMin = femMin(meshSizeField,theNodes->nNodes);  
     double hMax = femMax(meshSizeField,theNodes->nNodes);  
     printf(" ==== Global requested h : %14.7e \n",theGeometry->h);
@@ -86,56 +85,37 @@ int main(void)
     char theMessage[256];
     double pos[2] = {20,460};
  
- 
     GLFWwindow* window = glfemInit("EPL1110 : Mesh generation ");
     glfwMakeContextCurrent(window);
 
     do {
-        int w,h;
-    
-    
+        int w, h;
         glfwGetFramebufferSize(window,&w,&h);
         glfemReshapeWindows(theGeometry->theNodes,w,h);
-
         t = glfwGetTime();  
-        //    glfemChangeState(&mode, theMeshes->nMesh);
+        // glfemChangeState(&mode, theMeshes->nMesh);
         if (glfwGetKey(window,'D') == GLFW_PRESS) { mode = 0;}
         if (glfwGetKey(window,'V') == GLFW_PRESS) { mode = 1;}
         if (glfwGetKey(window,'N') == GLFW_PRESS && freezingButton == FALSE) { domain++; freezingButton = TRUE; told = t;}
-
         
-        if (t-told > 0.5) {freezingButton = FALSE; }
+        if (t-told > 0.5) { freezingButton = FALSE; }
             
-        
-        
-         
         if (mode == 1) {
             glfemPlotField(theGeometry->theElements, meshSizeField);
             glfemPlotMesh(theGeometry->theElements); 
-            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
- 
-            
-            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
- 
-            
-            
-            }
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);        
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage); 
+        }
         if (mode == 0) {
             domain = domain % theGeometry->nDomains;
-            glfemPlotDomain( theGeometry->theDomains[domain]); 
-            
-            
-            
+            glfemPlotDomain( theGeometry->theDomains[domain]);         
             sprintf(theMessage, "%s : %d ",theGeometry->theDomains[domain]->name,domain);
- 
-            
             glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
-            }
+        }
             
-         glfwSwapBuffers(window);
-         glfwPollEvents();
-    } while( glfwGetKey(window,GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-             glfwWindowShouldClose(window) != 1 );
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    } while(glfwGetKey(window,GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) != 1 );
             
     // Check if the ESC key was pressed or the window was closed
 

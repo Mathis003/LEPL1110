@@ -65,34 +65,34 @@ This function is used to get the geometry size of the plate at a given point.
 @returns:
     - the geometry size of the plate at the point (x, y).
 */
-double geoSize(double x, double y)
-{
-    femGeo *theGeometry = geoGetGeometry();
+// double geoSize(double x, double y)
+// {
+//     femGeo *theGeometry = geoGetGeometry();
     
-    double h = theGeometry->h;
+//     double h = theGeometry->h;
 
-    double x0 = theGeometry->xNotch;
-    double y0 = theGeometry->yNotch;
-    double r0 = theGeometry->rNotch;
-    double h0 = theGeometry->hNotch;
-    double d0 = theGeometry->dNotch;
+//     double x0 = theGeometry->xNotch;
+//     double y0 = theGeometry->yNotch;
+//     double r0 = theGeometry->rNotch;
+//     double h0 = theGeometry->hNotch;
+//     double d0 = theGeometry->dNotch;
     
-    double x1 = theGeometry->xHole;
-    double y1 = theGeometry->yHole;
-    double r1 = theGeometry->rHole;
-    double h1 = theGeometry->hHole;
-    double d1 = theGeometry->dHole;
+//     double x1 = theGeometry->xHole;
+//     double y1 = theGeometry->yHole;
+//     double r1 = theGeometry->rHole;
+//     double h1 = theGeometry->hHole;
+//     double d1 = theGeometry->dHole;
 
-    // Strip : BEGIN
-    double d_EuclNotch = getEuclidianDistance(x, y, x0, y0);
-    double d_EuclHole  = getEuclidianDistance(x, y, x1, y1);
+//     // Strip : BEGIN
+//     double d_EuclNotch = getEuclidianDistance(x, y, x0, y0);
+//     double d_EuclHole  = getEuclidianDistance(x, y, x1, y1);
 
-    double h_Notch = hermiteInterpolation(d_EuclNotch - r0, h, h0, d0);
-    double h_Hole  = hermiteInterpolation(d_EuclHole - r1, h, h1, d1);
+//     double h_Notch = hermiteInterpolation(d_EuclNotch - r0, h, h0, d0);
+//     double h_Hole  = hermiteInterpolation(d_EuclHole - r1, h, h1, d1);
 
-    return fmin(h_Notch, h_Hole);
-    // Strip : END
-}
+//     return fmin(h_Notch, h_Hole);
+//     // Strip : END
+// }
 
 
 // #define ___ 0
@@ -106,43 +106,116 @@ Generate the mesh of the plate.
 @returns:
     - the mesh of the plate.
 */
+// void geoMeshGenerate()
+// {
+//     femGeo *theGeometry = geoGetGeometry();
+
+//     double w = theGeometry->LxPlate;
+//     double h = theGeometry->LyPlate;
+     
+//     double x0 = theGeometry->xNotch;
+//     double y0 = theGeometry->yNotch;
+//     double r0 = theGeometry->rNotch;
+    
+//     double x1 = theGeometry->xHole;
+//     double y1 = theGeometry->yHole;
+//     double r1 = theGeometry->rHole;
+ 
+//     //
+//     //  -1- Construction de la geometrie avec OpenCascade
+//     //      On cree le rectangle
+//     //      On cree les deux cercles
+//     //      On soustrait les cercles du rectangle :-)
+//     //
+
+//     // Strip : BEGIN
+//     double xPlate = theGeometry->xPlate;
+//     double yPlate = theGeometry->yPlate;
+//     double zPlate = 0.0; // 2D
+ 
+//     int ierr;
+
+//     int idPlate = gmshModelOccAddRectangle(x0, y0, 0.0, w, h, -1, 0, &ierr);
+//     // ErrorGmsh(ierr);
+
+//     int idNotch  = gmshModelOccAddDisk(x0, y0, 0.0, r0, r0, -1, NULL, 0, NULL, 0, &ierr);    
+//     // ErrorGmsh(ierr);
+
+//     int idHole = gmshModelOccAddDisk(x1, y1, 0.0, r1, r1, -1, NULL, 0, NULL, 0, &ierr);
+//     // ErrorGmsh(ierr);
+
+//     // First parameter is the dimension : 2 because 2D
+//     // Second parameter is the id of the object (the tag of the object in Gmsh's memory)
+//     int plate[] = {2, idPlate};
+//     int notch[] = {2, idNotch};
+//     int hole[]  = {2, idHole};
+
+//     gmshModelOccCut(plate, 2, notch, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+//     // ErrorGmsh(ierr);
+
+//     gmshModelOccCut(plate, 2, hole, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+//     // ErrorGmsh(ierr);
+//     // Strip : END
+
+//     //
+//     //  -2- Definition de la fonction callback pour la taille de reference
+//     //      Synchronisation de OpenCascade avec gmsh
+//     //      Generation du maillage (avec l'option Mesh.SaveAll :-)
+   
+//     geoSetSizeCallback(geoSize);
+//     gmshModelOccSynchronize(&ierr);       
+//     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+//     gmshModelMeshGenerate(2, &ierr);  
+
+//     //
+//     //  Generation de quads :-)
+//     //
+    
+//     // gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+//     // gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
+//     // gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);  chk(ierr);
+//     // gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);  chk(ierr);
+//     // gmshModelGeoMeshSetRecombine(2,1,45,&ierr);  chk(ierr);
+//     // gmshModelMeshGenerate(2, &ierr);  
+
+    
+//     //
+//     //  Plot of Fltk
+//     //
+
+//     // gmshFltkInitialize(&ierr);
+//     // gmshFltkRun(&ierr);  chk(ierr);
+// }
+
+
+double geoSize(double x, double y)
+{
+    return 0.08;
+}
+
+
 void geoMeshGenerate()
 {
-    femGeo *theGeometry = geoGetGeometry();
+    double Lx = 3.0;
+    double Ly = 4.0;
 
-    double w = theGeometry->LxPlate;
-    double h = theGeometry->LyPlate;
+    double w = Lx;
+    double h = Ly;
      
-    double x0 = theGeometry->xNotch;
-    double y0 = theGeometry->yNotch;
-    double r0 = theGeometry->rNotch;
+    double x0 = -Lx / 2.0;
+    double y0 = -Ly / 2.0;
+    double r0 = Lx / 2.0;
     
-    double x1 = theGeometry->xHole;
-    double y1 = theGeometry->yHole;
-    double r1 = theGeometry->rHole;
+    double x1 = Lx / 4.0;
+    double y1 = Ly / 4.0;
+    double r1 = Lx / 8.0;
  
-    //
-    //  -1- Construction de la geometrie avec OpenCascade
-    //      On cree le rectangle
-    //      On cree les deux cercles
-    //      On soustrait les cercles du rectangle :-)
-    //
+    // Create geometry
 
-    // Strip : BEGIN
-    double xPlate = theGeometry->xPlate;
-    double yPlate = theGeometry->yPlate;
-    double zPlate = 0.0; // 2D
- 
     int ierr;
-
     int idPlate = gmshModelOccAddRectangle(x0, y0, 0.0, w, h, -1, 0, &ierr);
-    // ErrorGmsh(ierr);
-
-    int idNotch  = gmshModelOccAddDisk(x0, y0, 0.0, r0, r0, -1, NULL, 0, NULL, 0, &ierr);    
-    // ErrorGmsh(ierr);
-
-    int idHole = gmshModelOccAddDisk(x1, y1, 0.0, r1, r1, -1, NULL, 0, NULL, 0, &ierr);
-    // ErrorGmsh(ierr);
+    int idNotch = gmshModelOccAddDisk(x0, y0, 0.0, r0, r0, -1, NULL, 0, NULL, 0, &ierr);    
+    int idHole  = gmshModelOccAddDisk(x1, y1, 0.0, r1, r1, -1, NULL, 0, NULL, 0, &ierr);
 
     // First parameter is the dimension : 2 because 2D
     // Second parameter is the id of the object (the tag of the object in Gmsh's memory)
@@ -151,38 +224,11 @@ void geoMeshGenerate()
     int hole[]  = {2, idHole};
 
     gmshModelOccCut(plate, 2, notch, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // ErrorGmsh(ierr);
 
     gmshModelOccCut(plate, 2, hole, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // ErrorGmsh(ierr);
-    // Strip : END
 
-    //
-    //  -2- Definition de la fonction callback pour la taille de reference
-    //      Synchronisation de OpenCascade avec gmsh
-    //      Generation du maillage (avec l'option Mesh.SaveAll :-)
-   
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr);       
     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-    gmshModelMeshGenerate(2, &ierr);  
-
-    //
-    //  Generation de quads :-)
-    //
-    
-    // gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-    // gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
-    // gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);  chk(ierr);
-    // gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);  chk(ierr);
-    // gmshModelGeoMeshSetRecombine(2,1,45,&ierr);  chk(ierr);
-    // gmshModelMeshGenerate(2, &ierr);  
-
-    
-    //
-    //  Plot of Fltk
-    //
-
-    // gmshFltkInitialize(&ierr);
-    // gmshFltkRun(&ierr);  chk(ierr);
+    gmshModelMeshGenerate(2, &ierr);
 }
