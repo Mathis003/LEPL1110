@@ -233,7 +233,7 @@ void geoMeshGenerate()
 
     int idLittleArc1 = gmshModelOccAddDisk(xLittleArc1, yLittleArc1, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
     int idLittleArc2 = gmshModelOccAddDisk(xLittleArc2, yLittleArc2, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
-    int idBigArc = gmshModelOccAddDisk(xBigArc, yBigArc, 0.0, rxBigArcs, ryBigArcs, -1, NULL, 0, NULL, 0, &ierr);
+    int idBigArc     = gmshModelOccAddDisk(xBigArc, yBigArc, 0.0, rxBigArcs, ryBigArcs, -1, NULL, 0, NULL, 0, &ierr);
     int idLittleArc3 = gmshModelOccAddDisk(xLittleArc3, yLittleArc3, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
     int idLittleArc4 = gmshModelOccAddDisk(xLittleArc4, yLittleArc4, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
 
@@ -260,17 +260,44 @@ void geoMeshGenerate()
 
     // Ajout des colonnes
 
-    double widthBigColumn = 1.5;
-    double heightBigColumn = 15.0;
+    double widthBigColumn = 2.5;
+    double heightBigColumn = 6.0;
 
     double xBigColumn1 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 2;
     double yBigColumn1 = 0.0;
 
-    double xBigColumn2 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 2;
-    double yBigColumn2 = 0.0;
+    double xBigColumn2 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 4;
+    double yBigColumn2 = heightBigColumn;
+
+    double xBigColumn3 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 8;
+    double yBigColumn3 = 5 * heightBigColumn / 3;
+
+    double rBigDisk1 = 0.8;
+    double xBigDisk1 = - rxBigArcs - widthPillier - rxLittleArcs;
+    double yBigDisk1 = 2 * heightBigColumn + rBigDisk1 / 3;
+
+    double xBigColumn4 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 2;
+    double yBigColumn4 = 0.0;
+
+    double xBigColumn5 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 4;
+    double yBigColumn5 = heightBigColumn;
+
+    double xBigColumn6 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 8;
+    double yBigColumn6 = 5 * heightBigColumn / 3;
+
+    double rBigDisk2 = 0.8;
+    double xBigDisk2 = rxBigArcs + widthPillier + rxLittleArcs;
+    double yBigDisk2 = 2 * heightBigColumn + rBigDisk2 / 3;
 
     int idBigColumn1 = gmshModelOccAddRectangle(xBigColumn1, yBigColumn1, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
-    int idBigColumn2 = gmshModelOccAddRectangle(xBigColumn2, yBigColumn2, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
+    int idBigColumn2 = gmshModelOccAddRectangle(xBigColumn2, yBigColumn2, 0.0, widthBigColumn / 2, heightBigColumn / 1.5, -1, 0, &ierr);
+    int idBigColumn3 = gmshModelOccAddRectangle(xBigColumn3, yBigColumn3, 0.0, widthBigColumn / 4, heightBigColumn / 3, -1, 0, &ierr);
+    int idBigDisk1   = gmshModelOccAddDisk(xBigDisk1, yBigDisk1, 0.0, rBigDisk1, rBigDisk1, -1, NULL, 0, NULL, 0, &ierr);
+    int idBigColumn4 = gmshModelOccAddRectangle(xBigColumn4, yBigColumn4, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
+    int idBigColumn5 = gmshModelOccAddRectangle(xBigColumn5, yBigColumn5, 0.0, widthBigColumn / 2, heightBigColumn / 1.5, -1, 0, &ierr);
+    int idBigColumn6 = gmshModelOccAddRectangle(xBigColumn6, yBigColumn6, 0.0, widthBigColumn / 4, heightBigColumn / 3, -1, 0, &ierr);
+    int idBigDisk2   = gmshModelOccAddDisk(xBigDisk2, yBigDisk2, 0.0, rBigDisk2, rBigDisk2, -1, NULL, 0, NULL, 0, &ierr);
+
 
     // Ajout du second plateau
 
@@ -328,10 +355,25 @@ void geoMeshGenerate()
     int idLittleColumn9  = gmshModelOccAddRectangle(xLittleColumn9, yLittleColumn9, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
     int idLittleColumn10 = gmshModelOccAddRectangle(xLittleColumn10, yLittleColumn10, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
 
-    // TODO : Ajouter les fils entre les deux grosses colonnes ici !
+    double widthWindow = widthPillier / 2;
+    double heightWindow = 0.6;
 
+    double xWindow1 = - rxBigArcs - widthPillier + widthPillier / 4;
+    double yWindow1 = - Ly + heightPlate2 + 0.5;
 
-    // TODO : Ajouter aussi les fils verticaux entre les fils et le plateau de base ici !
+    double xWindow2 = - rxBigArcs - 2 * widthPillier - 2 * rxLittleArcs + widthPillier / 4;
+    double yWindow2 = - Ly + heightPlate2 + 0.5;
+
+    double xWindow3 = rxBigArcs + widthPillier / 4;
+    double yWindow3 = - Ly + heightPlate2 + 0.5;
+
+    double xWindow4 = rxBigArcs + widthPillier + 2 * rxLittleArcs + widthPillier / 4;
+    double yWindow4 = - Ly + heightPlate2 + 0.5;
+
+    int idWindow1 = gmshModelOccAddRectangle(xWindow1, yWindow1, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
+    int idWindow2 = gmshModelOccAddRectangle(xWindow2, yWindow2, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
+    int idWindow3 = gmshModelOccAddRectangle(xWindow3, yWindow3, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
+    int idWindow4 = gmshModelOccAddRectangle(xWindow4, yWindow4, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
 
     int plate[]       = {2, idPlate};
     int plate2[]      = {2, idPlate2};
@@ -357,6 +399,21 @@ void geoMeshGenerate()
     int littleColumn8[]  = {2, idLittleColumn8};
     int littleColumn9[]  = {2, idLittleColumn9};
     int littleColumn10[] = {2, idLittleColumn10};
+
+    int bigColumn1[]  = {2, idBigColumn1};
+    int bigColumn2[]  = {2, idBigColumn2};
+    int bigColumn3[]  = {2, idBigColumn3};
+    int bigColumn4[]  = {2, idBigColumn4};
+    int bigColumn5[]  = {2, idBigColumn5};
+    int bigColumn6[]  = {2, idBigColumn6};
+
+    int bigDisk1[]  = {2, idBigDisk1};
+    int bigDisk2[]  = {2, idBigDisk2};
+
+    int window1[]  = {2, idWindow1};
+    int window2[]  = {2, idWindow2};
+    int window3[]  = {2, idWindow3};
+    int window4[]  = {2, idWindow4};
     
 
     // On soustrait les arcs du plateau de base
@@ -366,27 +423,38 @@ void geoMeshGenerate()
     gmshModelOccCut(plate, 2, littleArc3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccCut(plate, 2, littleArc4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
-    // Garder qu'une des deux parties qui sont intersectées par les deux plateaux
-    gmshModelOccFragment(plate2, 2, plate, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    // Fusionner la structure de base ensemble
+    gmshModelOccFuse(plate, 2, plate2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
-    // TODO : Faire l'union entre les petites colonnes et les arcs ici !
-    // NE MARCHE PAS
-    // gmshModelOccFragment(littleColumn1, 1, plate, 1, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn1, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn2, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn3, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn4, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn5, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn6, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn7, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn8, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn9, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // gmshModelOccFragment(littleColumn10, 1, plate, 1, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, pillier1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, pillier2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, pillier3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, pillier4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
-    int tags[] = {idBigColumn1, idBigColumn2};
-    gmshModelOccAddSpline(tags, 2, -1, NULL, 0, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn5, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn6, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn7, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn8, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn9, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, littleColumn10, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
+    gmshModelOccFuse(bigColumn1, 2, bigColumn2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, bigColumn3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, bigDisk1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
+    gmshModelOccFuse(bigColumn4, 2, bigColumn5, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, bigColumn6, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, bigDisk2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
 
+    gmshModelOccCut(plate, 2, window1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, window2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, window3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccCut(plate, 2, window4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr);       
