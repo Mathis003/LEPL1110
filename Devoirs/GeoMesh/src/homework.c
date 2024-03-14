@@ -191,7 +191,7 @@ Generate the mesh of the plate.
 
 double geoSize(double x, double y)
 {
-    return 0.8;
+    return 0.7;
 }
 
 
@@ -212,24 +212,24 @@ void geoMeshGenerate()
 
     // Ajout du plateau de base
 
-    int idPlate = gmshModelOccAddRectangle(- Lx / 2, - Ly, 0.0, Lx, Ly, -1, 0, &ierr);
+    int idPlate = gmshModelOccAddRectangle(- Lx / 2, 0.0, 0.0, Lx, Ly, -1, 0, &ierr);
 
     // Ajout des arcs
 
     double xLittleArc1 = - Lx / 2;
-    double yLittleArc1 = - Ly;
+    double yLittleArc1 = 0.0;
 
     double xLittleArc2 = - widthPillier - rxBigArcs - rxLittleArcs;
-    double yLittleArc2 = - Ly;
+    double yLittleArc2 = 0.0;
 
-    double xBigArc = 0;
-    double yBigArc = - Ly;
+    double xBigArc = 0.0;
+    double yBigArc = 0.0;
 
     double xLittleArc3 = widthPillier + rxBigArcs + rxLittleArcs;
-    double yLittleArc3 = - Ly;
+    double yLittleArc3 = 0.0;
 
     double xLittleArc4 = Lx / 2;
-    double yLittleArc4 = - Ly;
+    double yLittleArc4 = 0.0;
 
     int idLittleArc1 = gmshModelOccAddDisk(xLittleArc1, yLittleArc1, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
     int idLittleArc2 = gmshModelOccAddDisk(xLittleArc2, yLittleArc2, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
@@ -242,16 +242,16 @@ void geoMeshGenerate()
     double depthPillier = 5.0;
 
     double xPillier1 = - Lx / 2 + rxLittleArcs;
-    double yPillier1 = - Ly - depthPillier;
+    double yPillier1 = - depthPillier;
 
     double xPillier2 = - rxBigArcs - widthPillier;
-    double yPillier2 = - Ly - depthPillier;
+    double yPillier2 = - depthPillier;
 
     double xPillier3 = rxBigArcs;
-    double yPillier3 = - Ly - depthPillier;
+    double yPillier3 = - depthPillier;
 
     double xPillier4 = Lx / 2 - rxLittleArcs - widthPillier;
-    double yPillier4 = - Ly - depthPillier;
+    double yPillier4 = - depthPillier;
 
     int idPillier1 = gmshModelOccAddRectangle(xPillier1, yPillier1, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
     int idPillier2 = gmshModelOccAddRectangle(xPillier2, yPillier2, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
@@ -264,30 +264,30 @@ void geoMeshGenerate()
     double heightBigColumn = 6.0;
 
     double xBigColumn1 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 2;
-    double yBigColumn1 = 0.0;
+    double yBigColumn1 = Ly;
 
     double xBigColumn2 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 4;
-    double yBigColumn2 = heightBigColumn;
+    double yBigColumn2 = Ly + heightBigColumn;
 
     double xBigColumn3 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 8;
-    double yBigColumn3 = 5 * heightBigColumn / 3;
+    double yBigColumn3 = Ly + 5 * heightBigColumn / 3;
 
     double rBigDisk1 = 0.8;
     double xBigDisk1 = - rxBigArcs - widthPillier - rxLittleArcs;
-    double yBigDisk1 = 2 * heightBigColumn + rBigDisk1 / 3;
+    double yBigDisk1 = Ly + 2 * heightBigColumn + rBigDisk1 / 3;
 
     double xBigColumn4 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 2;
-    double yBigColumn4 = 0.0;
+    double yBigColumn4 = Ly;
 
     double xBigColumn5 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 4;
-    double yBigColumn5 = heightBigColumn;
+    double yBigColumn5 = Ly + heightBigColumn;
 
     double xBigColumn6 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 8;
-    double yBigColumn6 = 5 * heightBigColumn / 3;
+    double yBigColumn6 = Ly + 5 * heightBigColumn / 3;
 
     double rBigDisk2 = 0.8;
     double xBigDisk2 = rxBigArcs + widthPillier + rxLittleArcs;
-    double yBigDisk2 = 2 * heightBigColumn + rBigDisk2 / 3;
+    double yBigDisk2 = Ly + 2 * heightBigColumn + rBigDisk2 / 3;
 
     int idBigColumn1 = gmshModelOccAddRectangle(xBigColumn1, yBigColumn1, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
     int idBigColumn2 = gmshModelOccAddRectangle(xBigColumn2, yBigColumn2, 0.0, widthBigColumn / 2, heightBigColumn / 1.5, -1, 0, &ierr);
@@ -305,7 +305,7 @@ void geoMeshGenerate()
     double heightPlate2 = 1.0;
 
     double xPlate2 = - Lx / 2;
-    double yPlate2 = - Ly;
+    double yPlate2 = 0.0;
 
     int idPlate2 = gmshModelOccAddRectangle(xPlate2, yPlate2, 0.0, widthPlate2, heightPlate2, -1, 0, &ierr);
 
@@ -315,34 +315,34 @@ void geoMeshGenerate()
     double heightLittleColumn = 4;
 
     double xLittleColumn1 = - Lx / 2 + rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn1 = - Ly + heightPlate2;
+    double yLittleColumn1 = heightPlate2;
 
     double xLittleColumn2 = - rxBigArcs - widthPillier - 3 * rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn2 = - Ly + heightPlate2;
+    double yLittleColumn2 = heightPlate2;
 
     double xLittleColumn3 = - rxBigArcs - widthPillier - rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn3 = - Ly + heightPlate2;
+    double yLittleColumn3 = heightPlate2;
 
     double xLittleColumn4 = - rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn4 = - Ly + heightPlate2;
+    double yLittleColumn4 = heightPlate2;
 
     double xLittleColumn5 = - 3 * rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn5 = - Ly + heightPlate2;
+    double yLittleColumn5 = heightPlate2;
 
     double xLittleColumn6 =  rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn6 = - Ly + heightPlate2;
+    double yLittleColumn6 = heightPlate2;
 
     double xLittleColumn7 = 3 * rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn7 = - Ly + heightPlate2;
+    double yLittleColumn7 = heightPlate2;
 
     double xLittleColumn8 = rxBigArcs + widthPillier + rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn8 = - Ly + heightPlate2;
+    double yLittleColumn8 = heightPlate2;
 
     double xLittleColumn9 = rxBigArcs + widthPillier + 3 *rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn9 = - Ly + heightPlate2;
+    double yLittleColumn9 = heightPlate2;
 
     double xLittleColumn10 = Lx / 2 - rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn10 = - Ly + heightPlate2;
+    double yLittleColumn10 = heightPlate2;
 
     int idLittleColumn1  = gmshModelOccAddRectangle(xLittleColumn1, yLittleColumn1, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
     int idLittleColumn2  = gmshModelOccAddRectangle(xLittleColumn2, yLittleColumn2, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
@@ -359,16 +359,16 @@ void geoMeshGenerate()
     double heightWindow = 0.6;
 
     double xWindow1 = - rxBigArcs - widthPillier + widthPillier / 4;
-    double yWindow1 = - Ly + heightPlate2 + 0.5;
+    double yWindow1 = heightPlate2 + 0.5;
 
     double xWindow2 = - rxBigArcs - 2 * widthPillier - 2 * rxLittleArcs + widthPillier / 4;
-    double yWindow2 = - Ly + heightPlate2 + 0.5;
+    double yWindow2 = heightPlate2 + 0.5;
 
     double xWindow3 = rxBigArcs + widthPillier / 4;
-    double yWindow3 = - Ly + heightPlate2 + 0.5;
+    double yWindow3 = heightPlate2 + 0.5;
 
     double xWindow4 = rxBigArcs + widthPillier + 2 * rxLittleArcs + widthPillier / 4;
-    double yWindow4 = - Ly + heightPlate2 + 0.5;
+    double yWindow4 = heightPlate2 + 0.5;
 
     int idWindow1 = gmshModelOccAddRectangle(xWindow1, yWindow1, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
     int idWindow2 = gmshModelOccAddRectangle(xWindow2, yWindow2, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
@@ -415,7 +415,6 @@ void geoMeshGenerate()
     int window3[]  = {2, idWindow3};
     int window4[]  = {2, idWindow4};
     
-
     // On soustrait les arcs du plateau de base
     gmshModelOccCut(plate, 2, littleArc1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccCut(plate, 2, littleArc2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
