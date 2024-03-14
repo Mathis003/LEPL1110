@@ -298,7 +298,6 @@ void geoMeshGenerate()
     int idBigColumn6 = gmshModelOccAddRectangle(xBigColumn6, yBigColumn6, 0.0, widthBigColumn / 4, heightBigColumn / 3, -1, 0, &ierr);
     int idBigDisk2   = gmshModelOccAddDisk(xBigDisk2, yBigDisk2, 0.0, rBigDisk2, rBigDisk2, -1, NULL, 0, NULL, 0, &ierr);
 
-
     // Ajout du second plateau
 
     double widthPlate2 = Lx;
@@ -375,6 +374,89 @@ void geoMeshGenerate()
     int idWindow3 = gmshModelOccAddRectangle(xWindow3, yWindow3, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
     int idWindow4 = gmshModelOccAddRectangle(xWindow4, yWindow4, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
 
+    // Ajout des cables
+
+    double widthCable = 0.2;
+    double heightCable = 14.5;
+    double distanceCable = 0.8;
+
+    double xCable1 = xBigColumn2 + widthBigColumn / 2;
+    double yCable1 = yBigColumn3;
+
+    double xCable2 = xBigColumn2 + widthBigColumn / 2;
+    double yCable2 = yCable1 - distanceCable;
+
+    double xCable3 = xBigColumn2 + widthBigColumn / 2;
+    double yCable3 = yCable2 - distanceCable;
+
+    double xCable4 = xBigColumn2 + widthBigColumn / 2;
+    double yCable4 = yCable3 - distanceCable;
+
+    double xCable5 = xBigColumn1 + widthBigColumn;
+    double yCable5 = yCable4 - 2 * distanceCable;
+
+    double xCable6 = xBigColumn1 + widthBigColumn;
+    double yCable6 = yCable5 - distanceCable;
+
+    double xCable7 = xBigColumn1 + widthBigColumn;
+    double yCable7 = yCable6 - distanceCable;
+
+    double xCable8 = xBigColumn1 + widthBigColumn;
+    double yCable8 = yCable7 - distanceCable;
+
+    double xCable9 = xBigColumn1 + widthBigColumn;
+    double yCable9 = yCable8 - distanceCable;
+
+    int idCable1 = gmshModelOccAddRectangle(xCable1, yCable1, 0.0, widthCable, heightCable, -1, 0, &ierr);
+    int idCable2 = gmshModelOccAddRectangle(xCable2, yCable2, 0.0, widthCable, heightCable - 1, -1, 0, &ierr);
+    int idCable3 = gmshModelOccAddRectangle(xCable3, yCable3, 0.0, widthCable, heightCable - 2, -1, 0, &ierr);
+    int idCable4 = gmshModelOccAddRectangle(xCable4, yCable4, 0.0, widthCable, heightCable - 3, -1, 0, &ierr);
+    int idCable5 = gmshModelOccAddRectangle(xCable5, yCable5, 0.0, widthCable, heightCable - 5, -1, 0, &ierr);
+    int idCable6 = gmshModelOccAddRectangle(xCable6, yCable6, 0.0, widthCable, heightCable - 6, -1, 0, &ierr);
+    int idCable7 = gmshModelOccAddRectangle(xCable7, yCable7, 0.0, widthCable, heightCable - 7, -1, 0, &ierr);
+    int idCable8 = gmshModelOccAddRectangle(xCable8, yCable8, 0.0, widthCable, heightCable - 8, -1, 0, &ierr);
+    int idCable9 = gmshModelOccAddRectangle(xCable9, yCable9, 0.0, widthCable, heightCable - 9, -1, 0, &ierr);
+
+    heightCable = 14.5;
+
+    double xCable10 = xBigColumn5 + widthBigColumn / 2;
+    double yCable10 = yBigColumn6;
+
+    double xCable11 = xBigColumn5 + widthBigColumn / 2;
+    double yCable11 = yCable10 - distanceCable;
+
+    double xCable12 = xBigColumn5 + widthBigColumn / 2;
+    double yCable12 = yCable11 - distanceCable;
+
+    double xCable13 = xBigColumn5 + widthBigColumn / 2;
+    double yCable13 = yCable12 - distanceCable;
+
+    double xCable14 = xBigColumn4 + widthBigColumn;
+    double yCable14 = yCable13 - 2 * distanceCable;
+
+    double xCable15 = xBigColumn4 + widthBigColumn;
+    double yCable15 = yCable14 - distanceCable;
+
+    double xCable16 = xBigColumn4 + widthBigColumn;
+    double yCable16 = yCable15 - distanceCable;
+
+    double xCable17 = xBigColumn4 + widthBigColumn;
+    double yCable17 = yCable16 - distanceCable;
+
+    double xCable18 = xBigColumn4 + widthBigColumn;
+    double yCable18 = yCable17 - distanceCable;
+
+    int idCable10 = gmshModelOccAddRectangle(xCable10, yCable10, 0.0, widthCable, heightCable, -1, 0, &ierr);
+    int idCable11 = gmshModelOccAddRectangle(xCable11, yCable11, 0.0, widthCable, heightCable - 1, -1, 0, &ierr);
+    int idCable12 = gmshModelOccAddRectangle(xCable12, yCable12, 0.0, widthCable, heightCable - 2, -1, 0, &ierr);
+    int idCable13 = gmshModelOccAddRectangle(xCable13, yCable13, 0.0, widthCable, heightCable - 3, -1, 0, &ierr);
+    int idCable14 = gmshModelOccAddRectangle(xCable14, yCable14, 0.0, widthCable, heightCable - 5, -1, 0, &ierr);
+    int idCable15 = gmshModelOccAddRectangle(xCable15, yCable15, 0.0, widthCable, heightCable - 6, -1, 0, &ierr);
+    int idCable16 = gmshModelOccAddRectangle(xCable16, yCable16, 0.0, widthCable, heightCable - 7, -1, 0, &ierr);
+    int idCable17 = gmshModelOccAddRectangle(xCable17, yCable17, 0.0, widthCable, heightCable - 8, -1, 0, &ierr);
+    int idCable18 = gmshModelOccAddRectangle(xCable18, yCable18, 0.0, widthCable, heightCable - 9, -1, 0, &ierr);
+
+
     int plate[]       = {2, idPlate};
     int plate2[]      = {2, idPlate2};
 
@@ -414,6 +496,49 @@ void geoMeshGenerate()
     int window2[]  = {2, idWindow2};
     int window3[]  = {2, idWindow3};
     int window4[]  = {2, idWindow4};
+
+    int cable1[]  = {2, idCable1};
+    int cable2[]  = {2, idCable2};
+    int cable3[]  = {2, idCable3};
+    int cable4[]  = {2, idCable4};
+    int cable5[]  = {2, idCable5};
+    int cable6[]  = {2, idCable6};
+    int cable7[]  = {2, idCable7};
+    int cable8[]  = {2, idCable8};
+    int cable9[]  = {2, idCable9};
+
+    int cable10[]  = {2, idCable10};
+    int cable11[]  = {2, idCable11};
+    int cable12[]  = {2, idCable12};
+    int cable13[]  = {2, idCable13};
+    int cable14[]  = {2, idCable14};
+    int cable15[]  = {2, idCable15};
+    int cable16[]  = {2, idCable16};
+    int cable17[]  = {2, idCable17};
+    int cable18[]  = {2, idCable18};
+
+    const double PI = 3.14159265358979323846;
+    double angle_cable = -135 * PI / 180;
+    
+    gmshModelOccRotate(cable1, 2, xCable1, yCable1, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable2, 2, xCable2, yCable2, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable3, 2, xCable3, yCable3, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable4, 2, xCable4, yCable4, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable5, 2, xCable5, yCable5, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable6, 2, xCable6, yCable6, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable7, 2, xCable7, yCable7, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable8, 2, xCable8, yCable8, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable9, 2, xCable9, yCable9, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+
+    gmshModelOccRotate(cable10, 2, xCable10, yCable10, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable11, 2, xCable11, yCable11, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable12, 2, xCable12, yCable12, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable13, 2, xCable13, yCable13, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable14, 2, xCable14, yCable14, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable15, 2, xCable15, yCable15, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable16, 2, xCable16, yCable16, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable17, 2, xCable17, yCable17, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    gmshModelOccRotate(cable18, 2, xCable18, yCable18, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
     
     // On soustrait les arcs du plateau de base
     gmshModelOccCut(plate, 2, littleArc1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
@@ -449,14 +574,39 @@ void geoMeshGenerate()
     gmshModelOccFuse(bigColumn4, 2, bigColumn6, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccFuse(bigColumn4, 2, bigDisk2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
-
     gmshModelOccCut(plate, 2, window1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccCut(plate, 2, window2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccCut(plate, 2, window3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccCut(plate, 2, window4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
+    gmshModelOccFuse(bigColumn1, 2, cable1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable5, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable6, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable7, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable8, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn1, 2, cable9, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
+    gmshModelOccFuse(bigColumn4, 2, cable10, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable11, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable12, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable13, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable14, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable15, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable16, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable17, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn4, 2, cable18, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
+    gmshModelOccFuse(plate, 2, bigColumn1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, bigColumn4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr);       
     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
     gmshModelMeshGenerate(2, &ierr);
+
+    //  Plot of Fltk
+    gmshFltkInitialize(&ierr);
 }
