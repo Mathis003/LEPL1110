@@ -189,555 +189,334 @@ Generate the mesh of the plate.
 // }
 
 
-double geoSize(double x, double y)
+double geoSize(double x, double y) { return 0.7; }
+
+
+typedef struct {
+    double widthPlate, heightPlate;
+    double widthWindow, heightWindow;
+    double widthSubPlate, heightSubPlate;
+    double rxArc, ryArc;
+    double rxLongArc, ryLongArc;
+    double widthColumn;
+    double widthPillier, heightPillier;
+    double widthBigColumn, heightBigColumn;
+    double widthCable, heightCable, distanceBetweenCable;
+    double angleCable;
+    double (*geoSize)(double x, double y);
+    femNodes *theNodes;
+    femMesh  *theElements;
+    femMesh  *theEdges;
+    int nDomains;
+    femDomain **theDomains;
+} femGeometry;
+
+
+void createWindows(femGeometry *theGeometry, int *idWindows, int ierr)
 {
-    return 0.7;
+    double offset = 0.5;
+    double y = theGeometry->heightPillier + theGeometry->heightSubPlate + offset;
+    double x1 = theGeometry->rxLongArc + theGeometry->widthPillier / 4;
+    double x2 = theGeometry->rxLongArc + 2 * theGeometry->rxArc + 5 * theGeometry->widthPillier / 4;
+
+    int id1 = gmshModelOccAddRectangle(- x1 - theGeometry->widthWindow, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
+    int id2 = gmshModelOccAddRectangle(- x2 - theGeometry->widthWindow, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
+    int id3 = gmshModelOccAddRectangle(x1, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
+    int id4 = gmshModelOccAddRectangle(x2, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
+
+    int tempId[] = {id1, id2, id3, id4};
+    memcpy(idWindows, tempId, 4 * sizeof(int));
 }
 
+void createColumns(femGeometry *theGeometry, int *idColumns, int ierr)
+{
+    double offset = theGeometry->widthColumn / 2;
+    double y = theGeometry->heightPillier + theGeometry->heightSubPlate;
+
+    double x1 = theGeometry->rxLongArc / 4;
+    double x2 = 3 * theGeometry->rxLongArc / 4;
+    double x3 = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc / 2;
+    double x4 = theGeometry->rxLongArc + theGeometry->widthPillier + 3 * theGeometry->rxArc / 2;
+    double x5 = theGeometry->widthPlate / 2 - theGeometry->rxArc / 2;
+
+    int id1  = gmshModelOccAddRectangle(x1 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id2  = gmshModelOccAddRectangle(- x1 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id3  = gmshModelOccAddRectangle(x2 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id4  = gmshModelOccAddRectangle(- x2 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id5  = gmshModelOccAddRectangle(x3 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id6  = gmshModelOccAddRectangle(- x3 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id7  = gmshModelOccAddRectangle(x4 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id8  = gmshModelOccAddRectangle(- x4 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id9  = gmshModelOccAddRectangle(x5 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    int id10 = gmshModelOccAddRectangle(- x5 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+
+    int tempId[] = {id1, id2, id3, id4, id5, id6, id7, id8, id9, id10};
+    memcpy(idColumns, tempId, 10 * sizeof(int));
+}
+
+void createPilliers(femGeometry *theGeometry, int *idPilliers, int ierr)
+{
+    double width  = theGeometry->widthPillier;
+    double height = theGeometry->heightPillier;
+
+    double y = 0.0;
+    double x1 = theGeometry->rxLongArc;
+    double x2 = theGeometry->widthPlate / 2 - theGeometry->rxArc;
+
+    int id1 = gmshModelOccAddRectangle(- x2, y, 0.0, width, height, -1, 0, &ierr);
+    int id2 = gmshModelOccAddRectangle(- x1 - width, y, 0.0, width, height, -1, 0, &ierr);
+    int id3 = gmshModelOccAddRectangle(x1, y, 0.0, width, height, -1, 0, &ierr);
+    int id4 = gmshModelOccAddRectangle(x2 - width, y, 0.0, width, height, -1, 0, &ierr);
+
+    int tempId[] = {id1, id2, id3, id4};
+    memcpy(idPilliers, tempId, 4 * sizeof(int));
+}
+
+void createArcs(femGeometry *theGeometry, int *idArcs, int ierr)
+{
+    double rxArc = theGeometry->rxArc;
+    double ryArc = theGeometry->ryArc;
+    double rxLongArc = theGeometry->rxLongArc;
+    double ryLongArc = theGeometry->ryLongArc;
+
+    double y = theGeometry->heightPillier;
+    double x1 = theGeometry->rxLongArc + 2 * theGeometry->widthPillier + 3 * theGeometry->rxArc;
+    double x2 = theGeometry->rxLongArc + theGeometry->widthPillier;
+
+    int id1 = gmshModelOccAddDisk(- x1, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
+    int id2 = gmshModelOccAddDisk(- x2 - rxArc, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
+    int id3 = gmshModelOccAddDisk(0.0, y, 0.0, rxLongArc, ryLongArc, -1, NULL, 0, NULL, 0, &ierr);
+    int id4 = gmshModelOccAddDisk(x2 + rxArc, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
+    int id5 = gmshModelOccAddDisk(x1, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
+
+    int tempId[] = {id1, id2, id3, id4, id5};
+    memcpy(idArcs, tempId, 5 * sizeof(int));
+}
+
+void createBigColumns(femGeometry *theGeometry, int *idBigColumns, int ierr)
+{
+    double width = theGeometry->widthBigColumn;
+    double height = theGeometry->heightBigColumn;
+
+    double y = theGeometry->heightPillier + theGeometry->heightPlate;
+    double x = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc;
+
+    int id1 = gmshModelOccAddRectangle(-x - width / 2, y, 0.0, width, height, -1, 0, &ierr);
+    int id2 = gmshModelOccAddRectangle(-x - width / 4, y + height, 0.0, width / 2, 2 * height / 3, -1, 0, &ierr);
+    int id3 = gmshModelOccAddRectangle(-x - width / 8, y + 5 * height / 3, 0.0, width / 4, height / 3, -1, 0, &ierr);
+    int id4 = gmshModelOccAddRectangle(x - width / 2, y, 0.0, width, height, -1, 0, &ierr);
+    int id5 = gmshModelOccAddRectangle(x - width / 4, y + height, 0.0, width / 2, 2 * height / 3, -1, 0, &ierr);
+    int id6 = gmshModelOccAddRectangle(x - width / 8, y + 5 * height / 3, 0.0, width / 4, height / 3, -1, 0, &ierr);
+
+    int tempId[] = {id1, id2, id3, id4, id5, id6};
+    memcpy(idBigColumns, tempId, 6 * sizeof(int));
+}
+
+void createDisk(femGeometry *theGeometry, int *idDisks, int ierr)
+{
+    double r = theGeometry->widthBigColumn / 3;
+    double x = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc;
+    double y = theGeometry->heightPillier + theGeometry->heightPlate + 2 * theGeometry->heightBigColumn + r / 3;
+
+    int id1 = gmshModelOccAddDisk(- x, y, 0.0, r, r, -1, NULL, 0, NULL, 0, &ierr);
+    int id2 = gmshModelOccAddDisk(x, y, 0.0, r, r, -1, NULL, 0, NULL, 0, &ierr);
+
+    int tempId[] = {id1, id2};
+    memcpy(idDisks, tempId, 2 * sizeof(int));
+}
+
+void createCables(femGeometry *theGeometry, int *idCables, double *positionX, double *positionY, int ierr)
+{
+    double width = theGeometry->widthCable;
+    double height = theGeometry->heightCable;
+    double distance = theGeometry->distanceBetweenCable;
+    double centerColumn = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc;
+
+    const double y  = theGeometry->heightPillier + theGeometry->heightPlate + 5 * theGeometry->heightBigColumn / 3;
+    double x1 = centerColumn + theGeometry->widthBigColumn / 4;
+    double x2 = centerColumn + theGeometry->widthBigColumn / 2;
+
+    // Fils de droite sur la colonne de droite
+    int idR1 = gmshModelOccAddRectangle(x1, y, 0.0, width, height, -1, 0, &ierr);
+    int idR2 = gmshModelOccAddRectangle(x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
+    int idR3 = gmshModelOccAddRectangle(x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
+    int idR4 = gmshModelOccAddRectangle(x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
+    int idR5 = gmshModelOccAddRectangle(x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
+    int idR6 = gmshModelOccAddRectangle(x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
+    int idR7 = gmshModelOccAddRectangle(x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
+    int idR8 = gmshModelOccAddRectangle(x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
+    int idR9 = gmshModelOccAddRectangle(x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
+
+    for (int i = 0; i < 4; i++) { positionX[i] = x1; positionY[i] = y - i * distance; }
+    for (int i = 4; i < 9; i++) { positionX[i] = x2; positionY[i] = y - (i + 1) * distance; }
+
+    x1 += width;
+    x2 += width;
+
+    // Fils de gauche sur la colonne de gauche
+    int idL1 = gmshModelOccAddRectangle(-x1, y, 0.0, width, height, -1, 0, &ierr);
+    int idL2 = gmshModelOccAddRectangle(-x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
+    int idL3 = gmshModelOccAddRectangle(-x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
+    int idL4 = gmshModelOccAddRectangle(-x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
+    int idL5 = gmshModelOccAddRectangle(-x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
+    int idL6 = gmshModelOccAddRectangle(-x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
+    int idL7 = gmshModelOccAddRectangle(-x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
+    int idL8 = gmshModelOccAddRectangle(-x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
+    int idL9 = gmshModelOccAddRectangle(-x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
+
+    for (int i = 18; i < 22; i++) { positionX[i] = - x1 + width; positionY[i] = y - (i - 18) * distance; }
+    for (int i = 22; i < 27; i++) { positionX[i] = - x2 + width; positionY[i] = y - (i + 1 - 18) * distance; }
+
+    x1 = centerColumn - theGeometry->widthBigColumn / 4 - width;
+    x2 = centerColumn - theGeometry->widthBigColumn / 2 - width;
+
+    // Fils de gauche sur la colonne de droite
+    int idL10 = gmshModelOccAddRectangle(x1, y, 0.0, width, height, -1, 0, &ierr);
+    int idL11 = gmshModelOccAddRectangle(x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
+    int idL12 = gmshModelOccAddRectangle(x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
+    int idL13 = gmshModelOccAddRectangle(x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
+    int idL14 = gmshModelOccAddRectangle(x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
+    int idL15 = gmshModelOccAddRectangle(x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
+    int idL16 = gmshModelOccAddRectangle(x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
+    int idL17 = gmshModelOccAddRectangle(x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
+    int idL18 = gmshModelOccAddRectangle(x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
+
+    for (int i = 27; i < 31; i++) { positionX[i] = x1 + width; positionY[i] = y - (i - 27) * distance; }
+    for (int i = 31; i < 36; i++) { positionX[i] = x2 + width; positionY[i] = y - (i + 1 - 27) * distance; }
+    
+    x1 += width;
+    x2 += width;
+
+    // Fils de droite sur la colonne de gauche
+    int idR10 = gmshModelOccAddRectangle(-x1, y, 0.0, width, height, -1, 0, &ierr);
+    int idR11 = gmshModelOccAddRectangle(-x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
+    int idR12 = gmshModelOccAddRectangle(-x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
+    int idR13 = gmshModelOccAddRectangle(-x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
+    int idR14 = gmshModelOccAddRectangle(-x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
+    int idR15 = gmshModelOccAddRectangle(-x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
+    int idR16 = gmshModelOccAddRectangle(-x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
+    int idR17 = gmshModelOccAddRectangle(-x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
+    int idR18 = gmshModelOccAddRectangle(-x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
+
+    for (int i = 9; i < 13; i++) { positionX[i] = - x1; positionY[i] = y - (i - 9) * distance; }
+    for (int i = 13; i < 18; i++) { positionX[i] = - x2; positionY[i] = y - (i + 1 - 9) * distance; }
+
+    int tempId[] = {idR1, idR2, idR3, idR4, idR5, idR6, idR7, idR8, idR9,
+                    idR10, idR11, idR12, idR13, idR14, idR15, idR16, idR17, idR18,
+                    idL1, idL2, idL3, idL4, idL5, idL6, idL7, idL8, idL9,
+                    idL10, idL11, idL12, idL13, idL14, idL15, idL16, idL17, idL18};
+
+    memcpy(idCables, tempId, 36 * sizeof(int));
+}
+
+void createPlate(femGeometry *theGeometry, int *idPlate, int ierr)
+{
+    *idPlate = gmshModelOccAddRectangle(- theGeometry->widthPlate / 2, theGeometry->heightPillier, 0.0, theGeometry->widthPlate, theGeometry->heightPlate, -1, 0, &ierr);
+}
+
+void createSubPlate(femGeometry *theGeometry, int *idSubPlate, int ierr)
+{
+    *idSubPlate = gmshModelOccAddRectangle(- theGeometry->widthPlate / 2, theGeometry->heightPillier, 0.0, theGeometry->widthSubPlate, theGeometry->heightSubPlate, -1, 0, &ierr);
+}
 
 void geoMeshGenerate()
 {
-    double rxLittleArcs = 5.0;
-    double rxBigArcs = 2 * rxLittleArcs;
-    double ryLittleArcs = 5.0;
-    double ryBigArcs = 4.0;
-
-    double widthPillier = 3.0;
-    double offsetPont = 4.0;
-
-    double Lx = 2 * rxBigArcs + 6 * rxLittleArcs + 4 * widthPillier;
-    double Ly = ryLittleArcs + offsetPont;
- 
-    int ierr;
-
-    // Ajout du plateau de base
-
-    int idPlate = gmshModelOccAddRectangle(- Lx / 2, 0.0, 0.0, Lx, Ly, -1, 0, &ierr);
-
-    // Ajout des arcs
-
-    double xLittleArc1 = - Lx / 2;
-    double yLittleArc1 = 0.0;
-
-    double xLittleArc2 = - widthPillier - rxBigArcs - rxLittleArcs;
-    double yLittleArc2 = 0.0;
-
-    double xBigArc = 0.0;
-    double yBigArc = 0.0;
-
-    double xLittleArc3 = widthPillier + rxBigArcs + rxLittleArcs;
-    double yLittleArc3 = 0.0;
-
-    double xLittleArc4 = Lx / 2;
-    double yLittleArc4 = 0.0;
-
-    int idLittleArc1 = gmshModelOccAddDisk(xLittleArc1, yLittleArc1, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
-    int idLittleArc2 = gmshModelOccAddDisk(xLittleArc2, yLittleArc2, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
-    int idBigArc     = gmshModelOccAddDisk(xBigArc, yBigArc, 0.0, rxBigArcs, ryBigArcs, -1, NULL, 0, NULL, 0, &ierr);
-    int idLittleArc3 = gmshModelOccAddDisk(xLittleArc3, yLittleArc3, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
-    int idLittleArc4 = gmshModelOccAddDisk(xLittleArc4, yLittleArc4, 0.0, rxLittleArcs, ryLittleArcs, -1, NULL, 0, NULL, 0, &ierr);
-
-    // Ajout des piliers
-
-    double depthPillier = 5.0;
-
-    double xPillier1 = - Lx / 2 + rxLittleArcs;
-    double yPillier1 = - depthPillier;
-
-    double xPillier2 = - rxBigArcs - widthPillier;
-    double yPillier2 = - depthPillier;
-
-    double xPillier3 = rxBigArcs;
-    double yPillier3 = - depthPillier;
-
-    double xPillier4 = Lx / 2 - rxLittleArcs - widthPillier;
-    double yPillier4 = - depthPillier;
-
-    int idPillier1 = gmshModelOccAddRectangle(xPillier1, yPillier1, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
-    int idPillier2 = gmshModelOccAddRectangle(xPillier2, yPillier2, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
-    int idPillier3 = gmshModelOccAddRectangle(xPillier3, yPillier3, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
-    int idPillier4 = gmshModelOccAddRectangle(xPillier4, yPillier4, 0.0, widthPillier, depthPillier, -1, 0, &ierr);
-
-    // Ajout des colonnes
-
-    double widthBigColumn = 2.5;
-    double heightBigColumn = 6.0;
-
-    double xBigColumn1 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 2;
-    double yBigColumn1 = Ly;
-
-    double xBigColumn2 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 4;
-    double yBigColumn2 = Ly + heightBigColumn;
-
-    double xBigColumn3 = - rxBigArcs - widthPillier - rxLittleArcs - widthBigColumn / 8;
-    double yBigColumn3 = Ly + 5 * heightBigColumn / 3;
-
-    double rBigDisk1 = 0.8;
-    double xBigDisk1 = - rxBigArcs - widthPillier - rxLittleArcs;
-    double yBigDisk1 = Ly + 2 * heightBigColumn + rBigDisk1 / 3;
-
-    double xBigColumn4 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 2;
-    double yBigColumn4 = Ly;
-
-    double xBigColumn5 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 4;
-    double yBigColumn5 = Ly + heightBigColumn;
-
-    double xBigColumn6 = rxBigArcs + widthPillier + rxLittleArcs - widthBigColumn / 8;
-    double yBigColumn6 = Ly + 5 * heightBigColumn / 3;
-
-    double rBigDisk2 = 0.8;
-    double xBigDisk2 = rxBigArcs + widthPillier + rxLittleArcs;
-    double yBigDisk2 = Ly + 2 * heightBigColumn + rBigDisk2 / 3;
-
-    int idBigColumn1 = gmshModelOccAddRectangle(xBigColumn1, yBigColumn1, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
-    int idBigColumn2 = gmshModelOccAddRectangle(xBigColumn2, yBigColumn2, 0.0, widthBigColumn / 2, heightBigColumn / 1.5, -1, 0, &ierr);
-    int idBigColumn3 = gmshModelOccAddRectangle(xBigColumn3, yBigColumn3, 0.0, widthBigColumn / 4, heightBigColumn / 3, -1, 0, &ierr);
-    int idBigDisk1   = gmshModelOccAddDisk(xBigDisk1, yBigDisk1, 0.0, rBigDisk1, rBigDisk1, -1, NULL, 0, NULL, 0, &ierr);
-    int idBigColumn4 = gmshModelOccAddRectangle(xBigColumn4, yBigColumn4, 0.0, widthBigColumn, heightBigColumn, -1, 0, &ierr);
-    int idBigColumn5 = gmshModelOccAddRectangle(xBigColumn5, yBigColumn5, 0.0, widthBigColumn / 2, heightBigColumn / 1.5, -1, 0, &ierr);
-    int idBigColumn6 = gmshModelOccAddRectangle(xBigColumn6, yBigColumn6, 0.0, widthBigColumn / 4, heightBigColumn / 3, -1, 0, &ierr);
-    int idBigDisk2   = gmshModelOccAddDisk(xBigDisk2, yBigDisk2, 0.0, rBigDisk2, rBigDisk2, -1, NULL, 0, NULL, 0, &ierr);
-
-    // Ajout du second plateau
-
-    double widthPlate2 = Lx;
-    double heightPlate2 = 1.0;
-
-    double xPlate2 = - Lx / 2;
-    double yPlate2 = 0.0;
-
-    int idPlate2 = gmshModelOccAddRectangle(xPlate2, yPlate2, 0.0, widthPlate2, heightPlate2, -1, 0, &ierr);
-
-    // Ajout des colonnes du second plateau
-
-    double widthLittleColumn = 0.5;
-    double heightLittleColumn = 4;
-
-    double xLittleColumn1 = - Lx / 2 + rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn1 = heightPlate2;
-
-    double xLittleColumn2 = - rxBigArcs - widthPillier - 3 * rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn2 = heightPlate2;
-
-    double xLittleColumn3 = - rxBigArcs - widthPillier - rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn3 = heightPlate2;
-
-    double xLittleColumn4 = - rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn4 = heightPlate2;
-
-    double xLittleColumn5 = - 3 * rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn5 = heightPlate2;
-
-    double xLittleColumn6 =  rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn6 = heightPlate2;
-
-    double xLittleColumn7 = 3 * rxBigArcs / 4 - widthLittleColumn / 2;
-    double yLittleColumn7 = heightPlate2;
-
-    double xLittleColumn8 = rxBigArcs + widthPillier + rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn8 = heightPlate2;
-
-    double xLittleColumn9 = rxBigArcs + widthPillier + 3 *rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn9 = heightPlate2;
-
-    double xLittleColumn10 = Lx / 2 - rxLittleArcs / 2 - widthLittleColumn / 2;
-    double yLittleColumn10 = heightPlate2;
-
-    int idLittleColumn1  = gmshModelOccAddRectangle(xLittleColumn1, yLittleColumn1, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn2  = gmshModelOccAddRectangle(xLittleColumn2, yLittleColumn2, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn3  = gmshModelOccAddRectangle(xLittleColumn3, yLittleColumn3, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn4  = gmshModelOccAddRectangle(xLittleColumn4, yLittleColumn4, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn5  = gmshModelOccAddRectangle(xLittleColumn5, yLittleColumn5, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn6  = gmshModelOccAddRectangle(xLittleColumn6, yLittleColumn6, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn7  = gmshModelOccAddRectangle(xLittleColumn7, yLittleColumn7, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn8  = gmshModelOccAddRectangle(xLittleColumn8, yLittleColumn8, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn9  = gmshModelOccAddRectangle(xLittleColumn9, yLittleColumn9, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-    int idLittleColumn10 = gmshModelOccAddRectangle(xLittleColumn10, yLittleColumn10, 0.0, widthLittleColumn, heightLittleColumn, -1, 0, &ierr);
-
-    double widthWindow = widthPillier / 2;
-    double heightWindow = 0.6;
-
-    double xWindow1 = - rxBigArcs - widthPillier + widthPillier / 4;
-    double yWindow1 = heightPlate2 + 0.5;
-
-    double xWindow2 = - rxBigArcs - 2 * widthPillier - 2 * rxLittleArcs + widthPillier / 4;
-    double yWindow2 = heightPlate2 + 0.5;
-
-    double xWindow3 = rxBigArcs + widthPillier / 4;
-    double yWindow3 = heightPlate2 + 0.5;
-
-    double xWindow4 = rxBigArcs + widthPillier + 2 * rxLittleArcs + widthPillier / 4;
-    double yWindow4 = heightPlate2 + 0.5;
-
-    int idWindow1 = gmshModelOccAddRectangle(xWindow1, yWindow1, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
-    int idWindow2 = gmshModelOccAddRectangle(xWindow2, yWindow2, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
-    int idWindow3 = gmshModelOccAddRectangle(xWindow3, yWindow3, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
-    int idWindow4 = gmshModelOccAddRectangle(xWindow4, yWindow4, 0.0, widthWindow, heightWindow, -1, 0, &ierr);
-
-    // Ajout des cables
-
-    double widthCable = 0.2;
-    double heightCable = 14.5;
-    double distanceCable = 0.8;
-
-    double xCable1 = xBigColumn2 + widthBigColumn / 2;
-    double yCable1 = yBigColumn3;
-
-    double xCable2 = xBigColumn2 + widthBigColumn / 2;
-    double yCable2 = yCable1 - distanceCable;
-
-    double xCable3 = xBigColumn2 + widthBigColumn / 2;
-    double yCable3 = yCable2 - distanceCable;
-
-    double xCable4 = xBigColumn2 + widthBigColumn / 2;
-    double yCable4 = yCable3 - distanceCable;
-
-    double xCable5 = xBigColumn1 + widthBigColumn;
-    double yCable5 = yCable4 - 2 * distanceCable;
-
-    double xCable6 = xBigColumn1 + widthBigColumn;
-    double yCable6 = yCable5 - distanceCable;
-
-    double xCable7 = xBigColumn1 + widthBigColumn;
-    double yCable7 = yCable6 - distanceCable;
-
-    double xCable8 = xBigColumn1 + widthBigColumn;
-    double yCable8 = yCable7 - distanceCable;
-
-    double xCable9 = xBigColumn1 + widthBigColumn;
-    double yCable9 = yCable8 - distanceCable;
-
-    int idCable1 = gmshModelOccAddRectangle(xCable1, yCable1, 0.0, widthCable, heightCable, -1, 0, &ierr);
-    int idCable2 = gmshModelOccAddRectangle(xCable2, yCable2, 0.0, widthCable, heightCable - 1, -1, 0, &ierr);
-    int idCable3 = gmshModelOccAddRectangle(xCable3, yCable3, 0.0, widthCable, heightCable - 2, -1, 0, &ierr);
-    int idCable4 = gmshModelOccAddRectangle(xCable4, yCable4, 0.0, widthCable, heightCable - 3, -1, 0, &ierr);
-    int idCable5 = gmshModelOccAddRectangle(xCable5, yCable5, 0.0, widthCable, heightCable - 5, -1, 0, &ierr);
-    int idCable6 = gmshModelOccAddRectangle(xCable6, yCable6, 0.0, widthCable, heightCable - 6, -1, 0, &ierr);
-    int idCable7 = gmshModelOccAddRectangle(xCable7, yCable7, 0.0, widthCable, heightCable - 7, -1, 0, &ierr);
-    int idCable8 = gmshModelOccAddRectangle(xCable8, yCable8, 0.0, widthCable, heightCable - 8, -1, 0, &ierr);
-    int idCable9 = gmshModelOccAddRectangle(xCable9, yCable9, 0.0, widthCable, heightCable - 9, -1, 0, &ierr);
-
-    heightCable = 14.5;
-
-    double xCable10 = xBigColumn5 + widthBigColumn / 2;
-    double yCable10 = yBigColumn6;
-
-    double xCable11 = xBigColumn5 + widthBigColumn / 2;
-    double yCable11 = yCable10 - distanceCable;
-
-    double xCable12 = xBigColumn5 + widthBigColumn / 2;
-    double yCable12 = yCable11 - distanceCable;
-
-    double xCable13 = xBigColumn5 + widthBigColumn / 2;
-    double yCable13 = yCable12 - distanceCable;
-
-    double xCable14 = xBigColumn4 + widthBigColumn;
-    double yCable14 = yCable13 - 2 * distanceCable;
-
-    double xCable15 = xBigColumn4 + widthBigColumn;
-    double yCable15 = yCable14 - distanceCable;
-
-    double xCable16 = xBigColumn4 + widthBigColumn;
-    double yCable16 = yCable15 - distanceCable;
-
-    double xCable17 = xBigColumn4 + widthBigColumn;
-    double yCable17 = yCable16 - distanceCable;
-
-    double xCable18 = xBigColumn4 + widthBigColumn;
-    double yCable18 = yCable17 - distanceCable;
-
-    int idCable10 = gmshModelOccAddRectangle(xCable10, yCable10, 0.0, widthCable, heightCable, -1, 0, &ierr);
-    int idCable11 = gmshModelOccAddRectangle(xCable11, yCable11, 0.0, widthCable, heightCable - 1, -1, 0, &ierr);
-    int idCable12 = gmshModelOccAddRectangle(xCable12, yCable12, 0.0, widthCable, heightCable - 2, -1, 0, &ierr);
-    int idCable13 = gmshModelOccAddRectangle(xCable13, yCable13, 0.0, widthCable, heightCable - 3, -1, 0, &ierr);
-    int idCable14 = gmshModelOccAddRectangle(xCable14, yCable14, 0.0, widthCable, heightCable - 5, -1, 0, &ierr);
-    int idCable15 = gmshModelOccAddRectangle(xCable15, yCable15, 0.0, widthCable, heightCable - 6, -1, 0, &ierr);
-    int idCable16 = gmshModelOccAddRectangle(xCable16, yCable16, 0.0, widthCable, heightCable - 7, -1, 0, &ierr);
-    int idCable17 = gmshModelOccAddRectangle(xCable17, yCable17, 0.0, widthCable, heightCable - 8, -1, 0, &ierr);
-    int idCable18 = gmshModelOccAddRectangle(xCable18, yCable18, 0.0, widthCable, heightCable - 9, -1, 0, &ierr);
-
-    heightCable = 14.5;
-
-    double xLeftCable1 = xBigColumn2 - widthCable;
-    double yLeftCable1 = yBigColumn3;
-
-    double xLeftCable2 = xBigColumn2 - widthCable;
-    double yLeftCable2 = yLeftCable1 - distanceCable;
-
-    double xLeftCable3 = xBigColumn2 - widthCable;
-    double yLeftCable3 = yLeftCable2 - distanceCable;
-
-    double xLeftCable4 = xBigColumn2 - widthCable;
-    double yLeftCable4 = yLeftCable3 - distanceCable;
-
-    double xLeftCable5 = xBigColumn1 - widthCable;
-    double yLeftCable5 = yLeftCable4 - 2 * distanceCable;
-
-    double xLeftCable6 = xBigColumn1 - widthCable;
-    double yLeftCable6 = yLeftCable5 - distanceCable;
-
-    double xLeftCable7 = xBigColumn1 - widthCable;
-    double yLeftCable7 = yLeftCable6 - distanceCable;
-
-    double xLeftCable8 = xBigColumn1 - widthCable;
-    double yLeftCable8 = yLeftCable7 - distanceCable;
-
-    double xLeftCable9 = xBigColumn1 - widthCable;
-    double yLeftCable9 = yLeftCable8 - distanceCable;
-
-    int idLeftCable1 = gmshModelOccAddRectangle(xLeftCable1, yLeftCable1, 0.0, widthCable, heightCable, -1, 0, &ierr);
-    int idLeftCable2 = gmshModelOccAddRectangle(xLeftCable2, yLeftCable2, 0.0, widthCable, heightCable - 1, -1, 0, &ierr);
-    int idLeftCable3 = gmshModelOccAddRectangle(xLeftCable3, yLeftCable3, 0.0, widthCable, heightCable - 2, -1, 0, &ierr);
-    int idLeftCable4 = gmshModelOccAddRectangle(xLeftCable4, yLeftCable4, 0.0, widthCable, heightCable - 3, -1, 0, &ierr);
-    int idLeftCable5 = gmshModelOccAddRectangle(xLeftCable5, yLeftCable5, 0.0, widthCable, heightCable - 5, -1, 0, &ierr);
-    int idLeftCable6 = gmshModelOccAddRectangle(xLeftCable6, yLeftCable6, 0.0, widthCable, heightCable - 6, -1, 0, &ierr);
-    int idLeftCable7 = gmshModelOccAddRectangle(xLeftCable7, yLeftCable7, 0.0, widthCable, heightCable - 7, -1, 0, &ierr);
-    int idLeftCable8 = gmshModelOccAddRectangle(xLeftCable8, yLeftCable8, 0.0, widthCable, heightCable - 8, -1, 0, &ierr);
-    int idLeftCable9 = gmshModelOccAddRectangle(xLeftCable9, yLeftCable9, 0.0, widthCable, heightCable - 9, -1, 0, &ierr);
-
-    heightCable = 14.5;
-
-    double xLeftCable10 = xBigColumn5 - widthCable;
-    double yLeftCable10 = yBigColumn3;
-
-    double xLeftCable11 = xBigColumn5 - widthCable;
-    double yLeftCable11 = yLeftCable10 - distanceCable;
-
-    double xLeftCable12 = xBigColumn5 - widthCable;
-    double yLeftCable12 = yLeftCable11 - distanceCable;
-
-    double xLeftCable13 = xBigColumn5 - widthCable;
-    double yLeftCable13 = yLeftCable12 - distanceCable;
-
-    double xLeftCable14 = xBigColumn4 - widthCable;
-    double yLeftCable14 = yLeftCable13 - 2 * distanceCable;
-
-    double xLeftCable15 = xBigColumn4 - widthCable;
-    double yLeftCable15 = yLeftCable14 - distanceCable;
-
-    double xLeftCable16 = xBigColumn4 - widthCable;
-    double yLeftCable16 = yLeftCable15 - distanceCable;
-
-    double xLeftCable17 = xBigColumn4 - widthCable;
-    double yLeftCable17 = yLeftCable16 - distanceCable;
-
-    double xLeftCable18 = xBigColumn4 - widthCable;
-    double yLeftCable18 = yLeftCable17 - distanceCable;
-
-    int idLeftCable10 = gmshModelOccAddRectangle(xLeftCable10, yLeftCable10, 0.0, widthCable, heightCable, -1, 0, &ierr);
-    int idLeftCable11 = gmshModelOccAddRectangle(xLeftCable11, yLeftCable11, 0.0, widthCable, heightCable - 1, -1, 0, &ierr);
-    int idLeftCable12 = gmshModelOccAddRectangle(xLeftCable12, yLeftCable12, 0.0, widthCable, heightCable - 2, -1, 0, &ierr);
-    int idLeftCable13 = gmshModelOccAddRectangle(xLeftCable13, yLeftCable13, 0.0, widthCable, heightCable - 3, -1, 0, &ierr);
-    int idLeftCable14 = gmshModelOccAddRectangle(xLeftCable14, yLeftCable14, 0.0, widthCable, heightCable - 5, -1, 0, &ierr);
-    int idLeftCable15 = gmshModelOccAddRectangle(xLeftCable15, yLeftCable15, 0.0, widthCable, heightCable - 6, -1, 0, &ierr);
-    int idLeftCable16 = gmshModelOccAddRectangle(xLeftCable16, yLeftCable16, 0.0, widthCable, heightCable - 7, -1, 0, &ierr);
-    int idLeftCable17 = gmshModelOccAddRectangle(xLeftCable17, yLeftCable17, 0.0, widthCable, heightCable - 8, -1, 0, &ierr);
-    int idLeftCable18 = gmshModelOccAddRectangle(xLeftCable18, yLeftCable18, 0.0, widthCable, heightCable - 9, -1, 0, &ierr);
-
-
-    int plate[]       = {2, idPlate};
-    int plate2[]      = {2, idPlate2};
-
-    int littleArc1[]  = {2, idLittleArc1};
-    int littleArc2[]  = {2, idLittleArc2};
-    int bigArc[]      = {2, idBigArc};
-    int littleArc3[]  = {2, idLittleArc3};
-    int littleArc4[]  = {2, idLittleArc4};
-
-    int pillier1[]    = {2, idPillier1};
-    int pillier2[]    = {2, idPillier2};
-    int pillier3[]    = {2, idPillier3};
-    int pillier4[]    = {2, idPillier4};
-
-    int littleColumn1[]  = {2, idLittleColumn1};
-    int littleColumn2[]  = {2, idLittleColumn2};
-    int littleColumn3[]  = {2, idLittleColumn3};
-    int littleColumn4[]  = {2, idLittleColumn4};
-    int littleColumn5[]  = {2, idLittleColumn5};
-    int littleColumn6[]  = {2, idLittleColumn6};
-    int littleColumn7[]  = {2, idLittleColumn7};
-    int littleColumn8[]  = {2, idLittleColumn8};
-    int littleColumn9[]  = {2, idLittleColumn9};
-    int littleColumn10[] = {2, idLittleColumn10};
-
-    int bigColumn1[]  = {2, idBigColumn1};
-    int bigColumn2[]  = {2, idBigColumn2};
-    int bigColumn3[]  = {2, idBigColumn3};
-    int bigColumn4[]  = {2, idBigColumn4};
-    int bigColumn5[]  = {2, idBigColumn5};
-    int bigColumn6[]  = {2, idBigColumn6};
-
-    int bigDisk1[]  = {2, idBigDisk1};
-    int bigDisk2[]  = {2, idBigDisk2};
-
-    int window1[]  = {2, idWindow1};
-    int window2[]  = {2, idWindow2};
-    int window3[]  = {2, idWindow3};
-    int window4[]  = {2, idWindow4};
-
-    int cable1[]  = {2, idCable1};
-    int cable2[]  = {2, idCable2};
-    int cable3[]  = {2, idCable3};
-    int cable4[]  = {2, idCable4};
-    int cable5[]  = {2, idCable5};
-    int cable6[]  = {2, idCable6};
-    int cable7[]  = {2, idCable7};
-    int cable8[]  = {2, idCable8};
-    int cable9[]  = {2, idCable9};
-
-    int cable10[]  = {2, idCable10};
-    int cable11[]  = {2, idCable11};
-    int cable12[]  = {2, idCable12};
-    int cable13[]  = {2, idCable13};
-    int cable14[]  = {2, idCable14};
-    int cable15[]  = {2, idCable15};
-    int cable16[]  = {2, idCable16};
-    int cable17[]  = {2, idCable17};
-    int cable18[]  = {2, idCable18};
-
-    int cableLeft1[]  = {2, idLeftCable1};
-    int cableLeft2[]  = {2, idLeftCable2};
-    int cableLeft3[]  = {2, idLeftCable3};
-    int cableLeft4[]  = {2, idLeftCable4};
-    int cableLeft5[]  = {2, idLeftCable5};
-    int cableLeft6[]  = {2, idLeftCable6};
-    int cableLeft7[]  = {2, idLeftCable7};
-    int cableLeft8[]  = {2, idLeftCable8};
-    int cableLeft9[]  = {2, idLeftCable9};
-
-    int cableLeft10[]  = {2, idLeftCable10};
-    int cableLeft11[]  = {2, idLeftCable11};
-    int cableLeft12[]  = {2, idLeftCable12};
-    int cableLeft13[]  = {2, idLeftCable13};
-    int cableLeft14[]  = {2, idLeftCable14};
-    int cableLeft15[]  = {2, idLeftCable15};
-    int cableLeft16[]  = {2, idLeftCable16};
-    int cableLeft17[]  = {2, idLeftCable17};
-    int cableLeft18[]  = {2, idLeftCable18};
-
     const double PI = 3.14159265358979323846;
-    double angle_cable = -135 * PI / 180;
+
+    femGeometry *theGeometry = malloc(sizeof(femGeometry));
+
+    theGeometry->widthPlate = 62.0;
+    theGeometry->heightPlate = 8.0;
+    theGeometry->widthWindow = 1.5;
+    theGeometry->heightWindow = 0.6;
+    theGeometry->widthSubPlate = 62.0;
+    theGeometry->heightSubPlate = 1.0;
+    theGeometry->rxArc = 5.0;
+    theGeometry->ryArc = 4.0;
+    theGeometry->rxLongArc = 10.0;
+    theGeometry->ryLongArc = 3.0;
+    theGeometry->widthColumn = 0.5;
+    theGeometry->widthPillier = 3.0;
+    theGeometry->heightPillier = 5.0;
+    theGeometry->widthBigColumn = 2.5;
+    theGeometry->heightBigColumn = 6.0;
+    theGeometry->angleCable = 135 * PI / 180;
+    theGeometry->widthCable = 0.2;
+    theGeometry->heightCable = 14.5;
+    theGeometry->distanceBetweenCable = 0.8;
+
+    int ierr;
+    int idPlate, idSubPlate;
+
+    int *idWindows          = malloc(4 * sizeof(int));
+    int *idColumns          = malloc(10 * sizeof(int));
+    int *idPilliers         = malloc(4 * sizeof(int));
+    int *idArcs             = malloc(5 * sizeof(int));
+    int *idBigColumns       = malloc(6 * sizeof(int));
+    int *idDisks            = malloc(2 * sizeof(int));
+    int *idCables           = malloc(36 * sizeof(int));
+    double *positionCablesX = malloc(36 * sizeof(double));
+    double *positionCablesY = malloc(36 * sizeof(double));
+
+    int plate[2], subPlate[2], pillier[4][2], bigColumn[6][2], cable[36][2], arc[5][2], window[4][2], disk[2][2], column[10][2];
+
+    createPlate(theGeometry, &idPlate, ierr);
+    createSubPlate(theGeometry, &idSubPlate, ierr);
+    createPilliers(theGeometry, idPilliers, ierr);
+    createBigColumns(theGeometry, idBigColumns, ierr);
+
+    subPlate[0] = 2;
+    plate[0]    = 2;
+    plate[1]    = idPlate;
+    subPlate[1] = idSubPlate;
+
+    for (int i = 0; i < 4; i++)  { pillier[i][0] = 2; pillier[i][1] = idPilliers[i]; }
+    for (int i = 0; i < 6; i++)  { bigColumn[i][0] = 2; bigColumn[i][1] = idBigColumns[i]; }
+    for (int i = 0; i < 36; i++) { cable[i][0] = 2; cable[i][1] = idCables[i]; }
+
+    createArcs(theGeometry, idArcs, ierr);
+    createWindows(theGeometry, idWindows, ierr);
+
+    for (int i = 0; i < 5; i++)  { arc[i][0] = 2; arc[i][1] = idArcs[i]; }
+    for (int i = 0; i < 4; i++)  { window[i][0] = 2; window[i][1] = idWindows[i]; }
+
+    for (int i = 0; i < 5; i++) { gmshModelOccCut(plate, 2, arc[i], 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    for (int i = 0; i < 4; i++) { gmshModelOccCut(plate, 2, window[i], 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+
+    createColumns(theGeometry, idColumns, ierr);
+    createDisk(theGeometry, idDisks, ierr);
+    createCables(theGeometry, idCables, positionCablesX, positionCablesY, ierr);
+
+    for (int i = 0; i < 2; i++)  { disk[i][0] = 2; disk[i][1] = idDisks[i]; }
+    for (int i = 0; i < 10; i++) { column[i][0] = 2; column[i][1] = idColumns[i]; }
+    for (int i = 0; i < 36; i++) { cable[i][0] = 2; cable[i][1] = idCables[i]; }
+
+    // Rotate the cables
+    for (int i = 0; i < 18; i++)  { gmshModelOccRotate(cable[i], 2, positionCablesX[i], positionCablesY[i], 0.0, 0.0, 0.0, 1.0, -theGeometry->angleCable, &ierr); }
+    for (int i = 18; i < 36; i++) { gmshModelOccRotate(cable[i], 2, positionCablesX[i], positionCablesY[i], 0.0, 0.0, 0.0, 1.0, theGeometry->angleCable, &ierr); }
     
-    gmshModelOccRotate(cable1, 2, xCable1, yCable1, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable2, 2, xCable2, yCable2, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable3, 2, xCable3, yCable3, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable4, 2, xCable4, yCable4, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable5, 2, xCable5, yCable5, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable6, 2, xCable6, yCable6, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable7, 2, xCable7, yCable7, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable8, 2, xCable8, yCable8, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable9, 2, xCable9, yCable9, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
+    // Fuse the elements
+    gmshModelOccFuse(plate, 2, subPlate, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    for (int i = 0; i < 4; i++)  { gmshModelOccFuse(plate, 2, pillier[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    for (int i = 0; i < 10; i++) { gmshModelOccFuse(plate, 2, column[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    for (int i = 1; i < 3; i++)  { gmshModelOccFuse(bigColumn[0], 2, bigColumn[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);}
+    for (int i = 4; i < 6; i++)  { gmshModelOccFuse(bigColumn[3], 2, bigColumn[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);}
+    gmshModelOccFuse(bigColumn[0], 2, disk[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(bigColumn[3], 2, disk[1], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    for (int i = 0; i < 9; i++)   { gmshModelOccFuse(bigColumn[3], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    for (int i = 27; i < 36; i++) { gmshModelOccFuse(bigColumn[3], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    for (int i = 9; i < 27; i++)  { gmshModelOccFuse(bigColumn[0], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    gmshModelOccFuse(plate, 2, bigColumn[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    gmshModelOccFuse(plate, 2, bigColumn[3], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
-    gmshModelOccRotate(cableLeft1, 2, xLeftCable1 + widthCable, yLeftCable1, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft2, 2, xLeftCable2 + widthCable, yLeftCable2, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft3, 2, xLeftCable3 + widthCable, yLeftCable3, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft4, 2, xLeftCable4 + widthCable, yLeftCable4, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft5, 2, xLeftCable5 + widthCable, yLeftCable5, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft6, 2, xLeftCable6 + widthCable, yLeftCable6, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft7, 2, xLeftCable7 + widthCable, yLeftCable7, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft8, 2, xLeftCable8 + widthCable, yLeftCable8, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft9, 2, xLeftCable9 + widthCable, yLeftCable9, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-
-    gmshModelOccRotate(cable10, 2, xCable10, yCable10, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable11, 2, xCable11, yCable11, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable12, 2, xCable12, yCable12, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable13, 2, xCable13, yCable13, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable14, 2, xCable14, yCable14, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable15, 2, xCable15, yCable15, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable16, 2, xCable16, yCable16, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable17, 2, xCable17, yCable17, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-    gmshModelOccRotate(cable18, 2, xCable18, yCable18, 0.0, 0.0, 0.0, 1.0, angle_cable, &ierr);
-
-    gmshModelOccRotate(cableLeft10, 2, xLeftCable10 + widthCable, yLeftCable10, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft11, 2, xLeftCable11 + widthCable, yLeftCable11, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft12, 2, xLeftCable12 + widthCable, yLeftCable12, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft13, 2, xLeftCable13 + widthCable, yLeftCable13, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft14, 2, xLeftCable14 + widthCable, yLeftCable14, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft15, 2, xLeftCable15 + widthCable, yLeftCable15, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft16, 2, xLeftCable16 + widthCable, yLeftCable16, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft17, 2, xLeftCable17 + widthCable, yLeftCable17, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-    gmshModelOccRotate(cableLeft18, 2, xLeftCable18 + widthCable, yLeftCable18, 0.0, 0.0, 0.0, 1.0, -angle_cable, &ierr);
-
-    // On soustrait les arcs du plateau de base
-    gmshModelOccCut(plate, 2, littleArc1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, littleArc2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, bigArc, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, littleArc3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, littleArc4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    // Fusionner la structure de base ensemble
-    gmshModelOccFuse(plate, 2, plate2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(plate, 2, pillier1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, pillier2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, pillier3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, pillier4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(plate, 2, littleColumn1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn5, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn6, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn7, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn8, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn9, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, littleColumn10, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(bigColumn1, 2, bigColumn2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, bigColumn3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, bigDisk1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(bigColumn4, 2, bigColumn5, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, bigColumn6, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, bigDisk2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccCut(plate, 2, window1, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, window2, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, window3, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccCut(plate, 2, window4, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(bigColumn1, 2, cable1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable5, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable6, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable7, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable8, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cable9, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft2, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft3, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft5, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft6, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft7, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft8, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn1, 2, cableLeft9, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(plate, 2, bigColumn1, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(bigColumn4, 2, cable10, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable11, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable12, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable13, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable14, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable15, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable16, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable17, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cable18, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft10, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft11, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft12, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft13, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft14, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft15, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft16, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft17, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn4, 2, cableLeft18, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    gmshModelOccFuse(plate, 2, bigColumn4, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    free(idWindows);
+    free(idColumns);
+    free(idPilliers);
+    free(idArcs);
+    free(idBigColumns);
+    free(idDisks);
+    free(idCables);
+    free(theGeometry);
 
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr);       
