@@ -1,3 +1,1 @@
-# LEPL1110
-
-TODO
+# LEPL1110 Course
