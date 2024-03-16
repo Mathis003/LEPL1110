@@ -320,6 +320,8 @@ void geoMeshGenerate()
     gmshModelOccFuse(plate, 2, bigColumn[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccFuse(plate, 2, bigColumn[3], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
 
+    // TODO : Add the frontiers and the physical groups to the model
+
     free(idWindows);
     free(idColumns);
     free(idPilliers);
