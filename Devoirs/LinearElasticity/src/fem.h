@@ -1,4 +1,3 @@
-
 /*
  *  fem.c
  *  Library for LEPL1110 : Finite Elements for dummies
@@ -56,7 +55,7 @@ typedef struct {
     double h;
     femElementType elementType;
     double (*geoSize)(double x, double y);
-    femNodes *theNodes;
+    femNodes* theNodes;
     femMesh  *theElements;
     femMesh  *theEdges;
     int nDomains;

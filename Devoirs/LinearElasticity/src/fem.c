@@ -84,7 +84,7 @@ void geoMeshImport()
        
     /* Importing elements */
     /* Pas super joli : a ameliorer pour eviter la triple copie */
-        
+    
     size_t nElem, *elem;
     gmshModelMeshGetElementsByType(1,&elem,&nElem,
                                &node,&nNode,-1,0,1,&ierr);    ErrorGmsh(ierr);
@@ -337,7 +337,6 @@ int geoGetDomain(char *name)
         if (strncasecmp(name,theDomain->name,MAXNAME) == 0)
             theIndex = iDomain;  }
     return theIndex;
-            
 }
 
 static const double _gaussQuad4Xsi[4]    = {-0.577350269189626,-0.577350269189626, 0.577350269189626, 0.577350269189626};
