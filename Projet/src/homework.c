@@ -28,7 +28,7 @@ femGeometry *geoGetMyGeometry()
     femGeometry *theGeometry = malloc(sizeof(femGeometry));
 
     theGeometry->widthPlate = 62.0;
-    theGeometry->heightPlate = 5.5; // Minimum 5.0
+    theGeometry->heightPlate = 6.5; // Minimum 6.0
     theGeometry->widthWindow = 1.5;
     theGeometry->heightWindow = 0.6;
     theGeometry->widthSubPlate = 62.0;
@@ -40,7 +40,7 @@ femGeometry *geoGetMyGeometry()
     theGeometry->widthColumn = 0.5;
     theGeometry->widthPillier = 3.0;
     theGeometry->heightPillier = 5.0;
-    theGeometry->widthBigColumn = 2.5;
+    theGeometry->widthBigColumn = 2;
     theGeometry->heightBigColumn = 6.0;
     theGeometry->angleCable = 135 * PI / 180;
     theGeometry->widthCable = 0.2;
@@ -50,38 +50,109 @@ femGeometry *geoGetMyGeometry()
     return theGeometry;
 }
 
+// ######################### //
+// ### Position Geometry ### //
+// ######################### //
 
-// For the complete geometry
+int isTablier(double x, double y)
+{
+    femGeometry *theGeometry = geoGetMyGeometry();
+    const double HEIGHT_TABLIER = 1.0;
+
+    if ((y >= theGeometry->heightPillier + theGeometry->heightPlate - HEIGHT_TABLIER) && (y <= theGeometry->heightPillier + theGeometry->heightPlate)) { return TRUE; }
+    return FALSE;
+}
+
+int isSubTablier(double x, double y)
+{
+    femGeometry *theGeometry = geoGetMyGeometry();
+
+    if ((y < theGeometry->heightPillier) || (y > theGeometry->heightSubPlate + theGeometry->heightPillier)) { return FALSE; }
+    
+    if ((x > theGeometry->rxLongArc) && (x < theGeometry->rxLongArc + theGeometry->widthPillier)) { return FALSE; }
+    if ((x > theGeometry->rxLongArc + theGeometry->widthPillier + 2 * theGeometry->rxArc) &&
+        (x < theGeometry->rxLongArc + 2 * theGeometry->widthPillier + 2 * theGeometry->rxArc))
+        { return FALSE; }
+
+    if ((x < -theGeometry->rxLongArc) && (x > -theGeometry->rxLongArc - theGeometry->widthPillier)) { return FALSE; }
+    if ((x < -theGeometry->rxLongArc - theGeometry->widthPillier - 2 * theGeometry->rxArc) &&
+        (x > -theGeometry->rxLongArc - 2 * theGeometry->widthPillier - 2 * theGeometry->rxArc))
+        { return FALSE; }
+
+    return TRUE;
+}
+
 int isCables(double x, double y)
 {
     femGeometry *theGeometry = geoGetMyGeometry();
 
     if ((y <= theGeometry->heightPlate + theGeometry->heightPillier) || (y >= theGeometry->heightPlate + theGeometry->heightPillier + 5 * theGeometry->heightBigColumn / 3)) { return FALSE; }
 
-    if ((x < theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc - theGeometry->widthBigColumn / 2) &&
-        (x > -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc + theGeometry->widthBigColumn / 2))
+    if ((x < theGeometry->rxLongArc + theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 2) &&
+        (x > - theGeometry->rxLongArc - theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 2))
         { return TRUE; }
 
-    if (x > theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc + theGeometry->widthBigColumn / 2)  { return TRUE; }
-    if (x < -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc - theGeometry->widthBigColumn / 2) { return TRUE; }
+    if (x > theGeometry->rxLongArc + theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 2)  { return TRUE; }
+    if (x < -theGeometry->rxLongArc - theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 2) { return TRUE; }
 
     if (y > theGeometry->heightPlate + theGeometry->heightPillier + theGeometry->heightBigColumn)
     {
-        if ((x < theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc - theGeometry->widthBigColumn / 4) &&
-            (x > -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc + theGeometry->widthBigColumn / 4))
+        if ((x < theGeometry->rxLongArc + theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 4) &&
+            (x > -theGeometry->rxLongArc - theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 4))
             { return TRUE; }
 
-        if (x > theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc + theGeometry->widthBigColumn / 4)  { return TRUE; }
-        if (x < -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc - theGeometry->widthBigColumn / 4) { return TRUE; }
+        if (x > theGeometry->rxLongArc + theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 4)  { return TRUE; }
+        if (x < -theGeometry->rxLongArc - theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 4) { return TRUE; }
     }
     return FALSE;
 }
 
-double geoSize(double x, double y)
+// ################# //
+// ### Materials ### //
+// ################# //
+
+double *getMaterialProperties(char *material)
 {
-    if (isCables(x, y) == TRUE) { return 0.2; }
-    else                        { return 0.6; }
+    double *properties = malloc(3 * sizeof(double));
+    if (strcmp(material, "steel") == 0)
+    {
+        properties[0] = 210.0e9; // E [Pa]
+        properties[1] = 0.3;     // nu [/]
+        properties[2] = 7800.0;  // rho [kg/m^3]
+    }
+    else if (strcmp(material, "reinforced_concrete") == 0)
+    {
+        properties[0] = 30.0e9; // E [Pa]
+        properties[1] = 0.2;    // nu [/]
+        properties[2] = 2300.0; // rho [kg/m^3]
+    }
+    else { Error("Material Unknown."); }
+    return properties;
 }
+
+char *getMaterials(double x, double y)
+{
+    if (isSubTablier(x, y) == TRUE || isTablier(x, y) == TRUE || isCables(x, y) == TRUE) { return "steel"; }
+    return "reinforced_concrete";
+}
+
+
+// ################# //
+// ### Size Mesh ### //
+// ################# //
+
+double geoSize(double x, double y)
+{  
+    if (isSubTablier(x, y) == TRUE) { return 0.6; }
+    if (isTablier(x, y) == TRUE)    { return 0.6; }
+    if (isCables(x, y) == TRUE)     { return 0.1; }
+    else                            { return 0.6; }
+}
+
+
+// ################### //
+// ### Create Mesh ### //
+// ################### //
 
 void createWindows(femGeometry *theGeometry, int *idWindows, int ierr)
 {
@@ -150,7 +221,7 @@ void createArcs(femGeometry *theGeometry, int *idArcs, int ierr)
     double rxLongArc = theGeometry->rxLongArc;
     double ryLongArc = theGeometry->ryLongArc;
 
-    double y = theGeometry->heightPillier;
+    double y = theGeometry->heightPillier + theGeometry->heightSubPlate;
     double x1 = theGeometry->rxLongArc + 2 * theGeometry->widthPillier + 3 * theGeometry->rxArc;
     double x2 = theGeometry->rxLongArc + theGeometry->widthPillier;
 
@@ -170,7 +241,9 @@ void createBigColumns(femGeometry *theGeometry, int *idBigColumns, int ierr)
     double height = theGeometry->heightBigColumn;
 
     double y = theGeometry->heightPillier + theGeometry->heightPlate;
-    double x = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc;
+
+    // To change if the column position change
+    double x = theGeometry->rxLongArc + theGeometry->widthPillier / 2;
 
     int id1 = gmshModelOccAddRectangle(-x - width / 2, y, 0.0, width, height, -1, 0, &ierr);
     int id2 = gmshModelOccAddRectangle(-x - width / 4, y + height, 0.0, width / 2, 2 * height / 3, -1, 0, &ierr);
@@ -186,7 +259,8 @@ void createBigColumns(femGeometry *theGeometry, int *idBigColumns, int ierr)
 void createDisk(femGeometry *theGeometry, int *idDisks, int ierr)
 {
     double r = theGeometry->widthBigColumn / 3;
-    double x = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc;
+    // To change if the column position change
+    double x = theGeometry->rxLongArc + theGeometry->widthPillier / 2;
     double y = theGeometry->heightPillier + theGeometry->heightPlate + 2 * theGeometry->heightBigColumn + r / 3;
 
     int id1 = gmshModelOccAddDisk(- x, y, 0.0, r, r, -1, NULL, 0, NULL, 0, &ierr);
@@ -201,7 +275,9 @@ void createCables(femGeometry *theGeometry, int *idCables, double *positionX, do
     double width = theGeometry->widthCable;
     double height = theGeometry->heightCable;
     double distance = theGeometry->distanceBetweenCable;
-    double centerColumn = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc;
+
+    // To change if the column position change
+    double centerColumn = theGeometry->rxLongArc + theGeometry->widthPillier / 2;
 
     const double y  = theGeometry->heightPillier + theGeometry->heightPlate + 5 * theGeometry->heightBigColumn / 3;
     double x1 = centerColumn + theGeometry->widthBigColumn / 4;
@@ -290,6 +366,11 @@ void createSubPlate(femGeometry *theGeometry, int *idSubPlate, int ierr)
     *idSubPlate = gmshModelOccAddRectangle(- theGeometry->widthPlate / 2, theGeometry->heightPillier, 0.0, theGeometry->widthSubPlate, theGeometry->heightSubPlate, -1, 0, &ierr);
 }
 
+
+// ##################### //
+// ### Generate Mesh ### //
+// ##################### //
+
 void geoMeshGenerate()
 {
     const double PI = 3.14159265358979323846;
@@ -359,8 +440,6 @@ void geoMeshGenerate()
     for (int i = 9; i < 27; i++)  { gmshModelOccFuse(bigColumn[0], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
     gmshModelOccFuse(plate, 2, bigColumn[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccFuse(plate, 2, bigColumn[3], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-
-    // TODO : Add the frontiers and the physical groups to the model
 
     free(idWindows);
     free(idColumns);
