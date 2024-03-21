@@ -1,7 +1,5 @@
 #include "fem.h"
 
-double geoSize(double x, double y) { return 0.7; }
-
 
 typedef struct {
     double widthPlate, heightPlate;
@@ -22,6 +20,68 @@ typedef struct {
     femDomain **theDomains;
 } femGeometry;
 
+
+femGeometry *geoGetMyGeometry()
+{
+    const double PI = 3.14159265358979323846;
+
+    femGeometry *theGeometry = malloc(sizeof(femGeometry));
+
+    theGeometry->widthPlate = 62.0;
+    theGeometry->heightPlate = 5.5; // Minimum 5.0
+    theGeometry->widthWindow = 1.5;
+    theGeometry->heightWindow = 0.6;
+    theGeometry->widthSubPlate = 62.0;
+    theGeometry->heightSubPlate = 1.0;
+    theGeometry->rxArc = 5.0;
+    theGeometry->ryArc = 4.0;
+    theGeometry->rxLongArc = 10.0;
+    theGeometry->ryLongArc = 3.0;
+    theGeometry->widthColumn = 0.5;
+    theGeometry->widthPillier = 3.0;
+    theGeometry->heightPillier = 5.0;
+    theGeometry->widthBigColumn = 2.5;
+    theGeometry->heightBigColumn = 6.0;
+    theGeometry->angleCable = 135 * PI / 180;
+    theGeometry->widthCable = 0.2;
+    theGeometry->heightCable = 14.5;
+    theGeometry->distanceBetweenCable = 0.8;
+
+    return theGeometry;
+}
+
+
+// For the complete geometry
+int isCables(double x, double y)
+{
+    femGeometry *theGeometry = geoGetMyGeometry();
+
+    if ((y <= theGeometry->heightPlate + theGeometry->heightPillier) || (y >= theGeometry->heightPlate + theGeometry->heightPillier + 5 * theGeometry->heightBigColumn / 3)) { return FALSE; }
+
+    if ((x < theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc - theGeometry->widthBigColumn / 2) &&
+        (x > -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc + theGeometry->widthBigColumn / 2))
+        { return TRUE; }
+
+    if (x > theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc + theGeometry->widthBigColumn / 2)  { return TRUE; }
+    if (x < -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc - theGeometry->widthBigColumn / 2) { return TRUE; }
+
+    if (y > theGeometry->heightPlate + theGeometry->heightPillier + theGeometry->heightBigColumn)
+    {
+        if ((x < theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc - theGeometry->widthBigColumn / 4) &&
+            (x > -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc + theGeometry->widthBigColumn / 4))
+            { return TRUE; }
+
+        if (x > theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc + theGeometry->widthBigColumn / 4)  { return TRUE; }
+        if (x < -theGeometry->rxLongArc - theGeometry->widthPillier - theGeometry->rxArc - theGeometry->widthBigColumn / 4) { return TRUE; }
+    }
+    return FALSE;
+}
+
+double geoSize(double x, double y)
+{
+    if (isCables(x, y) == TRUE) { return 0.2; }
+    else                        { return 0.6; }
+}
 
 void createWindows(femGeometry *theGeometry, int *idWindows, int ierr)
 {
@@ -234,28 +294,8 @@ void geoMeshGenerate()
 {
     const double PI = 3.14159265358979323846;
 
-    femGeometry *theGeometry = malloc(sizeof(femGeometry));
-
-    theGeometry->widthPlate = 62.0;
-    theGeometry->heightPlate = 8.0;
-    theGeometry->widthWindow = 1.5;
-    theGeometry->heightWindow = 0.6;
-    theGeometry->widthSubPlate = 62.0;
-    theGeometry->heightSubPlate = 1.0;
-    theGeometry->rxArc = 5.0;
-    theGeometry->ryArc = 4.0;
-    theGeometry->rxLongArc = 10.0;
-    theGeometry->ryLongArc = 3.0;
-    theGeometry->widthColumn = 0.5;
-    theGeometry->widthPillier = 3.0;
-    theGeometry->heightPillier = 5.0;
-    theGeometry->widthBigColumn = 2.5;
-    theGeometry->heightBigColumn = 6.0;
-    theGeometry->angleCable = 135 * PI / 180;
-    theGeometry->widthCable = 0.2;
-    theGeometry->heightCable = 14.5;
-    theGeometry->distanceBetweenCable = 0.8;
-
+    femGeometry *theGeometry = geoGetMyGeometry();
+    
     int ierr;
     int idPlate, idSubPlate;
 
