@@ -116,15 +116,15 @@ double *getMaterialProperties(char *material)
     double *properties = malloc(3 * sizeof(double));
     if (strcmp(material, "steel") == 0)
     {
-        properties[0] = 210.0e9; // E [Pa]
+        properties[0] = 200.0e9; // E [Pa]
         properties[1] = 0.3;     // nu [/]
-        properties[2] = 7800.0;  // rho [kg/m^3]
+        properties[2] = 7850.0;  // rho [kg/m^3]
     }
     else if (strcmp(material, "reinforced_concrete") == 0)
     {
         properties[0] = 30.0e9; // E [Pa]
         properties[1] = 0.2;    // nu [/]
-        properties[2] = 2300.0; // rho [kg/m^3]
+        properties[2] = 2400.0; // rho [kg/m^3]
     }
     else { Error("Material Unknown."); }
     return properties;
@@ -414,7 +414,7 @@ void geoMeshGenerate()
 
     for (int i = 0; i < 5; i++) { gmshModelOccCut(plate, 2, arc[i], 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
     for (int i = 0; i < 4; i++) { gmshModelOccCut(plate, 2, window[i], 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-
+    
     createColumns(theGeometry, idColumns, ierr);
     createDisk(theGeometry, idDisks, ierr);
     createCables(theGeometry, idCables, positionCablesX, positionCablesY, ierr);
@@ -440,6 +440,26 @@ void geoMeshGenerate()
     for (int i = 9; i < 27; i++)  { gmshModelOccFuse(bigColumn[0], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
     gmshModelOccFuse(plate, 2, bigColumn[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     gmshModelOccFuse(plate, 2, bigColumn[3], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    
+    // Begin : Cut the half of the bridge for the symmetry
+    int *savePlate = malloc(2 * sizeof(int));
+    memccpy(savePlate, plate, 2, sizeof(int));
+
+    int idRectFilterLeft = gmshModelOccAddRectangle(0.0, 0.0, 0.0, theGeometry->widthPlate / 2, theGeometry->heightPillier + theGeometry->heightPlate + 3 * theGeometry->heightBigColumn, -1, 0, &ierr);
+    int *filterLeft = malloc(2 * sizeof(int));
+    filterLeft[0] = 2;
+    filterLeft[1] = idRectFilterLeft;
+    gmshModelOccCut(plate, 2, filterLeft, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+    // End : Cut the half of the bridge for the symmetry
+
+
+    geoSetSizeCallback(geoSize);
+    gmshModelOccSynchronize(&ierr);       
+    gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+    gmshModelMeshGenerate(2, &ierr);
+
+    //  Plot of Fltk
+    gmshFltkInitialize(&ierr);
 
     free(idWindows);
     free(idColumns);
@@ -449,12 +469,6 @@ void geoMeshGenerate()
     free(idDisks);
     free(idCables);
     free(theGeometry);
-
-    geoSetSizeCallback(geoSize);
-    gmshModelOccSynchronize(&ierr);       
-    gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-    gmshModelMeshGenerate(2, &ierr);
-
-    //  Plot of Fltk
-    gmshFltkInitialize(&ierr);
+    free(filterLeft);
+    // free(filterCuttingPlane);
 }

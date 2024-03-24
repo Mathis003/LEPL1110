@@ -10,7 +10,6 @@
  
 #include "glfem.h"
 
-
 int main(void)
 {  
     printf("\n\n    V : Mesh and size mesh field \n");
@@ -23,36 +22,10 @@ int main(void)
     int ierr;
     
     geoInitialize();
-    femGeo* theGeometry = geoGetGeometry();
-    
-    theGeometry->LxPlate =  Lx;
-    theGeometry->LyPlate =  Ly;
-    theGeometry->xPlate  =  0.0;
-    theGeometry->yPlate  =  0.0;
-
-    theGeometry->xHole   =  Lx / 4.0;
-    theGeometry->yHole   =  Ly / 4.0;
-    theGeometry->rHole   =  Lx / 8.0;
-
-    theGeometry->xNotch  = -Lx / 2.0;
-    theGeometry->yNotch  = -Ly / 2.0;
-    theGeometry->rNotch  =  Lx / 2.0;
-    
-    theGeometry->h       =  Lx * 0.1; // 0.1 c'est plus joli :-)
-    theGeometry->hHole   =  theGeometry->h * 0.2;
-    theGeometry->hNotch  =  theGeometry->h * 0.05;
-    theGeometry->dHole   =  theGeometry->h * 1.0;
-    theGeometry->dNotch  =  theGeometry->h * 4.0;
+    femGeo *theGeometry = geoGetGeometry();
 
     geoMeshGenerate();
     geoMeshImport();
-    
-    geoSetDomainName(0,"Outer Disk");
-    geoSetDomainName(1,"Bottom");
-    geoSetDomainName(2,"Left");
-    geoSetDomainName(3,"Right");
-    geoSetDomainName(4,"Top");
-    geoSetDomainName(5,"Inner Disk");
     
     //
     //  -2- Creation du fichier du maillage
@@ -69,8 +42,7 @@ int main(void)
     femNodes *theNodes = theGeometry->theNodes;
     for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = geoSize(theNodes->X[i], theNodes->Y[i]); }
     double hMin = femMin(meshSizeField,theNodes->nNodes);  
-    double hMax = femMax(meshSizeField,theNodes->nNodes);  
-    printf(" ==== Global requested h : %14.7e \n",theGeometry->h);
+    double hMax = femMax(meshSizeField,theNodes->nNodes);
     printf(" ==== Minimum h          : %14.7e \n",hMin);
     printf(" ==== Maximum h          : %14.7e \n",hMax);
  
