@@ -123,20 +123,16 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
                 double dx = x[1] - x[0];
                 double dy = y[1] - y[0];
-                double jac = sqrt(dx * dx + dy * dy) / 2;
+                double jac = 2 * sqrt(dx * dx + dy * dy); // Devrait être la longueur du segment divisée par 2...
 
-                for (i = 0; i < theSpace->n; i++)
-                {
-                    B[mapU[i]] += phi[i] * value * jac * weight;
-                }
+                for (i = 0; i < theSpace->n; i++) {  B[mapU[i]] += phi[i] * value * jac * weight; }
             }
         }
         // Strip : END
     }
 }
 
-
-// Strip : BEGIN
+// // Strip : BEGIN
 double *femElasticitySolve(femProblem *theProblem)
 {
     // Assembly of stiffness matrix and load vector
