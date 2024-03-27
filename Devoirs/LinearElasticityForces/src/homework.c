@@ -79,7 +79,6 @@ void femElasticityAssembleElements(femProblem *theProblem)
     }
 }
 
-
 void femElasticityAssembleNeumann(femProblem *theProblem)
 {
     femFullSystem  *theSystem   = theProblem->system;
@@ -124,7 +123,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
                 double dx = x[1] - x[0];
                 double dy = y[1] - y[0];
-                double jac = sqrt(dx * dx + dy * dy);
+                double jac = sqrt(dx * dx + dy * dy) / 2;
 
                 for (i = 0; i < theSpace->n; i++)
                 {
