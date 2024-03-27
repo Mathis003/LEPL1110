@@ -96,26 +96,117 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
         femBoundaryType type = theCondition->type;
         double value = theCondition->value;
-
+        
         // Strip : BEGIN
-        // ...
+        if (type == DIRICHLET_X || type == DIRICHLET_Y) { continue; }
+        
+        for (iEdge = 0; iEdge < theEdges->nElem; iEdge++)
+        {
+            for (j = 0; j < nLocal; j++)
+            {
+                map[j] = theEdges->elem[iEdge * nLocal + j];
+                mapU[j] = 2 * map[j] + 1;
+                x[j] = theNodes->X[map[j]];
+                y[j] = theNodes->Y[map[j]];
+            }
+
+            for (iInteg = 0; iInteg < theRule->n; iInteg++)
+            {
+                double xsi = theRule->xsi[iInteg];
+                double eta = theRule->eta[iInteg];
+                double weight = theRule->weight[iInteg];
+
+                femDiscretePhi2(theSpace, xsi, eta, phi);
+
+                double dx = x[1] - x[0];
+                double dy = y[1] - y[0];
+                double jac = sqrt(dx * dx + dy * dy);
+
+                for (i = 0; i < theSpace->n; i++)
+                {
+                    B[mapU[i]] += phi[i] * value * jac * weight;
+                }
+            }
+        }
         // Strip : END
     }
 }
 
+// Strip : BEGIN
+// Structure pour la copie de la matrice A et du vecteur B
+static double **A_copy = NULL;
+static double *B_copy  = NULL;
+// Strip : END
+
 double *femElasticitySolve(femProblem *theProblem)
 {
     // Strip : BEGIN
-    // ...
+    femElasticityAssembleElements(theProblem);
+
+    // static double **A_copy = NULL;
+    // static double *B_copy  = NULL;
+
+    A_copy = malloc(sizeof(double *) * theProblem->system->size);
+    B_copy = malloc(sizeof(double) * theProblem->system->size);
+
+    for (int i = 0; i < theProblem->system->size; i++)
+    {
+        A_copy[i] = malloc(sizeof(double) * theProblem->system->size);
+        for (int j = 0; j < theProblem->system->size; j++) { A_copy[i][j] = theProblem->system->A[i][j]; }
+        B_copy[i] = theProblem->system->B[i];
+    }
+
+    // TODO : Stocker la matrice A et B ici pour éviter de la recalculer dans la fonction suivante.
+
+    femElasticityAssembleNeumann(theProblem);
+
+    femFullSystem *theSystem = theProblem->system;
+    int *theConstrainedNodes = theProblem->constrainedNodes; 
+       
+    for (int i = 0; i < theSystem->size; i++)
+    {
+        if (theConstrainedNodes[i] != -1)
+        {
+            femBoundaryCondition *theCondition = theProblem->conditions[theConstrainedNodes[i]];
+            femBoundaryType typeBoundary = theCondition->type;
+            double value = theCondition->value;
+
+            if (typeBoundary == DIRICHLET_X || typeBoundary == DIRICHLET_Y)
+            {
+                femFullSystemConstrain(theSystem, i, value);
+            }
+        }
+    }
+                        
+    femFullSystemEliminate(theSystem);
     // Strip : END
-    
+
     return theProblem->soluce;
 }
 
-double * femElasticityForces(femProblem *theProblem)
+double *femElasticityForces(femProblem *theProblem)
 {
     // Strip : BEGIN
-    // ...
+    
+    static double **A_copy;
+    static double *B_copy;
+
+    // Ca ne devrait pas arriver
+    // if (A_copy == NULL || B_copy == NULL) {}
+    // femElasticityAssembleElements(theProblem);
+
+    double *soluce = theProblem->soluce;
+    double *residuals = theProblem->residuals;
+    int size = theProblem->system->size;
+
+    for (int i = 0; i < size; i++)
+    {
+        residuals[i] = -B_copy[i];
+        for (int j = 0; j < size; j++)
+        {
+            residuals[i] += A_copy[i][j] * soluce[j];
+        }
+    }
     // Strip : END
 
     return theProblem->residuals;
