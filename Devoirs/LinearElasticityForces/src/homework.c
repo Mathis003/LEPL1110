@@ -95,20 +95,21 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
     for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
     {
+        // Strip : BEGIN
         femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
         femBoundaryType type = theCondition->type;
+        femDomain *domain = theCondition->domain;
         double value = theCondition->value;
     
-        // Strip : BEGIN
         if (type == DIRICHLET_X || type == DIRICHLET_Y) { continue; }
         
-        for (iEdge = 0; iEdge < theEdges->nElem; iEdge++)
+        for (iEdge = 0; iEdge < domain->nElem; iEdge++)
         {
-            if (theEdges->elem[iEdge * nLocal] != type) { continue; }
+            iElem = domain->elem[iEdge];
 
             for (j = 0; j < nLocal; j++)
             {
-                map[j] = theEdges->elem[iEdge * nLocal + j];
+                map[j] = theEdges->elem[iElem * nLocal + j];
                 mapU[j] = 2 * map[j] + 1;
                 x[j] = theNodes->X[map[j]];
                 y[j] = theNodes->Y[map[j]];
@@ -125,7 +126,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 double dy = y[1] - y[0];
                 double jac = sqrt(dx * dx + dy * dy) / 2;
 
-                for (i = 0; i < theSpace->n; i++) {  B[mapU[i]] += phi[i] * value * jac * weight; }
+                for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * jac * weight; }
             }
         }
         // Strip : END
@@ -146,8 +147,8 @@ double *femElasticitySolve(femProblem *theProblem)
 
     // Allocate memory for the copy of the stiffness matrix A and the load vector B
     A_copy = (double **) malloc(sizeof(double *) * size);
-    for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
     B_copy = (double *) malloc(sizeof(double) * size);
+    for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
 
     // Copy the stiffness matrix A and the load vector B
     for (int i = 0; i < size; i++)
@@ -190,20 +191,20 @@ double *femElasticityForces(femProblem *theProblem)
 
     /*
     Compute residuals: R = A * U - B where A and B are the system matrix
-    and load vector before applying Dirichlet boundary conditions
+    and load vector before applying Dirichlet boundary conditions.
+    The forces of the system are equal to F = -R = B - A * U
     */
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
-        residuals[i] -= B_copy[i];
-
-        // Invert residuals to get forces (action-reaction principle)
-        residuals[i] *= -1;
+        // Invert the sign of the residuals to get forces (action-reaction principle)
+        for (int j = 0; j < size; j++) { residuals[i] -= A_copy[i][j] * soluce[j]; }
+        residuals[i] += B_copy[i];
     }
 
-    // Free memory
-    free(A_copy);
-    free(B_copy);
+    // Free memory allocated for the copy of the stiffness matrix A and the load vector B
+    // for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL;}
+    // free(A_copy); free(B_copy);
+    // A_copy = NULL; B_copy = NULL;
 
     // Return the forces
     return residuals;
