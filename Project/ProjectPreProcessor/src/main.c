@@ -47,25 +47,17 @@ int main(int argc, char *argv[])
 
     /* Option 1 : Utilisation de GMSH avec OpenCascade */
 
-    // theGeometry->h = 0.05;
-    // geoMeshGenerate();
-
-    /* Option 2 : Utilisation de GMSH directement */
-
-    // theGeometry->h = 0.05;
-    // geoMeshGenerateGeo();
-
-    /* Option 3 : Lecture d'un fichier .geo */
-
     theGeometry->h = 0.05;
-    geoMeshGenerateGeoFile("../data/mesh.geo");
+    geoMeshGenerate();
 
-    /* Option 4 : Lecture d'un fichier .msh */
+    /* Option 2 : Lecture d'un fichier .geo */
 
-    // geoMeshGenerateMshFile("../data/mesh.msh");
+    // theGeometry->h = 0.05;
+    // geoMeshGenerateGeoFile("../data/mesh.geo");
 
     geoMeshImport();
 
+    // TODO : Change the domain names
     geoSetDomainName(0, "Something");
     geoSetDomainName(1, "SomethingElse");
 
@@ -77,6 +69,7 @@ int main(int argc, char *argv[])
     /* 2 : Definition du probleme */ 
     /******************************/
 
+    // TODO : Change the values of E, nu, rho, gx, gy
     double E = 211.e9;
     double nu = 0.3;
     double rho = 7.85e3;
@@ -85,6 +78,7 @@ int main(int argc, char *argv[])
 
     femProblem *theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, PLANAR_STRAIN);
 
+    // TODO : Change the boundary conditions
     femElasticityAddBoundaryCondition(theProblem, "Something", DIRICHLET_XY, 0.0, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "SomethingElse", DIRICHLET_Y, 0.0, NAN);
 
