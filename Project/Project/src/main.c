@@ -23,7 +23,7 @@ int main(void)
 
     // Write the solution to a file in this directory and in the ProjectPostProcess directory
     femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); // DO NOT CHANGE THIS PATHNAME
-    femSolutionWrite(nNodes, 2, theSoluce, "../../ProjectPostProcess/data/UV.txt"); // TO REMOVE IN THE FINAL VERSION (FOR SUBMISSION)
+    femSolutionWrite(nNodes, 2, theSoluce, "../../ProjectPostProcessor/data/UV.txt"); // TO REMOVE IN THE FINAL VERSION (FOR SUBMISSION)
 
     femElasticityFree(theProblem);
     geoFree();

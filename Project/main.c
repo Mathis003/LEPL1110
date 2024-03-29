@@ -51,19 +51,21 @@ int main(int argc, char *argv[])
     {   
         // Change the directory to the current program
         if (chdir(nameDirectory[i]) != 0) { perror("Erreur lors du changement de répertoire"); return EXIT_FAILURE; }
-
+        
         // Print the current step
         printf("\n\n/**************************/\n");
         printf("Stage %d : %s\n", i + 1, stages[i]);
         printf("/**************************/\n\n");
-        
+
         // Define the command to execute
         char command[100] = "./myFem";
-        
         if      (i == 0 && !meshVisualizer)   { sprintf(command, "./myFem -m"); }
         else if (i == 2 && !resultVisualizer) { sprintf(command, "./myFem -r"); }
 
-        // Execute the command
+        // Execute the command "make" to build the program "./myFem"
+        system("make > /dev/null");
+
+        // Execute the program "./myFem" with the option(s)
         fp = popen(command, "r");
         if (fp == NULL) { printf("Error : fp == NULL\n"); return EXIT_FAILURE; }
 
