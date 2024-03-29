@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/cc  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/myFem.dir/src/fem.c.o CMakeFiles/myFem.dir/src/homework.c.o CMakeFiles/myFem.dir/src/main.c.o -o myFem  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/lib/libm.tbd 

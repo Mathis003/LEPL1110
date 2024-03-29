@@ -1,7 +1,9 @@
 #include "fem.h"
 
+// Strip : BEGIN
 double **A_copy = NULL;
 double *B_copy  = NULL;
+// Strip : END
 
 void femElasticityAssembleElements(femProblem *theProblem)
 {
@@ -100,13 +102,17 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         femBoundaryType type = theCondition->type;
         femDomain *domain = theCondition->domain;
         double value = theCondition->value;
-    
+
+        // Skip Dirichlet boundary conditions
         if (type == DIRICHLET_X || type == DIRICHLET_Y) { continue; }
         
+        // Iterate over the elements of the domain
         for (iEdge = 0; iEdge < domain->nElem; iEdge++)
         {
+            // Get the element index (mapping)
             iElem = domain->elem[iEdge];
 
+            // Mapping local nodes to global nodes
             for (j = 0; j < nLocal; j++)
             {
                 map[j] = theEdges->elem[iElem * nLocal + j];
@@ -115,17 +121,22 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 y[j] = theNodes->Y[map[j]];
             }
 
+            // Iterate over the integration points
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
+                // Get the integration point coordinates and weight
                 double xsi    = theRule->xsi[iInteg];
                 double weight = theRule->weight[iInteg];
 
+                // Compute the shape functions
                 femDiscretePhi(theSpace, xsi, phi);
 
+                // Compute the Jacobian
                 double dx = x[1] - x[0];
                 double dy = y[1] - y[0];
                 double jac = sqrt(dx * dx + dy * dy) / 2;
 
+                // Compute the forces and add them to the load vector
                 for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * jac * weight; }
             }
         }
@@ -146,9 +157,12 @@ double *femElasticitySolve(femProblem *theProblem)
     int size = theSystem->size;
 
     // Allocate memory for the copy of the stiffness matrix A and the load vector B
-    A_copy = (double **) malloc(sizeof(double *) * size);
-    B_copy = (double *) malloc(sizeof(double) * size);
-    for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
+    if (A_copy == NULL)
+    {
+        A_copy = (double **) malloc(sizeof(double *) * size);
+        for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
+    }
+    if (B_copy == NULL) { B_copy = (double *) malloc(sizeof(double) * size); }
 
     // Copy the stiffness matrix A and the load vector B
     for (int i = 0; i < size; i++)
@@ -169,9 +183,9 @@ double *femElasticitySolve(femProblem *theProblem)
     }
 
     // Solve the system and return the solution
-    theProblem->soluce = femFullSystemEliminate(theSystem);
-    
-    return theProblem->soluce;
+    // theProblem->soluce = femFullSystemEliminate(theSystem);
+    // return theProblem->soluce;
+    return femFullSystemEliminate(theSystem);
 }
 // Strip : END
 
@@ -194,19 +208,26 @@ double *femElasticityForces(femProblem *theProblem)
     and load vector before applying Dirichlet boundary conditions.
     The forces of the system are equal to F = -R = B - A * U
     */
+    // for (int i = 0; i < size; i++)
+    // {
+    //     // Invert the sign of the residuals to get forces (action-reaction principle)
+    //     for (int j = 0; j < size; j++) { residuals[i] -= A_copy[i][j] * soluce[j]; }
+    //     residuals[i] += B_copy[i];
+    // }
+
     for (int i = 0; i < size; i++)
     {
         // Invert the sign of the residuals to get forces (action-reaction principle)
-        for (int j = 0; j < size; j++) { residuals[i] -= A_copy[i][j] * soluce[j]; }
-        residuals[i] += B_copy[i];
+        for (int j = 0; j < size; j++) { residuals[i] -= theProblem->system->A[i][j] * soluce[j]; }
+        residuals[i] += theProblem->system->B[i];
     }
 
     // Free memory allocated for the copy of the stiffness matrix A and the load vector B
-    // for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL;}
-    // free(A_copy); free(B_copy);
-    // A_copy = NULL; B_copy = NULL;
+    for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL;}
+    free(A_copy); free(B_copy);
+    A_copy = NULL; B_copy = NULL;
 
     // Return the forces
-    return residuals;
+    return theProblem->residuals;
 }
 // Strip : END

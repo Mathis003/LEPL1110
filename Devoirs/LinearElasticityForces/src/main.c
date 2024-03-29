@@ -171,7 +171,7 @@ int main(void)
     free(forcesY);
     femElasticityFree(theProblem) ; 
     geoFinalize();
-    glfwTerminate(); 
+    glfwTerminate();
     
     exit(EXIT_SUCCESS);
     return 0;  
