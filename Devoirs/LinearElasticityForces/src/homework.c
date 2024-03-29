@@ -92,6 +92,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
     double x[2], y[2], phi[2];
     int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
+    
     int nLocal = 2;
     double *B  = theSystem->B;
 
@@ -121,6 +122,11 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 y[j] = theNodes->Y[map[j]];
             }
 
+            // Compute the constant Jacobian
+            double dx = x[1] - x[0];
+            double dy = y[1] - y[0];
+            double jac = sqrt(dx * dx + dy * dy) / 2;
+
             // Iterate over the integration points
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
@@ -130,11 +136,6 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
                 // Compute the shape functions
                 femDiscretePhi(theSpace, xsi, phi);
-
-                // Compute the Jacobian
-                double dx = x[1] - x[0];
-                double dy = y[1] - y[0];
-                double jac = sqrt(dx * dx + dy * dy) / 2;
 
                 // Compute the forces and add them to the load vector
                 for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * jac * weight; }

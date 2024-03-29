@@ -108,8 +108,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         femBoundaryType type = theCondition->type;
         double value = theCondition->value1;
 
-        //
-        // A completer
+        // Strip : BEGIN
+
         // Attention, pour le normal tangent on calcule la normale (sortante) au SEGMENT, surtout PAS celle de constrainedNodes
         
         // Une petite aide pour le calcul de la normale :
@@ -117,6 +117,52 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         // double ty = theNodes->Y[node1] - theNodes->Y[node0];
         // double nx = ty;
         // double ny = -tx;
+
+        femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
+        femBoundaryType type = theCondition->type;
+        femDomain *domain = theCondition->domain;
+        double value1 = theCondition->value1;
+        double value2 = theCondition->value2;
+
+        // Skip Dirichlet boundary conditions
+        if (type == DIRICHLET_X || type == DIRICHLET_Y || type == DIRICHLET_XY ||
+            type == DIRICHLET_N || type == DIRICHLET_T || type == DIRICHLET_NT) { continue; }
+        
+        // Iterate over the elements of the domain
+        for (iEdge = 0; iEdge < domain->nElem; iEdge++)
+        {
+            // Get the element index (mapping)
+            iElem = domain->elem[iEdge];
+
+            // Mapping local nodes to global nodes
+            for (j = 0; j < nLocal; j++)
+            {
+                map[j] = theEdges->elem[iElem * nLocal + j];
+                mapU[j] = 2 * map[j] + 1;
+                x[j] = theNodes->X[map[j]];
+                y[j] = theNodes->Y[map[j]];
+            }
+
+            // Iterate over the integration points
+            for (iInteg = 0; iInteg < theRule->n; iInteg++)
+            {
+                // Get the integration point coordinates and weight
+                double xsi    = theRule->xsi[iInteg];
+                double weight = theRule->weight[iInteg];
+
+                // Compute the shape functions
+                femDiscretePhi(theSpace, xsi, phi);
+
+                // Compute the Jacobian
+                double dx = x[1] - x[0];
+                double dy = y[1] - y[0];
+                double jac = sqrt(dx * dx + dy * dy) / 2;
+
+                // Compute the forces and add them to the load vector
+                for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * jac * weight; }
+            }
+        }
+        // Strip : END
     }
 }
 
