@@ -183,9 +183,9 @@ double *femElasticitySolve(femProblem *theProblem)
     }
 
     // Solve the system and return the solution
-    // theProblem->soluce = femFullSystemEliminate(theSystem);
-    // return theProblem->soluce;
-    return femFullSystemEliminate(theSystem);
+    double *soluce = femFullSystemEliminate(theProblem->system);
+    memcpy(theProblem->soluce, soluce, theProblem->system->size * sizeof(double));
+    return theProblem->soluce;
 }
 // Strip : END
 
@@ -206,20 +206,11 @@ double *femElasticityForces(femProblem *theProblem)
     /*
     Compute residuals: R = A * U - B where A and B are the system matrix
     and load vector before applying Dirichlet boundary conditions.
-    The forces of the system are equal to F = -R = B - A * U
     */
-    // for (int i = 0; i < size; i++)
-    // {
-    //     // Invert the sign of the residuals to get forces (action-reaction principle)
-    //     for (int j = 0; j < size; j++) { residuals[i] -= A_copy[i][j] * soluce[j]; }
-    //     residuals[i] += B_copy[i];
-    // }
-
     for (int i = 0; i < size; i++)
     {
-        // Invert the sign of the residuals to get forces (action-reaction principle)
-        for (int j = 0; j < size; j++) { residuals[i] -= theProblem->system->A[i][j] * soluce[j]; }
-        residuals[i] += theProblem->system->B[i];
+        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
+        residuals[i] -= B_copy[i];
     }
 
     // Free memory allocated for the copy of the stiffness matrix A and the load vector B
@@ -227,7 +218,7 @@ double *femElasticityForces(femProblem *theProblem)
     free(A_copy); free(B_copy);
     A_copy = NULL; B_copy = NULL;
 
-    // Return the forces
+    // Return the residuals corresponding to the forces (principe of action/reaction)
     return theProblem->residuals;
 }
 // Strip : END
