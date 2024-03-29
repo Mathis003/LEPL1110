@@ -10,10 +10,34 @@
 *
 */
 
+#include <getopt.h>
+#include <stdbool.h>
 #include "glfem.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    // Deal with the options arguments
+    int opt;
+    bool resultVisualizer = true;
+    while ((opt = getopt(argc, argv, "rh")) != -1)
+    {
+        switch (opt)
+        {
+            case 'r':
+                resultVisualizer = false;
+                break;
+            case 'h':
+                printf("Usage: %s [-r] [-h]\n", argv[0]);
+                printf("Options:\n");
+                printf("  -r : Disable the result visualizer\n");
+                printf("  -h : Display this help message\n");
+                return EXIT_SUCCESS;
+            default:
+                fprintf(stderr, "Usage: %s [-r] [-h]\n", argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+
     printf("\n\n    V : Mesh and displacement norm \n");
     printf("    D : Domains \n");
     printf("    N : Next domain highlighted\n\n\n");
@@ -53,9 +77,11 @@ int main(void)
     printf(" ==== Minimum displacement          : %14.7e \n", hMin);
     printf(" ==== Maximum displacement          : %14.7e \n", hMax);
 
-    /***************************/
+    /*********************/
     /* 3 : Visualisation */ 
-    /***************************/
+    /*********************/
+
+    if (!resultVisualizer) { return EXIT_SUCCESS; }
 
     int mode = 1;
     int domain = 0;

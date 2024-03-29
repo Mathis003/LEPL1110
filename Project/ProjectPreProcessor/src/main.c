@@ -10,10 +10,34 @@
 *
 */
 
+#include <getopt.h>
+#include <stdbool.h>
 #include "glfem.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    // Deal with the options arguments
+    int opt;
+    bool meshVisualizer = true;
+    while ((opt = getopt(argc, argv, "mh")) != -1)
+    {
+        switch (opt)
+        {
+            case 'm':
+                meshVisualizer = false;
+                break;
+            case 'h':
+                printf("Usage: %s [-m] [-h]\n", argv[0]);
+                printf("Options:\n");
+                printf("  -m : Disable the mesh visualizer\n");
+                printf("  -h : Display this help message\n");
+                return EXIT_SUCCESS;
+            default:
+                fprintf(stderr, "Usage: %s [-m] [-h]\n", argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+
     /************************************/
     /* 1 : Construction de la geometrie */ 
     /************************************/
@@ -44,7 +68,10 @@ int main(void)
 
     geoSetDomainName(0, "Something");
     geoSetDomainName(1, "SomethingElse");
+
+    // Write the mesh to a file in this directory and in the Project directory
     geoMeshWrite("../data/mesh.txt");
+    geoMeshWrite("../../Project/data/mesh.txt");
 
     /******************************/
     /* 2 : Definition du probleme */ 
@@ -62,7 +89,10 @@ int main(void)
     femElasticityAddBoundaryCondition(theProblem, "SomethingElse", DIRICHLET_Y, 0.0, NAN);
 
     femElasticityPrint(theProblem);
+
+    // Write the problem to a file in this directory and in the Project directory
     femElasticityWrite(theProblem, "../data/problem.txt");
+    femElasticityWrite(theProblem, "../../Project/data/problem.txt");
 
     /***************************************************/
     /* 3 : Champ de la taille de référence du maillage */
@@ -85,6 +115,8 @@ int main(void)
     /*********************/
     /* 4 : Visualisation */ 
     /*********************/
+
+    if (!meshVisualizer) { return EXIT_SUCCESS; }
 
     int mode = 1;
     int domain = 0;
