@@ -15,7 +15,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
     femFullSystem *theSystem = theProblem->system;
     femIntegration *theRule  = theProblem->rule;
     femDiscrete *theSpace    = theProblem->space;
-    femGeo *theGeometry      = theProblem->geometry;
+    femGeometry *theGeometry      = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theMesh         = theGeometry->theElements;
 
@@ -92,7 +92,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     femFullSystem *theSystem = theProblem->system;
     femIntegration *theRule  = theProblem->ruleEdge;
     femDiscrete *theSpace    = theProblem->spaceEdge;
-    femGeo *theGeometry      = theProblem->geometry;
+    femGeometry *theGeometry      = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theEdges        = theGeometry->theEdges;
 
@@ -121,44 +121,47 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         double value1 = theCondition->value1;
         double value2 = theCondition->value2;
 
-        // Skip Dirichlet boundary conditions
-        if (type == DIRICHLET_X || type == DIRICHLET_Y || type == DIRICHLET_XY ||
-            type == DIRICHLET_N || type == DIRICHLET_T || type == DIRICHLET_NT) { continue; }
+        // // Skip Dirichlet boundary conditions
+        // if (type == DIRICHLET_X || type == DIRICHLET_Y || type == DIRICHLET_XY ||
+        //     type == DIRICHLET_N || type == DIRICHLET_T || type == DIRICHLET_NT) { continue; }
         
-        // Iterate over the elements of the domain
-        for (iEdge = 0; iEdge < domain->nElem; iEdge++)
-        {
-            // Get the element index (mapping)
-            iElem = domain->elem[iEdge];
+        // // SKIP FOR NOW (NOY YET IMPLMENTED)
+        // if (type == NEUMANN_N || type == NEUMANN_T) { continue; }
 
-            // Mapping local nodes to global nodes
-            for (j = 0; j < nLocal; j++)
-            {
-                map[j] = theEdges->elem[iElem * nLocal + j];
-                mapU[j] = 2 * map[j] + 1;
-                x[j] = theNodes->X[map[j]];
-                y[j] = theNodes->Y[map[j]];
-            }
+        // // Iterate over the elements of the domain
+        // for (iEdge = 0; iEdge < domain->nElem; iEdge++)
+        // {
+        //     // Get the element index (mapping)
+        //     iElem = domain->elem[iEdge];
 
-            // Iterate over the integration points
-            for (iInteg = 0; iInteg < theRule->n; iInteg++)
-            {
-                // Get the integration point coordinates and weight
-                double xsi    = theRule->xsi[iInteg];
-                double weight = theRule->weight[iInteg];
+        //     // Mapping local nodes to global nodes
+        //     for (j = 0; j < nLocal; j++)
+        //     {
+        //         map[j] = theEdges->elem[iElem * nLocal + j];
+        //         mapU[j] = 2 * map[j] + 1;
+        //         x[j] = theNodes->X[map[j]];
+        //         y[j] = theNodes->Y[map[j]];
+        //     }
 
-                // Compute the shape functions
-                femDiscretePhi(theSpace, xsi, phi);
+        //     // Compute the constant Jacobian
+        //     double dx = x[1] - x[0];
+        //     double dy = y[1] - y[0];
+        //     double jac = sqrt(dx * dx + dy * dy) / 2;
 
-                // Compute the Jacobian
-                double dx = x[1] - x[0];
-                double dy = y[1] - y[0];
-                double jac = sqrt(dx * dx + dy * dy) / 2;
+        //     // Iterate over the integration points
+        //     for (iInteg = 0; iInteg < theRule->n; iInteg++)
+        //     {
+        //         // Get the integration point coordinates and weight
+        //         double xsi    = theRule->xsi[iInteg];
+        //         double weight = theRule->weight[iInteg];
 
-                // Compute the forces and add them to the load vector
-                for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight; }
-            }
-        }
+        //         // Compute the shape functions
+        //         femDiscretePhi(theSpace, xsi, phi);
+
+        //         // Compute the forces and add them to the load vector
+        //         for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight; }
+        //     }
+        // }
         // Strip : END
     }
 }
@@ -166,7 +169,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 void femElasticityApplyDirichlet(femProblem *theProblem)
 {
     femFullSystem *theSystem = theProblem->system;
-    femGeo *theGeometry      = theProblem->geometry;
+    femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
 
     for (int node = 0; node < theNodes->nNodes; node++)
@@ -220,11 +223,11 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
 
 double *femElasticitySolve(femProblem *theProblem)
 {
-  femElasticityAssembleElements(theProblem);
-  femElasticityAssembleNeumann(theProblem);
-  femElasticityApplyDirichlet(theProblem);
+    femElasticityAssembleElements(theProblem);
+    femElasticityAssembleNeumann(theProblem);
+    femElasticityApplyDirichlet(theProblem);
 
-  double *soluce = femFullSystemEliminate(theProblem->system);
-  memcpy(theProblem->soluce, soluce, theProblem->system->size * sizeof(double));
-  return theProblem->soluce;
+    double *soluce = femFullSystemEliminate(theProblem->system);
+    memcpy(theProblem->soluce, soluce, theProblem->system->size * sizeof(double));
+    return theProblem->soluce;
 }

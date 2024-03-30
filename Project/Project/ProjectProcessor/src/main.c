@@ -15,7 +15,7 @@
 
 int main(void)
 {
-    femGeo *theGeometry = geoGetGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
     // geoMeshRead("../data/mesh.txt"); // DO NOT CHANGE THIS PATHNAME
     geoMeshRead("../../../data/mesh.txt");
     // femProblem *theProblem = femElasticityRead(theGeometry, "../data/problem.txt"); // DO NOT CHANGE THIS PATHNAME
