@@ -344,6 +344,9 @@ void geoMeshGenerate()
     theGeometry->h = 0.6;
 
     theGeometry->geoSize = geoSize;
+    theGeometry->getMaterialProperties = getMaterialProperties;
+    theGeometry->getMaterials = getMaterials;
+
     theGeometry->elementType = FEM_TRIANGLE;
     
     int ierr;
@@ -451,13 +454,23 @@ void geoMeshGenerate()
     gmshFltkInitialize(&ierr);
 
     free(idWindows);
+    idWindows = NULL;
     free(idColumns);
+    idColumns = NULL;
     free(idPilliers);
+    idPilliers = NULL;
     free(idArcs);
+    idArcs = NULL;
     free(idBigColumns);
+    idBigColumns = NULL;
     free(idDisks);
+    idDisks = NULL;
     free(idCables);
+    idCables = NULL;
     free(positionCablesX);
+    positionCablesX = NULL;
     free(positionCablesY);
+    positionCablesY = NULL;
     free(filterLeft);
+    filterLeft = NULL;
 }

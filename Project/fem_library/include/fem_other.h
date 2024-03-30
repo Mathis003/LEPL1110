@@ -65,6 +65,8 @@ typedef struct {
     double h;
     
     double (*geoSize)(double x, double y);
+    double * (*getMaterialProperties)(char *material);
+    char * (*getMaterials)(double x, double y);
 
     femElementType elementType;
     femNodes *theNodes;

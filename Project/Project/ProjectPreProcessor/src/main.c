@@ -59,14 +59,20 @@ int main(int argc, char *argv[])
     /* 2 : Definition du probleme */ 
     /******************************/
 
-    // TODO : Change the values of E, nu, rho, gx, gy
-    double E = 211.e9;
-    double nu = 0.3;
-    double rho = 7.85e3;
+    double E_steel = 200.e9;
+    double E_reinforced_concrete = 35e9;
+
+    double nu_steel = 0.3;
+    double nu_reinforced_concrete = 0.2;
+
+    double rho_steel = 7.85e3;
+    double rho_reinforced_concrete = 2.5e3;
+    
     double gx = 0;
     double gy = -9.81;
 
-    femProblem *theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, PLANAR_STRAIN);
+    // TODO : Rendre possible le multi-materiaux
+    femProblem *theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, PLANAR_STRAIN);
 
     // TODO : Change the boundary conditions
     // femElasticityAddBoundaryCondition(theProblem, "Something", DIRICHLET_XY, 0.0, 0.0);
@@ -145,6 +151,7 @@ int main(int argc, char *argv[])
     // Check if the ESC key was pressed or the window was closed
 
     free(meshSizeField);
+    meshSizeField = NULL;
     femElasticityFree(theProblem);
     geoFree();
     glfwTerminate();
