@@ -6,6 +6,7 @@ femPoissonProblem *femPoissonCreate(const char *filename)
 {
     femGeo *theGeometry = geoMeshCreate(filename);
     femPoissonProblem *theProblem = malloc(sizeof(femPoissonProblem));
+    if (theProblem == NULL) { Error("Memory allocation failed !"); exit(EXIT_FAILURE); return NULL; }
 
     theProblem->geo  = theGeometry;
     femMesh *theMesh = theGeometry->theElements;
@@ -31,11 +32,12 @@ femPoissonProblem *femPoissonCreate(const char *filename)
 void femPoissonFindBoundaryNodes(femPoissonProblem *theProblem)
 {
     femGeo *theGeometry = theProblem->geo;  
-    femMesh *theEdges = theGeometry->theEdges;
+    femMesh *theEdges   = theGeometry->theEdges;
 
     // Strip : BEGIN
     int size = theProblem->system->size;
     int *map = malloc(size * sizeof(int));
+    if (map == NULL) { Error("Memory allocation failed !"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < size; i++) { map[i] = 0; }
 
     int nDomains = theGeometry->nDomains;
@@ -56,16 +58,19 @@ void femPoissonFindBoundaryNodes(femPoissonProblem *theProblem)
     int nBoundary = 0;
     for (int i=0; i < size; i++)
     {
-        if (map[i] == 1) nBoundary++;
+        if (map[i] == 1) { nBoundary++; }
     }
     // Strip : END
 
     femDomain *theBoundary = malloc(sizeof(femDomain));
+    if (theBoundary == NULL) { Error("Memory allocation failed !"); exit(EXIT_FAILURE); return; }
     theGeometry->nDomains++;
-    theGeometry->theDomains = realloc(theGeometry->theDomains, theGeometry->nDomains * sizeof(femDomain*));
+    theGeometry->theDomains = realloc(theGeometry->theDomains, theGeometry->nDomains * sizeof(femDomain *));
+    if (theGeometry->theDomains == NULL) { Error("Memory allocation failed !"); exit(EXIT_FAILURE); return; }
     theGeometry->theDomains[theGeometry->nDomains - 1] = theBoundary;
     theBoundary->nElem = nBoundary;
     theBoundary->elem = malloc(nBoundary * sizeof(int));
+    if (theBoundary->elem == NULL) { Error("Memory allocation failed !"); exit(EXIT_FAILURE); return; }
 
     theBoundary->mesh = NULL;
     sprintf(theBoundary->name, "Boundary");
@@ -185,16 +190,11 @@ void femPoissonSolve(femPoissonProblem *theProblem)
                 // Assemble the local vector B_e with the global vector B
                 theSystem->B[map[i]] += phi[i] * weightedJac;
             }
-            // For Debugging
-            // femFullSystemPrint(theSystem);
         }
     }
 
     // Apply boundary conditions (0.0 on the boundary)
     for (int i = 0; i < theBoundary->nElem; i++) { femFullSystemConstrain(theSystem, theBoundary->elem[i], 0.0); }
-
-    // For Debugging
-    // femFullSystemPrint(theSystem);
 
     // Solve the linear system
     femFullSystemEliminate(theSystem);

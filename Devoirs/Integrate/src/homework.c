@@ -11,10 +11,10 @@ double integrate(double x[3], double y[3], double (*f) (double, double))
 {
     // Strip BEGIN
     // Const values for the integration points (see guidelines)
-    const double value = 1.0 / 6.0;
+    const double value  = 1.0 / 6.0;
     const double xi[3]  = { value, 4 * value, value };
     const double eta[3] = { value, value, 4 * value };
-    const double weight      = value; // All the weights are the same
+    const double weight = value; // All the weights are the same
 
     const double jacobien = getJacobien(x, y);
 

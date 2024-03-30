@@ -1,6 +1,5 @@
 #include "fem.h"
 
-
 void geoMeshGenerate()
 {
     femGeo* theGeometry = geoGetGeometry();
@@ -124,11 +123,10 @@ double *femElasticitySolve(femProblem *theProblem)
                     A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac;
                 }
                 // Assemble the local vector B_e with the global vector B
-                B[mapY[i]] += -g * rho * phi[i] * weightedJac;
+                B[mapY[i]] -= g * rho * phi[i] * weightedJac;
             }
         }
     }
-    
     // Strip : End                
   
     int *theConstrainedNodes = theProblem->constrainedNodes;     

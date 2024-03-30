@@ -4,14 +4,14 @@
 // Strip : BEGIN
 
 // Usefull for the renumbering (along x and y directions) method
-double *posMeshNodes;
+double *positionMeshNodes;
 
-int comparPosNode(const void *a, const void *b)
+int comparPositionNode(const void *a, const void *b)
 {
     const int *nodePos_a = (const int *) a;
     const int *nodePos_b = (const int *) b;
     
-    double diff = posMeshNodes[*nodePos_a] - posMeshNodes[*nodePos_b];
+    double diff = positionMeshNodes[*nodePos_a] - positionMeshNodes[*nodePos_b];
     return (diff < 0) - (diff > 0);
 }
 // Strip : END
@@ -23,26 +23,26 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
     int i;
 
     // Strip : BEGIN
-
     int nNodes = theMesh->nodes->nNodes;
     int *mapper = (int *) malloc(nNodes * sizeof(int));
+    if (mapper == NULL) { Error("Memory allocation failed !"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
 
     switch (renumType)
-    {        
+    {
         case FEM_NO :
             break;
 
         // Sorting the nodes along the x-direction
         case FEM_XNUM :
-            posMeshNodes = theMesh->nodes->X;
-            qsort(mapper, nNodes, sizeof(int), comparPosNode);
+            positionMeshNodes = theMesh->nodes->X;
+            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
             break;
 
         // Sorting the nodes along the y-direction
         case FEM_YNUM :
-            posMeshNodes = theMesh->nodes->Y;
-            qsort(mapper, nNodes, sizeof(int), comparPosNode);
+            positionMeshNodes = theMesh->nodes->Y;
+            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
             break;    
 
         default : Error("Unexpected renumbering option"); }
@@ -92,10 +92,8 @@ int femMeshComputeBand(femMesh *theMesh)
     // Strip : END
 }
 
-
 #endif
 #ifndef NOBANDASSEMBLE
-
 
 void femBandSystemAssemble(femBandSystem *myBandSystem, double *Aloc, double *Bloc, int *map, int nLoc)
 {
@@ -106,26 +104,21 @@ void femBandSystemAssemble(femBandSystem *myBandSystem, double *Aloc, double *Bl
     for (int i = 0; i < nLoc; i++)
     {
         currRow = map[i];
-
         for (int j = 0; j < nLoc; j++)
         {
             currCol = map[j];
-
             // Assemble the local matrix A_e with the global matrix A
             // The condition ensures that we only assemble the upper part of the matrix
             if (currRow <= currCol) { myBandSystem->A[currRow][currCol] += Aloc[i * nLoc + j]; }
         }
-
         // Assemble the local vector B_e with the global vector B
         myBandSystem->B[currRow] += Bloc[i];
     }
     // Strip : END
 }
 
-
 #endif
 #ifndef NOBANDELIMINATE
-
 
 double  *femBandSystemEliminate(femBandSystem *myBand)
 {
@@ -137,12 +130,6 @@ double  *femBandSystemEliminate(femBandSystem *myBand)
     band = myBand->band;
 
     // Strip : BEGIN
-
-    /*
-    This is the same function as in the full solver,
-    but with a limit on the number of columns to eliminate
-    limit = MIN(size, band + idx)
-    */
 
     /* Gauss elimination */
     for (k = 0; k < size; k++)
@@ -165,7 +152,6 @@ double  *femBandSystemEliminate(femBandSystem *myBand)
         for (j = i + 1 ; j < jend; j++) { factor += A[i][j] * B[j]; }
         B[i] = ( B[i] - factor) / A[i][i];
     }
-
     // Strip : END
 
     return myBand->B;

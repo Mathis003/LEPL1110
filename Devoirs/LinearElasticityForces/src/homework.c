@@ -125,7 +125,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
             // Compute the constant Jacobian
             double dx = x[1] - x[0];
             double dy = y[1] - y[0];
-            double jac = sqrt(dx * dx + dy * dy) / 2;
+            double length = sqrt(dx * dx + dy * dy);
+            double jac = length / 2;
 
             // Iterate over the integration points
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -190,7 +191,6 @@ double *femElasticitySolve(femProblem *theProblem)
 }
 // Strip : END
 
-
 // Strip : BEGIN
 double *femElasticityForces(femProblem *theProblem)
 {
@@ -219,7 +219,7 @@ double *femElasticityForces(femProblem *theProblem)
     free(A_copy); free(B_copy);
     A_copy = NULL; B_copy = NULL;
 
-    // Return the residuals corresponding to the forces (principe of action/reaction)
+    // Return the residuals corresponding to the forces
     return theProblem->residuals;
 }
 // Strip : END
