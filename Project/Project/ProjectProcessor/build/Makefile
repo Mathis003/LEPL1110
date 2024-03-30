@@ -142,19 +142,6 @@ run/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/run.dir/build.make CMakeFiles/run.dir/build
 .PHONY : run/fast
 
-#=============================================================================
-# Target rules for targets named glfw
-
-# Build rule for target.
-glfw: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 glfw
-.PHONY : glfw
-
-# fast build rule for target.
-glfw/fast:
-	$(MAKE) $(MAKESILENT) -f glfw_binary/src/CMakeFiles/glfw.dir/build.make glfw_binary/src/CMakeFiles/glfw.dir/build
-.PHONY : glfw/fast
-
 Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_elasticity.o: Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_elasticity.c.o
 .PHONY : Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_elasticity.o
 
@@ -332,7 +319,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... run"
-	@echo "... glfw"
 	@echo "... myFem"
 	@echo "... Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_elasticity.o"
 	@echo "... Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_elasticity.i"

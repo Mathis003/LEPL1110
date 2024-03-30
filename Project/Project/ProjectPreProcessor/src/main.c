@@ -11,7 +11,7 @@
 */
 
 #include "../../../glfem_library/glfem.h"
-#include "../../../fem_library/include/fem_geometry.h"
+#include "../../../fem_library/include/fem_gmsh.h"
 
 #include <getopt.h>
 

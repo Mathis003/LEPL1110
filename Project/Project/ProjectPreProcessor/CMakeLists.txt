@@ -59,6 +59,7 @@ add_executable(${EXEC_NAME}
     ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_solver.c
     ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_integrate.c
     ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_geometry.c
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_gmsh.c
     ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_elasticity.c
     ${CMAKE_SOURCE_DIR}/${GLFEM_LIBRARY_PATH}/glfem.c
     src/homework.c

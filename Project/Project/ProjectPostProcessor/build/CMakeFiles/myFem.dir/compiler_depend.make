@@ -176,9 +176,6 @@ CMakeFiles/myFem.dir/Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/sr
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_string.h \
-  /Users/mathisdelsart/Desktop/LEPL1110/Project/gmsh/gmsh-4.12.2-MacOSARM-sdk/include/gmshc.h \
-  /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/stddef.h \
-  /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/__stddef_max_align_t.h \
   /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/include/fem_other.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/math.h
 
@@ -648,8 +645,7 @@ CMakeFiles/myFem.dir/src/main.c.o: /Users/mathisdelsart/Desktop/LEPL1110/Project
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/syslimits.h \
   /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/include/fem_other.h \
   /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/include/fem_integrate.h \
-  /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/include/fem_geometry.h \
-  /Users/mathisdelsart/Desktop/LEPL1110/Project/gmsh/gmsh-4.12.2-MacOSARM-sdk/include/gmshc.h
+  /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/include/fem_geometry.h
 
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/gethostuuid.h:
@@ -680,6 +676,10 @@ CMakeFiles/myFem.dir/src/main.c.o: /Users/mathisdelsart/Desktop/LEPL1110/Project
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h:
 
+/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/__stddef_max_align_t.h:
+
+/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/stddef.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_uuid_t.h:
 
 /Users/mathisdelsart/Desktop/LEPL1110/Project/glfw/include/GLFW/glfw3.h:
@@ -688,7 +688,9 @@ CMakeFiles/myFem.dir/src/main.c.o: /Users/mathisdelsart/Desktop/LEPL1110/Project
 
 /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_other.c:
 
-/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/stddef.h:
+/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/mach/machine/_structs.h:
+
+/Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_integrate.c:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/arm/signal.h:
 
@@ -744,21 +746,21 @@ CMakeFiles/myFem.dir/src/main.c.o: /Users/mathisdelsart/Desktop/LEPL1110/Project
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_sigset_t.h:
 
-/Users/mathisdelsart/Desktop/LEPL1110/Project/gmsh/gmsh-4.12.2-MacOSARM-sdk/include/gmshc.h:
-
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/arm/limits.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_ucontext.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/_types/_uintmax_t.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_pid_t.h:
+
+/Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_solver.c:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_timespec.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/libkern/_OSByteOrder.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_pthread/_pthread_attr_t.h:
-
-/Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_integrate.c:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/mach/machine/_structs.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/appleapiopts.h:
 
@@ -838,12 +840,6 @@ CMakeFiles/myFem.dir/src/main.c.o: /Users/mathisdelsart/Desktop/LEPL1110/Project
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/_ctermid.h:
 
-/Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/fem_solver.c:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/_types/_uintmax_t.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_pid_t.h:
-
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_rsize_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_int16_t.h:
@@ -885,8 +881,6 @@ CMakeFiles/myFem.dir/src/main.c.o: /Users/mathisdelsart/Desktop/LEPL1110/Project
 /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/include/fem_geometry.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/Availability.h:
-
-/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/__stddef_max_align_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/_types/_dev_t.h:
 

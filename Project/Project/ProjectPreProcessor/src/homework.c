@@ -1,6 +1,5 @@
 #include "../../../fem_library/include/fem_geometry.h"
-
-#include "gmshc.h"
+#include "../../../fem_library/include/fem_gmsh.h"
 
 /*
 TODO : Definir la geometrie du probleme
