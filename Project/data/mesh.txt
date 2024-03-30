@@ -17927,7 +17927,7 @@ Number of triangles 8429
   8428 :   3536   4694   3535
 Number of domains 129
   Domain :      0 
-  Name : Something
+  Name : Entity 0 
   Number of elements :     17
      0
      1
@@ -17948,7 +17948,7 @@ Number of domains 129
     15
     16
   Domain :      1 
-  Name : SomethingElse
+  Name : Entity 1 
   Number of elements :      9
     17
     18

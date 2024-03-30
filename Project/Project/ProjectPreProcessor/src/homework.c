@@ -1,48 +1,17 @@
 #include "../../../fem_library/include/fem_geometry.h"
 #include "../../../fem_library/include/fem_gmsh.h"
 
-/*
-TODO : Definir la geometrie du probleme
-TODO : Raffiner intelligemment
-TODO : Construire la geometrie
-*/
+
+// TODO : Raffiner intelligemment
 
 
-femGeometry *geoGetMyGeometry()
-{
-    femGeometry *theGeometry = malloc(sizeof(femGeometry));
-    if (theGeometry == NULL) { Error("Memory Allocation Error"); return NULL; }
-
-    theGeometry->widthPlate = 62.0;
-    theGeometry->heightPlate = 6.5; // Minimum 6.0
-    theGeometry->widthWindow = 1.5;
-    theGeometry->heightWindow = 0.6;
-    theGeometry->widthSubPlate = 62.0;
-    theGeometry->heightSubPlate = 1.0;
-    theGeometry->rxArc = 5.0;
-    theGeometry->ryArc = 4.0;
-    theGeometry->rxLongArc = 10.0;
-    theGeometry->ryLongArc = 3.0;
-    theGeometry->widthColumn = 0.5;
-    theGeometry->widthPillier = 3.0;
-    theGeometry->heightPillier = 5.0;
-    theGeometry->widthBigColumn = 2;
-    theGeometry->heightBigColumn = 6.0;
-    theGeometry->angleCable = 135 * M_PI / 180;
-    theGeometry->widthCable = 0.2;
-    theGeometry->heightCable = 14.5;
-    theGeometry->distanceBetweenCable = 0.8;
-
-    return theGeometry;
-}
-
-// ######################### //
-// ### Position Geometry ### //
-// ######################### //
+/*********************************************************************************************************************/
+/************** POSITION GEOMETRY ***** POSITION GEOMETRY ***** POSITION GEOMETRY ***** POSITION GEOMETRY ************/
+/*********************************************************************************************************************/
 
 int isTablier(double x, double y)
 {
-    femGeometry *theGeometry = geoGetMyGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
     const double HEIGHT_TABLIER = 1.0;
 
     if ((y >= theGeometry->heightPillier + theGeometry->heightPlate - HEIGHT_TABLIER) && (y <= theGeometry->heightPillier + theGeometry->heightPlate)) { return TRUE; }
@@ -51,7 +20,7 @@ int isTablier(double x, double y)
 
 int isSubTablier(double x, double y)
 {
-    femGeometry *theGeometry = geoGetMyGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
 
     if ((y < theGeometry->heightPillier) || (y > theGeometry->heightSubPlate + theGeometry->heightPillier)) { return FALSE; }
     
@@ -70,7 +39,7 @@ int isSubTablier(double x, double y)
 
 int isCables(double x, double y)
 {
-    femGeometry *theGeometry = geoGetMyGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
 
     if ((y <= theGeometry->heightPlate + theGeometry->heightPillier) || (y >= theGeometry->heightPlate + theGeometry->heightPillier + 5 * theGeometry->heightBigColumn / 3)) { return FALSE; }
 
@@ -93,9 +62,10 @@ int isCables(double x, double y)
     return FALSE;
 }
 
-// ################# //
-// ### Materials ### //
-// ################# //
+
+/*************************************************************************************************************/
+/********* MATERIALS ********* MATERIALS ********* MATERIALS ********* MATERIALS ********* MATERIALS *********/
+/**************************************************************************************************************/
 
 double *getMaterialProperties(char *material)
 {
@@ -123,9 +93,9 @@ char *getMaterials(double x, double y)
 }
 
 
-// ################# //
-// ### Size Mesh ### //
-// ################# //
+/************************************************************************************/
+/********* MESH ********* MESH ********* MESH ********* MESH ********* MESH *********/
+/************************************************************************************/
 
 double geoSize(double x, double y)
 {  
@@ -134,11 +104,6 @@ double geoSize(double x, double y)
     if (isCables(x, y) == TRUE)     { return 0.1; }
     else                            { return 0.6; }
 }
-
-
-// ################### //
-// ### Create Mesh ### //
-// ################### //
 
 void createWindows(femGeometry *theGeometry, int *idWindows, int ierr)
 {
@@ -352,14 +317,34 @@ void createSubPlate(femGeometry *theGeometry, int *idSubPlate, int ierr)
     *idSubPlate = gmshModelOccAddRectangle(- theGeometry->widthPlate / 2, theGeometry->heightPillier, 0.0, theGeometry->widthSubPlate, theGeometry->heightSubPlate, -1, 0, &ierr);
 }
 
-
-// ##################### //
-// ### Generate Mesh ### //
-// ##################### //
-
 void geoMeshGenerate()
 {
-    femGeometry *theGeometry = geoGetMyGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
+
+    // Define the geometry parameters
+    theGeometry->widthPlate = 62.0;
+    theGeometry->heightPlate = 6.5; // Minimum 6.0
+    theGeometry->widthWindow = 1.5;
+    theGeometry->heightWindow = 0.6;
+    theGeometry->widthSubPlate = 62.0;
+    theGeometry->heightSubPlate = 1.0;
+    theGeometry->rxArc = 5.0;
+    theGeometry->ryArc = 4.0;
+    theGeometry->rxLongArc = 10.0;
+    theGeometry->ryLongArc = 3.0;
+    theGeometry->widthColumn = 0.5;
+    theGeometry->widthPillier = 3.0;
+    theGeometry->heightPillier = 5.0;
+    theGeometry->widthBigColumn = 2;
+    theGeometry->heightBigColumn = 6.0;
+    theGeometry->angleCable = 135 * M_PI / 180;
+    theGeometry->widthCable = 0.2;
+    theGeometry->heightCable = 14.5;
+    theGeometry->distanceBetweenCable = 0.8;
+    theGeometry->h = 0.6;
+
+    theGeometry->geoSize = geoSize;
+    theGeometry->elementType = FEM_TRIANGLE;
     
     int ierr;
     int idPlate, idSubPlate;
@@ -373,6 +358,16 @@ void geoMeshGenerate()
     int *idCables           = malloc(36 * sizeof(int));
     double *positionCablesX = malloc(36 * sizeof(double));
     double *positionCablesY = malloc(36 * sizeof(double));
+
+    if (idWindows == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idColumns == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idPilliers == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idArcs == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idBigColumns == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idDisks == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idCables == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (positionCablesX == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (positionCablesY == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
 
     int plate[2], subPlate[2], pillier[4][2], bigColumn[6][2], cable[36][2], arc[5][2], window[4][2], disk[2][2], column[10][2];
 
@@ -426,21 +421,31 @@ void geoMeshGenerate()
     gmshModelOccFuse(plate, 2, bigColumn[3], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     
     // Begin : Cut the half of the bridge for the symmetry
-    int *savePlate = malloc(2 * sizeof(int));
-    memccpy(savePlate, plate, 2, sizeof(int));
-
     int idRectFilterLeft = gmshModelOccAddRectangle(0.0, 0.0, 0.0, theGeometry->widthPlate / 2, theGeometry->heightPillier + theGeometry->heightPlate + 3 * theGeometry->heightBigColumn, -1, 0, &ierr);
     int *filterLeft = malloc(2 * sizeof(int));
+    if (filterLeft == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
     filterLeft[0] = 2;
     filterLeft[1] = idRectFilterLeft;
     gmshModelOccCut(plate, 2, filterLeft, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
     // End : Cut the half of the bridge for the symmetry
 
-
     geoSetSizeCallback(geoSize);
-    gmshModelOccSynchronize(&ierr);       
-    gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-    gmshModelMeshGenerate(2, &ierr);
+    gmshModelOccSynchronize(&ierr); 
+
+    if (theGeometry->elementType == FEM_QUAD)
+    {
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+        gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
+        gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
+        gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
+        gmshModelGeoMeshSetRecombine(2, 1, 45, &ierr);
+        gmshModelMeshGenerate(2, &ierr);
+    }
+    else if (theGeometry->elementType == FEM_TRIANGLE)
+    {
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+        gmshModelMeshGenerate(2, &ierr);
+    }
 
     //  Plot of Fltk
     gmshFltkInitialize(&ierr);
@@ -452,84 +457,7 @@ void geoMeshGenerate()
     free(idBigColumns);
     free(idDisks);
     free(idCables);
-    free(theGeometry);
+    free(positionCablesX);
+    free(positionCablesY);
     free(filterLeft);
-    // free(filterCuttingPlane);
 }
-
-// double geoSize(double x, double y)
-// {
-//     femGeo *theGeometry = geoGetGeometry();
-//     return theGeometry->h * (1.0 - 0.5 * x);
-// }
-
-// void geoMeshGenerate(void)
-// {
-//     femGeo *theGeometry = geoGetGeometry();
-//     double Lx = 1.0;
-//     double Ly = 1.0;
-//     theGeometry->LxPlate = Lx;
-//     theGeometry->LyPlate = Ly;
-//     theGeometry->h = Lx * 0.05;
-//     theGeometry->elementType = FEM_QUAD;
-
-//     geoSetSizeCallback(geoSize);
-
-//     double w = theGeometry->LxPlate;
-//     double h = theGeometry->LyPlate;
-
-//     int ierr;
-//     double r = w / 4;
-//     int idRect = gmshModelOccAddRectangle(0.0, 0.0, 0.0, w, h, -1, 0.0, &ierr);
-//     int idDisk = gmshModelOccAddDisk(w / 2.0, h / 2.0, 0.0, r, r, -1, NULL, 0, NULL, 0, &ierr);
-//     int idSlit = gmshModelOccAddRectangle(w / 2.0, h / 2.0 - r, 0.0, w, 2.0 * r, -1, 0.0, &ierr);
-//     int rect[] = {2, idRect};
-//     int disk[] = {2, idDisk};
-//     int slit[] = {2, idSlit};
-
-//     gmshModelOccCut(rect, 2, disk, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-//     gmshModelOccCut(rect, 2, slit, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-//     gmshModelOccSynchronize(&ierr);
-
-//     if (theGeometry->elementType == FEM_QUAD)
-//     {
-//         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-//         gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
-//         gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
-//         gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
-//         gmshModelGeoMeshSetRecombine(2, 1, 45, &ierr);
-//         gmshModelMeshGenerate(2, &ierr);
-//     }
-
-//     if (theGeometry->elementType == FEM_TRIANGLE)
-//     {
-//         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-//         gmshModelMeshGenerate(2, &ierr);
-//     }
-
-//     return;
-// }
-
-// void geoMeshGenerateGeoFile(const char *filename)
-// {
-//     femGeo *theGeometry = geoGetGeometry();
-//     int ierr;
-//     gmshOpen(filename, &ierr);
-//     ErrorGmsh(ierr);
-//     if (theGeometry->elementType == FEM_QUAD)
-//     {
-//         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-//         gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
-//         gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
-//         gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
-//         gmshModelGeoMeshSetRecombine(2, 1, 45, &ierr);
-//         gmshModelMeshGenerate(2, &ierr);
-//     }
-
-//     if (theGeometry->elementType == FEM_TRIANGLE)
-//     {
-//         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-//         gmshModelMeshGenerate(2, &ierr);
-//     }
-//     return;
-// }

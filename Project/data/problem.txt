@@ -4,5 +4,3 @@ Poisson ratio      :  3.0000000e-01
 Mass density       :  7.8500000e+03  
 Gravity-X          :  0.0000000e+00  
 Gravity-Y          : -9.8100000e+00  
-Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : Something
-Boundary condition :  Dirichlet-Y        =  0.0000000e+00,            nan : SomethingElse

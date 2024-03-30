@@ -66,6 +66,7 @@ typedef struct {
     
     double (*geoSize)(double x, double y);
 
+    femElementType elementType;
     femNodes *theNodes;
     femMesh  *theElements;
     femMesh  *theEdges;
