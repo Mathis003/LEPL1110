@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "fem_struct.h": "c",
+        "fem_geometry.h": "c"
+    }
+}
