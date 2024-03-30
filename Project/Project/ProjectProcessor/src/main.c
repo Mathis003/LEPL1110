@@ -25,7 +25,7 @@ int main(void)
     femGeometry *theGeometry = geoGetGeometry();
     geoMeshRead("../../../data/mesh.txt");
     femProblem *theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
-    femElasticityPrint(theProblem);
+    // femElasticityPrint(theProblem);
     double *theSoluce = femElasticitySolve(theProblem);
     int nNodes = theGeometry->theNodes->nNodes;
     femSolutionWrite(nNodes, 2, theSoluce, "../../../data/UV.txt");

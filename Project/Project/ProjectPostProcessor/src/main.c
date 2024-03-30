@@ -50,10 +50,11 @@ int main(int argc, char *argv[])
     femGeometry *theGeometry = geoGetGeometry();
     geoMeshRead("../../../data/mesh.txt");
 
-    femProblem *theProblem = femElasticityRead(theGeometry, "../../../data/problem.txt");
+    femSolverType typeSolver = FEM_FULL;
+    femProblem *theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
     double *theSoluce = theProblem->soluce;
     int n = theGeometry->theNodes->nNodes;
-    femSolutiondRead(2 * n,theSoluce, "../../../data/UV.txt");
+    femSolutiondRead(2 * n, theSoluce, "../../../data/UV.txt");
     femElasticityPrint(theProblem);
 
     /****************************************************/
@@ -64,6 +65,7 @@ int main(int argc, char *argv[])
     femNodes *theNodes = theGeometry->theNodes;
     double deformationFactor = 1e5;
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
+    if (normDisplacement == NULL) { printf("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
 
     for (int i = 0; i < n; i++)
     {

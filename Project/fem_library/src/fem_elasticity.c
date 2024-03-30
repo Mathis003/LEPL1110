@@ -297,7 +297,7 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     switch (typeSolver)
     {
         case FEM_FULL: theProblem->solver = femSolverFullCreate(size, size); break;
-        case FEM_BAND: theProblem->solver = femSolverBandCreate(size, size, 10); break; // TODO : femMeshComputeBand(theProblem->theMesh) au lieu de '10' mais on a pas accès à theMesh 
+        case FEM_BAND: theProblem->solver = femSolverBandCreate(size, size, femMeshComputeBand(theGeometry->theElements)); break;
         case FEM_ITER: theProblem->solver = femSolverIterativeCreate(size, size); break;
         default: Error("Unknown solver type");
     }

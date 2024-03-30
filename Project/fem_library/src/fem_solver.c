@@ -226,7 +226,21 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 
 void femBandSystemConstrain(femBandSystem *system, int node, double value)
 {
-    // TODO : Implement this function
+    double **A, *B;
+    int i, size, band;
+
+    A = system->A;
+    B = system->B;
+    size = system->size;
+    band = system->band;
+
+    for (i = 0; i < size; i++)
+    {
+        if (i >= node && i < node + band) { A[node][i] = (i == node) ? 1 : 0; }
+        else { B[i] -= value * A[i][node]; A[i][node] = 0; }
+    }
+    A[node][node] = 1;
+    B[node] = value;
 }
 
 double *femBandSystemEliminate(femBandSystem *system)
@@ -306,6 +320,21 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
 
 int femMeshComputeBand(femMesh *theMesh)
 {
+
+    /*
+    typedef struct {
+        int nNodes;
+        double *X;
+        double *Y;
+    } femNodes;
+
+    typedef struct {
+        int nLocalNode;
+        int nElem;
+        int *elem;
+        femNodes *nodes;
+    } femMesh;
+    */
     int maxNum, minNum, nodeNum, elemNum;
     int band = 0;
 
@@ -521,6 +550,17 @@ void femSolverAssemble(femSolver *mySolver, double *Aloc, double *Bloc, double *
     }
 }
 
+void femSolverSystemConstrain(femSolver *mySolver, double node, double value)
+{
+    switch (mySolver->type)
+    {
+        case FEM_FULL : femFullSystemConstrain((femFullSystem *) mySolver->solver, node, value); break;
+        case FEM_BAND : femBandSystemConstrain((femBandSystem *) mySolver->solver, node, value); break;
+        case FEM_ITER : femFullSystemConstrain((femFullSystem *) mySolver->solver, node, value); break;
+        default :       Error("Unexpected solver type");
+    }
+}
+
 void femSolverConstrain(femSolver *solver, int node, double value)
 {
     switch (solver->type)
@@ -534,15 +574,13 @@ void femSolverConstrain(femSolver *solver, int node, double value)
 
 double *femSolverEliminate(femSolver *mySolver)
 {
-    double *soluce;
     switch (mySolver->type)
     {
-        case FEM_FULL : soluce = femFullSystemEliminate((femFullSystem *) mySolver->solver); break;
-        case FEM_BAND : soluce = femBandSystemEliminate((femBandSystem *) mySolver->solver); break;
-        case FEM_ITER : soluce = femIterativeSolverEliminate((femIterativeSolver *) mySolver->solver); break;
+        case FEM_FULL : return femFullSystemEliminate((femFullSystem *) mySolver->solver); break;
+        case FEM_BAND : return femBandSystemEliminate((femBandSystem *) mySolver->solver); break;
+        case FEM_ITER : return femIterativeSolverEliminate((femIterativeSolver *) mySolver->solver); break;
         default :       Error("Unexpected solver type");
     }
-    return soluce;
 }
 
 int femSolverConverged(femSolver *mySolver)

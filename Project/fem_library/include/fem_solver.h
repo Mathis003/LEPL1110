@@ -89,6 +89,7 @@ double femSolverGet(femSolver *mySolver, int i, int j);
 void femSolverPrint(femSolver *mySolver);
 void femSolverPrintInfos(femSolver *mySolver);
 void femSolverAssemble(femSolver *mySolver, double *Aloc, double *Bloc, double *Uloc,int *map, int nLoc);
+void femSolverSystemConstrain(femSolver *mySolver, double node, double value);
 double *femSolverEliminate(femSolver *mySolver);
 int femSolverConverged(femSolver *mySolver);
 
