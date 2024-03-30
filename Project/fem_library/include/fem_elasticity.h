@@ -22,7 +22,7 @@ typedef struct {
     femIntegration *rule;
     femDiscrete *spaceEdge;
     femIntegration *ruleEdge;
-    femFullSystem *system;
+    femSolver *solver;
     femConstrainedNode *constrainedNodes;
 } femProblem;
 
@@ -32,7 +32,7 @@ void femElasticityPrint(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 double *femElasticitySolve(femProblem *theProblem);
 
-femProblem *femElasticityRead(femGeometry *theGeometry, const char *filename);
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
 
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);

@@ -42,7 +42,7 @@ int main(void)
     fflush(stdout);
     
 
-    int option = 1;    
+    int option = 1;
     femSolverType newSolverType = solverType;
     femRenumType  newRenumType  = renumType;
     femMesh *theMesh = theProblem->geo->theElements;

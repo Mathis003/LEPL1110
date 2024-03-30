@@ -8,76 +8,73 @@
 
 femFullSystem *femFullSystemCreate(int size)
 {
-    femFullSystem *theSystem = malloc(sizeof(femFullSystem));
-    if (theSystem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    femFullSystemAlloc(theSystem, size);
-    femFullSystemInit(theSystem);
-    return theSystem;
+    femFullSystem *system = malloc(sizeof(femFullSystem));
+    if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    femFullSystemAlloc(system, size);
+    femFullSystemInit(system);
+    return system;
 }
 
-void femFullSystemFree(femFullSystem *theSystem)
+void femFullSystemFree(femFullSystem *system)
 {
-    free(theSystem->A);
-    free(theSystem->B);
-    free(theSystem);
+    free(system->A);
+    free(system->B);
+    free(system);
 }
 
-void femFullSystemAlloc(femFullSystem *mySystem, int size)
+void femFullSystemAlloc(femFullSystem *system, int size)
 {
     double *elem = malloc(sizeof(double) * size * (size + 1));
     if (elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    mySystem->A = malloc(sizeof(double *) * size);
-    if (mySystem->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    mySystem->B = elem;
-    mySystem->A[0] = elem + size;
-    mySystem->size = size;
-    for (int i = 1; i < size; i++) { mySystem->A[i] = mySystem->A[i - 1] + size; }
+    system->A = malloc(sizeof(double *) * size);
+    if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    system->B = elem;
+    system->A[0] = elem + size;
+    system->size = size;
+    for (int i = 1; i < size; i++) { system->A[i] = system->A[i - 1] + size; }
 }
 
-void femFullSystemInit(femFullSystem *mySystem)
+void femFullSystemInit(femFullSystem *system)
 {
-    int size = mySystem->size;
-    for (int i = 0; i < size * (size + 1); i++) { mySystem->B[i] = 0; }
+    int size = system->size;
+    for (int i = 0; i < size * (size + 1); i++) { system->B[i] = 0; }
 }
 
-void femFullSystemAssemble(femFullSystem *mySystem, double *Aloc, double *Bloc, int *map, int nLoc)
+void femFullSystemAssemble(femFullSystem *system, double *Aloc, double *Bloc, int *map, int nLoc)
 {
     for (int i = 0; i < nLoc; i++)
     {
-        for (int j = 0; j < nLoc; j++) { mySystem->A[map[i]][map[j]] += Aloc[i * nLoc+ j]; }
-        mySystem->B[map[i]] += Bloc[i];
+        for (int j = 0; j < nLoc; j++) { system->A[map[i]][map[j]] += Aloc[i * nLoc+ j]; }
+        system->B[map[i]] += Bloc[i];
     }
 }
 
-void femFullSystemConstrain(femFullSystem *mySystem, int myNode, double myValue)
+void femFullSystemConstrain(femFullSystem *system, int node, double value)
 {
     double **A, *B;
     int i, size;
 
-    A = mySystem->A;
-    B = mySystem->B;
-    size = mySystem->size;
+    A = system->A;
+    B = system->B;
+    size = system->size;
 
-    for (i = 0; i < size; i++) { B[i] -= myValue * A[i][myNode]; A[i][myNode] = 0; }
-    for (i = 0; i < size; i++) { A[myNode][i] = 0; }
+    for (i = 0; i < size; i++) { B[i] -= value * A[i][node]; A[i][node] = 0; }
+    for (i = 0; i < size; i++) { A[node][i] = 0; }
 
-    A[myNode][myNode] = 1;
-    B[myNode] = myValue;
+    A[node][node] = 1;
+    B[node] = value;
 }
 
-double femFullSystemGet(femFullSystem* myFullSystem, int myRow, int myCol)
-{
-    return(myFullSystem->A[myRow][myCol]); 
-}
+double femFullSystemGet(femFullSystem *system, int row, int col) { return system->A[row][col]; }
 
-double *femFullSystemEliminate(femFullSystem *mySystem)
+double *femFullSystemEliminate(femFullSystem *system)
 {
     double **A, *B, factor;
     int i, j, k, size;
 
-    A = mySystem->A;
-    B = mySystem->B;
-    size = mySystem->size;
+    A = system->A;
+    B = system->B;
+    size = system->size;
 
     /* Gauss elimination */
     for (k = 0; k < size; k++)
@@ -99,17 +96,17 @@ double *femFullSystemEliminate(femFullSystem *mySystem)
         B[i] = (B[i] - factor) / A[i][i];
     }
 
-    return mySystem->B;
+    return system->B;
 }
 
-void femFullSystemPrint(femFullSystem *mySystem)
+void femFullSystemPrint(femFullSystem *system)
 {
     double **A, *B;
     int i, j, size;
 
-    A = mySystem->A;
-    B = mySystem->B;
-    size = mySystem->size;
+    A = system->A;
+    B = system->B;
+    size = system->size;
 
     for (i = 0; i < size; i++)
     {
@@ -122,9 +119,9 @@ void femFullSystemPrint(femFullSystem *mySystem)
     }
 }
 
-void femFullSystemPrintInfos(femFullSystem *mySystem)
+void femFullSystemPrintInfos(femFullSystem *system)
 {
-    int size = mySystem->size;
+    int size = system->size;
     printf(" \n");
     printf("    Full Gaussian elimination \n");
     printf("    Storage informations \n");
@@ -139,42 +136,47 @@ void femFullSystemPrintInfos(femFullSystem *mySystem)
 
 femBandSystem *femBandSystemCreate(int size, int band)
 {
-    femBandSystem *myBandSystem = malloc(sizeof(femBandSystem));
-    if (myBandSystem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    myBandSystem->B = malloc(sizeof(double) * size * (band + 1));
-    if (myBandSystem->B == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    myBandSystem->A = malloc(sizeof(double *) * size);
-    if (myBandSystem->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }     
-    myBandSystem->size = size;
-    myBandSystem->band = band;
-    myBandSystem->A[0] = myBandSystem->B + size;
-    for (int i = 1 ; i < size ; i++) { myBandSystem->A[i] = myBandSystem->A[i-1] + band - 1; }
-    femBandSystemInit(myBandSystem);
-    return myBandSystem;
-}
- 
-void femBandSystemFree(femBandSystem *myBandSystem)
-{
-    free(myBandSystem->B);
-    free(myBandSystem->A); 
-    free(myBandSystem);
-}
- 
-void femBandSystemInit(femBandSystem *myBandSystem)
-{
-    int size = myBandSystem->size;
-    int band = myBandSystem->band;
-    for (int i = 0 ; i < size * (band + 1) ; i++) { myBandSystem->B[i] = 0; }        
+    femBandSystem *system = malloc(sizeof(femBandSystem));
+    if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    femBandSystemAlloc(system, size, band);
+    femBandSystemInit(system);
+    return system;
 }
 
-void femBandSystemPrint(femBandSystem *myBand)
+void femBandSystemAlloc(femBandSystem *system, int size, int band)
+{   
+    system->B = malloc(sizeof(double) * size * (band + 1));
+    if (system->B == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    system->A = malloc(sizeof(double *) * size);
+    if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }     
+    system->size = size;
+    system->band = band;
+    system->A[0] = system->B + size;
+    for (int i = 1 ; i < size ; i++) { system->A[i] = system->A[i-1] + band - 1; }
+}
+
+void femBandSystemInit(femBandSystem *system)
+{
+    int size = system->size;
+    int band = system->band;
+    for (int i = 0 ; i < size * (band + 1) ; i++) { system->B[i] = 0; }
+}
+
+void femBandSystemFree(femBandSystem *system)
+{
+    free(system->B);
+    free(system->A); 
+    free(system);
+}
+
+void femBandSystemPrint(femBandSystem *system)
 {
     double  **A, *B;
     int    band, size;
-    A    = myBand->A;
-    B    = myBand->B;
-    size = myBand->size;
-    band = myBand->band;
+    A    = system->A;
+    B    = system->B;
+    size = system->size;
+    band = system->band;
 
     for (int i = 0; i < size; i++)
     {
@@ -187,10 +189,10 @@ void femBandSystemPrint(femBandSystem *myBand)
     }
 }
   
-void femBandSystemPrintInfos(femBandSystem *myBand)
+void femBandSystemPrintInfos(femBandSystem *system)
 {
-    int size = myBand->size;
-    int band = myBand->band;
+    int size = system->size;
+    int band = system->band;
     printf(" \n");
     printf("    Banded Gaussian elimination \n");
     printf("    Storage informations \n");
@@ -199,122 +201,47 @@ void femBandSystemPrintInfos(femBandSystem *myBand)
     printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (band + 1));     
 }
 
-double *posMeshNodes;
-int comparPosNode(const void *a, const void *b)
-{
-    const int *nodePos_a = (const int *) a;
-    const int *nodePos_b = (const int *) b;
-    
-    double diff = posMeshNodes[*nodePos_a] - posMeshNodes[*nodePos_b];
-    return (diff < 0) - (diff > 0);
-}
-
-void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
-{
-    int nNodes = theMesh->nodes->nNodes;
-    int *mapper = (int *) malloc(nNodes * sizeof(int));
-    if (mapper == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
-
-    switch (renumType)
-    {        
-        case FEM_NO :
-            break;
-        // Sorting the nodes along the x-direction
-        case FEM_XNUM :
-            posMeshNodes = theMesh->nodes->X;
-            qsort(mapper, nNodes, sizeof(int), comparPosNode);
-            break;
-        // Sorting the nodes along the y-direction
-        case FEM_YNUM :
-            posMeshNodes = theMesh->nodes->Y;
-            qsort(mapper, nNodes, sizeof(int), comparPosNode);
-            break;    
-
-        default : Error("Unexpected renumbering option");
-    }
-
-    // Renumbering the nodes
-    for (int i = 0; i < nNodes; i++)
-    {
-        theMesh->elem[mapper[i]] = i; // TODO : Check if this is correct
-        // theMesh->nodes->number[mapper[i]] = i; // Version in Homework 'BandSolver'
-    }
-
-    // Free the memory
-    free(mapper); 
-}
-
-int femMeshComputeBand(femMesh *theMesh)
-{
-    int maxNum, minNum, nodeNum, elemNum;
-    int myBand = 0;
-
-    // Looping through all elements
-    for (int iElem = 0; iElem < theMesh->nElem; iElem++)
-    {   
-        // Initializing the max and min numbers
-        maxNum = INT_MIN;
-        minNum = INT_MAX;
-
-        // Looping through all nodes of the element
-        for (int j = 0; j < theMesh->nLocalNode; j++)
-        {
-            // Getting the node number
-            elemNum = theMesh->elem[iElem * theMesh->nLocalNode + j];
-            // nodeNum = theMesh->nodes->number[elemNum]; // Version in Homework 'BandSolver'
-            nodeNum = theMesh->elem[elemNum]; // TODO : Check if this is correct
-
-            // Updating the max and min node numbers
-            maxNum = (nodeNum > maxNum) ? nodeNum : maxNum;
-            minNum = (nodeNum < minNum) ? nodeNum : minNum;
-        }
-
-        // Updating the band
-        if (myBand < maxNum - minNum) { myBand = maxNum - minNum; }
-    }
-    return ++myBand;
-}
-
-void femBandSystemAssemble(femBandSystem *myBandSystem, double *Aloc, double *Bloc, int *map, int nLoc)
+void femBandSystemAssemble(femBandSystem *system, double *Aloc, double *Bloc, int *map, int nLoc)
 {
     int currRow, currCol;
-    // Looping through the local matrix elements
+    double **A = system->A;
+    double *B  = system->B;
+    
     for (int i = 0; i < nLoc; i++)
     {
         currRow = map[i];
         for (int j = 0; j < nLoc; j++)
         {
             currCol = map[j];
-            // Assemble the local matrix A_e with the global matrix A
-            // The condition ensures that we only assemble the upper part of the matrix
-            if (currRow <= currCol) { myBandSystem->A[currRow][currCol] += Aloc[i * nLoc + j]; }
+            if (currRow <= currCol) { A[currRow][currCol] += Aloc[i * nLoc + j]; }
         }
-        // Assemble the local vector B_e with the global vector B
-        myBandSystem->B[currRow] += Bloc[i];
+        B[currRow] += Bloc[i];
     }
 }
 
-double femBandSystemGet(femBandSystem* myBandSystem, int myRow, int myCol)
+double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 {
-    double value = 0;
-    if (myCol >= myRow && myCol < myRow+myBandSystem->band)  value = myBandSystem->A[myRow][myCol]; 
-    return(value);
+    return (myCol >= myRow && myCol < myRow + system->band) ? system->A[myRow][myCol] : 0.0;
 }
 
-double *femBandSystemEliminate(femBandSystem *myBand)
+void femBandSystemConstrain(femBandSystem *system, int node, double value)
+{
+    // TODO : Implement this function
+}
+
+double *femBandSystemEliminate(femBandSystem *system)
 {
     double  **A, *B, factor;
     int     i, j, k, jend, size, band;
-    A    = myBand->A;
-    B    = myBand->B;
-    size = myBand->size;
-    band = myBand->band;
+    A    = system->A;
+    B    = system->B;
+    size = system->size;
+    band = system->band;
 
     /* Gauss elimination */
     for (k = 0; k < size; k++)
     {
-        if (fabs(A[k][k]) <= 1e-8) { Error("Cannot eliminate with such a pivot.\n"); }
+        if (fabs(A[k][k]) <= 1e-16) { Error("Cannot eliminate with such a pivot.\n"); }
         jend = (k + band < size) ? k + band : size;
         for (i = k + 1; i < jend; i++)
         {
@@ -332,9 +259,74 @@ double *femBandSystemEliminate(femBandSystem *myBand)
         for (j = i + 1 ; j < jend; j++) { factor += A[i][j] * B[j]; }
         B[i] = ( B[i] - factor) / A[i][i];
     }
-    return myBand->B;
+    return system->B;
 }
 
+double *positionMeshNodes;
+
+int comparPositionNode(const void *a, const void *b)
+{
+    const int *nodePos_a = (const int *) a;
+    const int *nodePos_b = (const int *) b;
+    
+    double diff = positionMeshNodes[*nodePos_a] - positionMeshNodes[*nodePos_b];
+    return (diff < 0) - (diff > 0);
+}
+
+void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
+{
+    int nNodes = theMesh->nodes->nNodes;
+    int *mapper = (int *) malloc(nNodes * sizeof(int));
+    if (mapper == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
+
+    switch (renumType)
+    {        
+        case FEM_NO :
+            break;
+
+        case FEM_XNUM :
+            positionMeshNodes = theMesh->nodes->X;
+            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
+            break;
+
+        case FEM_YNUM :
+            positionMeshNodes = theMesh->nodes->Y;
+            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
+            break;    
+
+        default : Error("Unexpected renumbering option");
+    }
+
+    // TODO : Check if this is correct
+    for (int i = 0; i < nNodes; i++) { theMesh->elem[mapper[i]] = i; }
+
+    free(mapper); 
+}
+
+int femMeshComputeBand(femMesh *theMesh)
+{
+    int maxNum, minNum, nodeNum, elemNum;
+    int band = 0;
+
+    for (int iElem = 0; iElem < theMesh->nElem; iElem++)
+    {   
+        maxNum = INT_MIN;
+        minNum = INT_MAX;
+
+        for (int j = 0; j < theMesh->nLocalNode; j++)
+        {
+            elemNum = theMesh->elem[iElem * theMesh->nLocalNode + j];
+            // TODO : Check if this is correct
+            nodeNum = theMesh->elem[elemNum];
+
+            maxNum = (nodeNum > maxNum) ? nodeNum : maxNum;
+            minNum = (nodeNum < minNum) ? nodeNum : minNum;
+        }
+        if (band < maxNum - minNum) { band = maxNum - minNum; }
+    }
+    return ++band;
+}
 
 
 /*********************************************************************************************************************/
@@ -343,78 +335,83 @@ double *femBandSystemEliminate(femBandSystem *myBand)
 
 femIterativeSolver *femIterativeSolverCreate(int size)
 {
-    femIterativeSolver *mySolver = malloc(sizeof(femIterativeSolver));
-    if (mySolver == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    mySolver->R = malloc(sizeof(double) * size * 4);
-    if (mySolver->R == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    mySolver->D = mySolver->R + size;       
-    mySolver->S = mySolver->R + size * 2;       
-    mySolver->X = mySolver->R + size * 3;       
-    mySolver->size = size;
-    femIterativeSolverInit(mySolver);
-    return mySolver;
+    femIterativeSolver *iterativeSolver = malloc(sizeof(femIterativeSolver));
+    if (iterativeSolver == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    femIterativeSolverAlloc(iterativeSolver, size);
+    femIterativeSolverInit(iterativeSolver);
+    return iterativeSolver;
 }
 
-void femIterativeSolverFree(femIterativeSolver *mySolver)
+void femIterativeSolverFree(femIterativeSolver *iterativeSolver)
 {
-    free(mySolver->R);
-    free(mySolver);
+    free(iterativeSolver->R);
+    free(iterativeSolver);
 }
 
-void femIterativeSolverInit(femIterativeSolver *mySolver)
+void femIterativeSolverAlloc(femIterativeSolver *iterativeSolver, int size)
 {
-    mySolver->iter  = 0;
-    mySolver->error = 10.0e+12;
-    for (int i = 0 ; i < mySolver->size * 4 ; i++) { mySolver->R[i] = 0; }        
+    iterativeSolver->R = malloc(sizeof(double) * size * 4);
+    if (iterativeSolver->R == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    iterativeSolver->D = iterativeSolver->R + size;       
+    iterativeSolver->S = iterativeSolver->R + size * 2;       
+    iterativeSolver->X = iterativeSolver->R + size * 3;       
+    iterativeSolver->size = size;
+}
+
+void femIterativeSolverInit(femIterativeSolver *iterativeSolver)
+{
+    iterativeSolver->iter  = 0;
+    iterativeSolver->error = 10.0e+12;
+    for (int i = 0 ; i < iterativeSolver->size * 4 ; i++) { iterativeSolver->R[i] = 0; }        
 }
  
-void femIterativeSolverPrint(femIterativeSolver *mySolver)
+void femIterativeSolverPrint(femIterativeSolver *iterativeSolver)
 {
     double *R;
     int size;
 
-    R    = mySolver->R;
-    size = mySolver->size;
+    R    = iterativeSolver->R;
+    size = iterativeSolver->size;
 
     for (int i = 0; i < size; i++) { printf("%d :  %+.1e \n",i,R[i]); }
 }
 
-void femIterativeSolverPrintInfos(femIterativeSolver *mySolver)
+void femIterativeSolverPrintInfos(femIterativeSolver *iterativeSolver)
 {
-    if (mySolver->iter == 1) { printf("\n    Iterative solver \n"); }
-    printf("    Iteration %4d : %14.7e\n",mySolver->iter,mySolver->error);
+    if (iterativeSolver->iter == 1) { printf("\n    Iterative solver \n"); }
+    printf("    Iteration %4d : %14.7e\n",iterativeSolver->iter, iterativeSolver->error);
 }
 
-int femIterativeSolverConverged(femIterativeSolver *mySolver)
+int femIterativeSolverConverged(femIterativeSolver *iterativeSolver)
 {
     int  testConvergence = 0;
-    if (mySolver->iter  > 3000)    { testConvergence = -1; }
-    if (mySolver->error < 10.0e-6) { testConvergence = 1; }
+    if (iterativeSolver->iter  > 3000)    { testConvergence = -1; }
+    if (iterativeSolver->error < 10.0e-6) { testConvergence = 1; }
     return testConvergence;
 }
 
-void femIterativeSolverAssemble(femIterativeSolver *mySolver, double *Aloc, double *Bloc, double *Uloc, int *map, int nLoc)
+void femIterativeSolverAssemble(femIterativeSolver *iterativeSolver, double *Aloc, double *Bloc, double *Uloc, int *map, int nLoc)
 {
     for (int i = 0; i < nLoc; i++)
     {
-        int myRow = map[i];
-        mySolver->R[myRow] -= Bloc[i];
-        for(int j = 0; j < nLoc; j++) { mySolver->R[myRow] += Aloc[i*nLoc+j]*Uloc[j]; }
+        int row = map[i];
+        iterativeSolver->R[row] -= Bloc[i];
+        for(int j = 0; j < nLoc; j++) { iterativeSolver->R[row] += Aloc[i * nLoc + j] * Uloc[j]; }
     }
 }
 
-double *femIterativeSolverEliminate(femIterativeSolver *mySolver)
+double *femIterativeSolverEliminate(femIterativeSolver *iterativeSolver)
 {
-    mySolver->iter++;
+    iterativeSolver->iter++;
     double error = 0.0;
-    for (int i = 0; i < mySolver->size; i++)
+    for (int i = 0; i < iterativeSolver->size; i++)
     {
-        error += mySolver->R[i] * mySolver->R[i];
-        mySolver->X[i] = - mySolver->R[i] / 5.0; 
-        mySolver->R[i] = 0.0;
+        error += iterativeSolver->R[i] * iterativeSolver->R[i];
+        iterativeSolver->X[i] = - iterativeSolver->R[i] / 5.0; 
+        iterativeSolver->R[i] = 0.0;
     }
-    mySolver->error = sqrt(error);
-    return mySolver->X;
+    iterativeSolver->error = sqrt(error);
+    return iterativeSolver->X;
 }
 
 
@@ -424,10 +421,10 @@ double *femIterativeSolverEliminate(femIterativeSolver *mySolver)
 
 femSolver *femSolverCreate(int sizeLoc)
 {
-    femSolver *mySolver = malloc(sizeof(femSolver));
-    if (mySolver == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    mySolver->local = femFullSystemCreate(sizeLoc);
-    return mySolver;
+    femSolver *solver = malloc(sizeof(femSolver));
+    if (solver == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    solver->local = femFullSystemCreate(sizeLoc);
+    return solver;
 }
 
 femSolver *femSolverFullCreate(int size, int sizeLoc)
@@ -463,7 +460,7 @@ void femSolverFree(femSolver *mySolver)
         case FEM_ITER : femIterativeSolverFree((femIterativeSolver *) mySolver->solver); break;
         default :       Error("Unexpected solver type");
     }
-    femFullSystemFree(mySolver->local);
+    free(mySolver->local);
     free(mySolver);
 }
 
@@ -520,6 +517,17 @@ void femSolverAssemble(femSolver *mySolver, double *Aloc, double *Bloc, double *
         case FEM_FULL : femFullSystemAssemble((femFullSystem *) mySolver->solver, Aloc, Bloc, map, nLoc); break;
         case FEM_BAND : femBandSystemAssemble((femBandSystem *) mySolver->solver, Aloc, Bloc, map, nLoc); break;
         case FEM_ITER : femIterativeSolverAssemble((femIterativeSolver *) mySolver->solver, Aloc, Bloc, Uloc, map, nLoc); break;
+        default :       Error("Unexpected solver type");
+    }
+}
+
+void femSolverConstrain(femSolver *solver, int node, double value)
+{
+    switch (solver->type)
+    {
+        case FEM_FULL : femFullSystemConstrain((femFullSystem *) solver->solver, node, value); break;
+        case FEM_BAND : femBandSystemConstrain((femBandSystem *) solver->solver, node, value); break;
+        case FEM_ITER : break;
         default :       Error("Unexpected solver type");
     }
 }

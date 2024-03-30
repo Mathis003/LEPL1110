@@ -10,6 +10,8 @@
 typedef enum {FEM_FULL,FEM_BAND,FEM_ITER} femSolverType;
 typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM} femRenumType;
 
+double *positionMeshNodes; // To renumber the mesh nodes
+
 typedef struct {
     double *B;
     double **A;
@@ -27,16 +29,16 @@ typedef struct {
     double *R;
     double *D;
     double *S;
-    double *X; 
-    double error;      
+    double *X;
+    double error;
     int size;
-    int iter;        
+    int iter;
 } femIterativeSolver;
 
 typedef struct {
     femSolverType type;
-    femFullSystem *local;
     void *solver;
+    femFullSystem *local;
 } femSolver;
 
 femFullSystem *femFullSystemCreate(int size);
@@ -53,17 +55,23 @@ void femFullSystemPrintInfos(femFullSystem *mySystem);
 femBandSystem *femBandSystemCreate(int size, int band);
 void femBandSystemFree(femBandSystem *myBandSystem);
 void femBandSystemInit(femBandSystem *myBandSystem);
+void femBandSystemAlloc(femBandSystem *system, int size, int band);
 int comparPosNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 void femBandSystemAssemble(femBandSystem *myBandSystem, double *Aloc, double *Bloc, int *map, int nLoc);
 double femBandSystemGet(femBandSystem* myBandSystem, int myRow, int myCol);
+void femBandSystemConstrain(femBandSystem *system, int node, double value); // TODO : To implement
 double *femBandSystemEliminate(femBandSystem *myBand);
 void femBandSystemPrint(femBandSystem *myBand);
 void femBandSystemPrintInfos(femBandSystem *myBand);
+int comparPositionNode(const void *a, const void *b);
+void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
+int femMeshComputeBand(femMesh *theMesh);
 
 femIterativeSolver *femIterativeSolverCreate(int size);
 void femIterativeSolverFree(femIterativeSolver *mySolver);
+void femIterativeSolverAlloc(femIterativeSolver *iterativeSolver, int size);
 void femIterativeSolverInit(femIterativeSolver *mySolver);
 void femIterativeSolverPrint(femIterativeSolver *mySolver);
 void femIterativeSolverPrintInfos(femIterativeSolver *mySolver);

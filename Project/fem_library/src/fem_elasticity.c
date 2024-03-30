@@ -51,13 +51,13 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
         theProblem->space = femDiscreteCreate(4, FEM_QUAD);
         theProblem->rule = femIntegrationCreate(4, FEM_QUAD);
     }
-    theProblem->system = femFullSystemCreate(size);
+    theProblem->solver = femSolverCreate(size);
     return theProblem;
 }
 
 void femElasticityFree(femProblem *theProblem)
 {
-    femFullSystemFree(theProblem->system);
+    femSolverFree(theProblem->solver);
     femIntegrationFree(theProblem->rule);
     femDiscreteFree(theProblem->space);
     for (int i = 0; i < theProblem->nBoundaryConditions; i++) { free(theProblem->conditions[i]); }
@@ -254,7 +254,7 @@ void femElasticityWrite(femProblem *theProblem, const char *filename)
     fclose(file);
 }
 
-femProblem *femElasticityRead(femGeometry *theGeometry, const char *filename)
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -293,7 +293,14 @@ femProblem *femElasticityRead(femGeometry *theGeometry, const char *filename)
         theProblem->space = femDiscreteCreate(4, FEM_QUAD);
         theProblem->rule = femIntegrationCreate(4, FEM_QUAD);
     }
-    theProblem->system = femFullSystemCreate(size);
+
+    switch (typeSolver)
+    {
+        case FEM_FULL: theProblem->solver = femSolverFullCreate(size, size); break;
+        case FEM_BAND: theProblem->solver = femSolverBandCreate(size, size, 10); break; // TODO : femMeshComputeBand(theProblem->theMesh) au lieu de '10' mais on a pas accès à theMesh 
+        case FEM_ITER: theProblem->solver = femSolverIterativeCreate(size, size); break;
+        default: Error("Unknown solver type");
+    }
 
     char theLine[MAXNAME];
     char theDomain[MAXNAME];

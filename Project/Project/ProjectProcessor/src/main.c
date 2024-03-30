@@ -10,25 +10,25 @@
 *
 */
 
+
+// geoMeshRead("../data/mesh.txt"); // DO NOT CHANGE THIS PATHNAME
+// femProblem *theProblem = femElasticityRead(theGeometry, "../data/problem.txt"); // DO NOT CHANGE THIS PATHNAME
+// femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); // DO NOT CHANGE THIS PATHNAME
+
 #include "../../../fem_library/include/fem_elasticity.h"
 #include "../../../fem_library/include/fem_geometry.h"
 
 int main(void)
 {
+    femSolverType typeSolver = FEM_FULL; // Chosing the solver type
+
     femGeometry *theGeometry = geoGetGeometry();
-    // geoMeshRead("../data/mesh.txt"); // DO NOT CHANGE THIS PATHNAME
     geoMeshRead("../../../data/mesh.txt");
-    // femProblem *theProblem = femElasticityRead(theGeometry, "../data/problem.txt"); // DO NOT CHANGE THIS PATHNAME
-    femProblem *theProblem = femElasticityRead(theGeometry, "../../../data/problem.txt");
+    femProblem *theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
     femElasticityPrint(theProblem);
     double *theSoluce = femElasticitySolve(theProblem);
     int nNodes = theGeometry->theNodes->nNodes;
-
-    // Write the solution to a file in this directory and in the ProjectPostProcess directory
-    // femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); // DO NOT CHANGE THIS PATHNAME
     femSolutionWrite(nNodes, 2, theSoluce, "../../../data/UV.txt");
-    // femSolutionWrite(nNodes, 2, theSoluce, "../../ProjectPostProcessor/data/UV.txt"); // TO REMOVE IN THE FINAL VERSION (FOR SUBMISSION)
-
     femElasticityFree(theProblem);
     geoFree();
     return EXIT_SUCCESS;
