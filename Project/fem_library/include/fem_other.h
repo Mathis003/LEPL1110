@@ -51,16 +51,27 @@ typedef struct {
 } femConstrainedNode;
 
 typedef struct {
-    double LxPlate, LyPlate;
+    double widthPlate, heightPlate;
+    double widthWindow, heightWindow;
+    double widthSubPlate, heightSubPlate;
+    double rxArc, ryArc;
+    double rxLongArc, ryLongArc;
+    double widthColumn;
+    double widthPillier, heightPillier;
+    double widthBigColumn, heightBigColumn;
+    double widthCable, heightCable, distanceBetweenCable;
+    double angleCable;
+
     double h;
-    femElementType elementType;
+    
     double (*geoSize)(double x, double y);
+
     femNodes *theNodes;
-    femMesh *theElements;
-    femMesh *theEdges;
+    femMesh  *theElements;
+    femMesh  *theEdges;
     int nDomains;
     femDomain **theDomains;
-} femGeo;
+} femGeometry;
 
 double femMin(double *x, int n);
 double femMax(double *x, int n);

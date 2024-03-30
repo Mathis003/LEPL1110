@@ -1,6 +1,6 @@
 #include "../include/fem_geometry.h"
 
-femGeo *geoGetGeometry(void) { return &theGeometry; }
+femGeometry *geoGetGeometry(void) { return &theGeometry; }
 
 void geoSetSizeCallback(double (*geoSize)(double x, double y)) { theGeometry.geoSize = geoSize; }
 

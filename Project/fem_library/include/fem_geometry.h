@@ -9,9 +9,9 @@
 
 #include "fem_other.h"
 
-femGeo theGeometry;
+femGeometry theGeometry;
 
-femGeo *geoGetGeometry(void);
+femGeometry *geoGetGeometry(void);
 double geoSize(double x, double y);
 void geoFree(void);
 void geoSetSizeCallback(double (*geoSize)(double x, double y));

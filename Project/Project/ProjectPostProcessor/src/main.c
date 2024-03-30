@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     /* 1 : Lecture des donnees */ 
     /***************************/
 
-    femGeo *theGeometry = geoGetGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
     geoMeshRead("../../../data/mesh.txt");
 
     femProblem *theProblem = femElasticityRead(theGeometry, "../../../data/problem.txt");

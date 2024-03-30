@@ -7,31 +7,11 @@ TODO : Raffiner intelligemment
 TODO : Construire la geometrie
 */
 
-typedef struct {
-    double widthPlate, heightPlate;
-    double widthWindow, heightWindow;
-    double widthSubPlate, heightSubPlate;
-    double rxArc, ryArc;
-    double rxLongArc, ryLongArc;
-    double widthColumn;
-    double widthPillier, heightPillier;
-    double widthBigColumn, heightBigColumn;
-    double widthCable, heightCable, distanceBetweenCable;
-    double angleCable;
-    double (*geoSize)(double x, double y);
-    femNodes *theNodes;
-    femMesh  *theElements;
-    femMesh  *theEdges;
-    int nDomains;
-    femDomain **theDomains;
-} femGeometry;
-
 
 femGeometry *geoGetMyGeometry()
 {
-    const double PI = 3.14159265358979323846;
-
     femGeometry *theGeometry = malloc(sizeof(femGeometry));
+    if (theGeometry == NULL) { Error("Memory Allocation Error"); return NULL; }
 
     theGeometry->widthPlate = 62.0;
     theGeometry->heightPlate = 6.5; // Minimum 6.0
@@ -48,7 +28,7 @@ femGeometry *geoGetMyGeometry()
     theGeometry->heightPillier = 5.0;
     theGeometry->widthBigColumn = 2;
     theGeometry->heightBigColumn = 6.0;
-    theGeometry->angleCable = 135 * PI / 180;
+    theGeometry->angleCable = 135 * M_PI / 180;
     theGeometry->widthCable = 0.2;
     theGeometry->heightCable = 14.5;
     theGeometry->distanceBetweenCable = 0.8;
@@ -379,8 +359,6 @@ void createSubPlate(femGeometry *theGeometry, int *idSubPlate, int ierr)
 
 void geoMeshGenerate()
 {
-    const double PI = 3.14159265358979323846;
-
     femGeometry *theGeometry = geoGetMyGeometry();
     
     int ierr;

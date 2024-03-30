@@ -1,6 +1,6 @@
 #include "../include/fem_elasticity.h"
 
-femProblem *femElasticityCreate(femGeo *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
 {
     femProblem *theProblem = malloc(sizeof(femProblem));
     if (theProblem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
@@ -254,7 +254,7 @@ void femElasticityWrite(femProblem *theProblem, const char *filename)
     fclose(file);
 }
 
-femProblem *femElasticityRead(femGeo *theGeometry, const char *filename)
+femProblem *femElasticityRead(femGeometry *theGeometry, const char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }

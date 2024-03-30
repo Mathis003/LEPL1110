@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     /************************************/
 
     geoInitialize();
-    femGeo *theGeometry = geoGetGeometry();
+    femGeometry *theGeometry = geoGetGeometry();
 
     /* Option 1 : Utilisation de GMSH avec OpenCascade */
 
