@@ -45,81 +45,9 @@ int main(int argc, char *argv[])
 
     geoInitialize();
     femGeometry *theGeometry = geoGetGeometry();
-
     geoMeshGenerate();
     geoMeshImport();
-
-    // Define the domain's name
-    geoSetDomainName(5, "PILAR R 1");
-    geoSetDomainName(6, "PILAR D 1");
-    geoSetDomainName(7, "PILAR L 1");
-    geoSetDomainName(1, "PILAR R 2");
-    geoSetDomainName(2, "PILAR D 2");
-    geoSetDomainName(3, "PILAR L 2");
-
-    geoSetDomainName(10, "SUB ROADWAY U 1");
-    geoSetDomainName(33, "SUB ROADWAY U 2");
-    geoSetDomainName(38, "SUB ROADWAY U 3");
-    geoSetDomainName(42, "SUB ROADWAY U 4");
-    geoSetDomainName(51, "SUB ROADWAY U 5");
-    geoSetDomainName(49, "SUB ROADWAY U 6");
-    geoSetDomainName(56, "SUB ROADWAY U 7");
-    geoSetDomainName(27, "SUB ROADWAY U 8");
-    geoSetDomainName(8, "SUB ROADWAY D 1");
-    geoSetDomainName(4, "SUB ROADWAY D 2");
-    geoSetDomainName(0, "SUB ROADWAY D 3");
-    geoSetDomainName(9, "SUB ROADWAY L");
-    geoSetDomainName(28, "SUB ROADWAY R");
-
-    geoSetDomainName(13, "ROADWAY L");
-    geoSetDomainName(24, "ROADWAY R");
-    // geoSetDomainName(13, "ROADWAY U 1"); // NUMERO
-    // geoSetDomainName(24, "ROADWAY U 2"); // NUMERO
-
-    geoSetDomainName(29, "WINDOW D 1");
-    geoSetDomainName(30, "WINDOW L 1");
-    geoSetDomainName(31, "WINDOW R 1");
-    geoSetDomainName(32, "WINDOW U 1");
-    geoSetDomainName(43, "WINDOW D 2");
-    geoSetDomainName(44, "WINDOW L 2");
-    geoSetDomainName(45, "WINDOW R 2");
-    geoSetDomainName(46, "WINDOW U 2");
-
-    geoSetDomainName(11, "PILE L 1");
-    geoSetDomainName(35, "PILE R 1");
-    geoSetDomainName(37, "PILE L 2");
-    geoSetDomainName(41, "PILE R 2");
-    geoSetDomainName(40, "PILE L 3");
-    geoSetDomainName(52, "PILE R 3");
-    geoSetDomainName(48, "PILE L 4");
-    geoSetDomainName(55, "PILE R 4");
-    geoSetDomainName(54, "PILE L 5");
-    geoSetDomainName(26, "PILE R 5");
-
-    geoSetDomainName(12, "ARC 1");
-    geoSetDomainName(34, "ARC 2");
-    geoSetDomainName(36, "ARC 3");
-    geoSetDomainName(39, "ARC 4");
-    geoSetDomainName(50, "ARC 5");
-    geoSetDomainName(47, "ARC 6");
-    geoSetDomainName(53, "ARC 7");
-    geoSetDomainName(25, "ARC 8");
-
-    // geoSetDomainName(0, "PYLON 1 L"); // NUMERO
-    // geoSetDomainName(0, "PYLON 1 R"); // NUMERO
-    // geoSetDomainName(0, "PYLON 1 UL"); // NUMERO
-    // geoSetDomainName(0, "PYLON 1 UR"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 L"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 R"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 UL"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 UR"); // NUMERO
-    // geoSetDomainName(0, "PYLON 3 L"); // NUMERO
-    // geoSetDomainName(0, "PYLON 3 R"); // NUMERO
-
-    // geoSetDomainName(0, "TOP BALL 1"); // NUMERO
-    // geoSetDomainName(0, "TOP BALL 2"); // NUMERO
-
-
+    setDomainsName();
     geoMeshWrite("../../../data/mesh.txt");
 
     /******************************/
@@ -128,77 +56,16 @@ int main(int argc, char *argv[])
 
     double E_steel = 200.e9;
     double E_reinforced_concrete = 35e9;
-
     double nu_steel = 0.3;
     double nu_reinforced_concrete = 0.2;
-
     double rho_steel = 7.85e3;
     double rho_reinforced_concrete = 2.5e3;
-    
     double gx = 0;
     double gy = -9.81;
-
-    // TODO : Rendre possible le multi-materiaux
+    
     femProblem *theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, PLANAR_STRAIN);
-
-    // Boundary conditions
-
-    femElasticityAddBoundaryCondition(theProblem, "PILAR R 1", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "PILAR L 1", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "PILAR D 1", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "PILAR R 2", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "PILAR L 2", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "PILAR D 2", DIRICHLET_XY, 0.0, 0.0);
-
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 1", NEUMANN_Y, 800.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 2", NEUMANN_Y, 1000.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 3", NEUMANN_Y, 1200.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 4", NEUMANN_Y, 700.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 5", NEUMANN_Y, 20.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 6", NEUMANN_Y, 1000.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 7", NEUMANN_Y, 1300.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "SUB ROADWAY U 8", NEUMANN_Y, 800.0, NAN);
-
-    femElasticityAddBoundaryCondition(theProblem, "ROADWAY L", DIRICHLET_XY, 0.0, 0.0);
-    femElasticityAddBoundaryCondition(theProblem, "ROADWAY R", DIRICHLET_XY, 0.0, 0.0);
-
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW D 1", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW L 1", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW R 1", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW U 1", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW D 2", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW L 2", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW R 2", NEUMANN_Y, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "WINDOW U 2", NEUMANN_X, 0.0, NAN);
-
-    femElasticityAddBoundaryCondition(theProblem, "PILE L 1", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE R 1", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE L 2", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE R 2", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE L 3", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE R 3", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE L 4", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE R 4", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE L 5", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "PILE R 5", NEUMANN_X, 0.0, NAN);
-
-    femElasticityAddBoundaryCondition(theProblem, "ARC 1", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 2", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 3", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 4", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 5", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 6", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 7", NEUMANN_X, 0.0, NAN);
-    femElasticityAddBoundaryCondition(theProblem, "ARC 8", NEUMANN_X, 0.0, NAN);
-
-
+    createBoundaryConditions(theProblem);
     femElasticityPrint(theProblem);
-
     femElasticityWrite(theProblem, "../../../data/problem.txt");
 
     /***************************************************/
@@ -215,7 +82,7 @@ int main(int argc, char *argv[])
     double hMin = femMin(meshSizeField, theNodes->nNodes);
     double hMax = femMax(meshSizeField, theNodes->nNodes);
 
-    printf(" ==== Global requested h : %14.7e \n", theGeometry->h);
+    printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
     printf(" ==== Minimum h          : %14.7e \n", hMin);
     printf(" ==== Maximum h          : %14.7e \n", hMax);
 

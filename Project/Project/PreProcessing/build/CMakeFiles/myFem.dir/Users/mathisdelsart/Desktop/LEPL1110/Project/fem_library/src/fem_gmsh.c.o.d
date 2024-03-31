@@ -86,4 +86,13 @@ CMakeFiles/myFem.dir/Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/sr
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/secure/_string.h \
   /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/../include/fem_other.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/math.h
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/math.h \
+  /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/../include/fem_elasticity.h \
+  /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/../include/fem_solver.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/machine/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/arm/limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/arm/_limits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/usr/include/sys/syslimits.h \
+  /Users/mathisdelsart/Desktop/LEPL1110/Project/fem_library/src/../include/fem_integrate.h

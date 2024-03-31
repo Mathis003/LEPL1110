@@ -1,6 +1,6 @@
 #include "../include/fem_gmsh.h"
 
-double geoSizeDefault(double x, double y) { return theGeometry.h; }
+double geoSizeDefault(double x, double y) { return theGeometry.defaultSize; }
 
 double geoGmshSize(int dim, int tag, double x, double y, double z, double lc, void *data) { return theGeometry.geoSize(x, y); }
 

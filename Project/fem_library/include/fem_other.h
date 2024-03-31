@@ -51,18 +51,17 @@ typedef struct {
 } femConstrainedNode;
 
 typedef struct {
-    double widthPlate, heightPlate;
+    double widthSpanBridge, heightBridge;
     double widthWindow, heightWindow;
-    double widthSubPlate, heightSubPlate;
+    double widthSubRoadWay, heightSubRoadWay;
     double rxArc, ryArc;
     double rxLongArc, ryLongArc;
-    double widthColumn;
-    double widthPillier, heightPillier;
-    double widthBigColumn, heightBigColumn;
-    double widthCable, heightCable, distanceBetweenCable;
-    double angleCable;
+    double widthPiles;
+    double widthPillars, heightPillars;
+    double widthPylons, heightPylons;
+    double widthStayCables, heightStayCables, distStayCables, angleStayCables;
 
-    double h;
+    double defaultSize;
     
     double (*geoSize)(double x, double y);
     double * (*getMaterialProperties)(char *material);

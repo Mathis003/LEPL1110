@@ -1,75 +1,166 @@
 #include "../../../fem_library/include/fem_geometry.h"
 #include "../../../fem_library/include/fem_gmsh.h"
+#include "../../../fem_library/include/fem_elasticity.h"
+
+/*
+* TODO
+* - Raffiner le maillage
+* - Ajouter les conditions aux limites (finir)
+* - Vérifier le sens des contours (convention pour la normale)
+* - Faire en sort d'arriver à Fuse la TopBall de droite (voir le TODO dans le code)
+* - Ajouter une fonction qui determine si un point (x, y) se trouve à une distance d'une frontière => Pour raffiner les bords
+*/
+
+/**********************************/
+/********* Gmsh functions *********/
+/**********************************/
+
+int createRectangle(double x, double y, double width, double height)
+{
+    int ierr;
+    return gmshModelOccAddRectangle(x, y, 0.0, width, height, -1, 0, &ierr);
+}
+
+int createDisk(double xc, double yc, double rx, double ry)
+{
+    int ierr;
+    return gmshModelOccAddDisk(xc, yc, 0.0, rx, ry, -1, NULL, 0, NULL, 0, &ierr);
+}
+
+void cutElement(int *mainElement, int *cutElement)
+{
+    int ierr;
+    gmshModelOccCut(mainElement, 2, cutElement, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+}
+
+void fuseElement(int *mainElement, int *fuseElement)
+{
+    int ierr;
+    gmshModelOccFuse(mainElement, 2, fuseElement, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
+}
+
+void rotateElement(int *element, double posX, double posY, double angle)
+{
+    int ierr;
+    gmshModelOccRotate(element, 2, posX, posY, 0.0, 0.0, 0.0, 1.0, angle, &ierr);
+}
 
 
-// TODO : Raffiner intelligemment
+/*************************************/
+/********* Position Geometry *********/
+/*************************************/
 
-
-/*********************************************************************************************************************/
-/************** POSITION GEOMETRY ***** POSITION GEOMETRY ***** POSITION GEOMETRY ***** POSITION GEOMETRY ************/
-/*********************************************************************************************************************/
-
-int isTablier(double x, double y)
+int isFixedPillar(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
-    const double HEIGHT_TABLIER = 1.0;
-
-    if ((y >= theGeometry->heightPillier + theGeometry->heightPlate - HEIGHT_TABLIER) && (y <= theGeometry->heightPillier + theGeometry->heightPlate)) { return TRUE; }
+    if (y <= theGeometry->heightPillars / 3) { return TRUE; }
     return FALSE;
 }
 
-int isSubTablier(double x, double y)
+int isPile(double x, double y)
+{
+    double xCenter, yCenter, newX, newY, dist;
+    femGeometry *theGeometry = geoGetGeometry();
+
+    yCenter = theGeometry->heightPillars + theGeometry->heightSubRoadWay;
+    if (y <= yCenter) { return FALSE; }
+
+    xCenter = 0.0;
+    newX = (x - xCenter) / theGeometry->rxLongArc;
+    newY = (y - yCenter) / theGeometry->ryLongArc;
+    dist = newX * newX + newY * newY;
+    if (dist < 1.0) { return TRUE; }
+
+    xCenter = - theGeometry->rxLongArc - theGeometry->widthPillars - theGeometry->rxArc;
+    newX = (x - xCenter) / theGeometry->rxArc;
+    newY = (y - yCenter) / theGeometry->ryArc;
+    dist = newX * newX + newY * newY;
+    if (dist < 1.0) { return TRUE; }
+
+    xCenter = theGeometry->rxLongArc + theGeometry->widthPillars + theGeometry->rxArc;
+    newX = (x - xCenter) / theGeometry->rxArc;
+    newY = (y - yCenter) / theGeometry->ryArc;
+    dist = newX * newX + newY * newY;
+    if (dist < 1.0) { return TRUE; }
+
+    xCenter = theGeometry->widthSpanBridge / 2;
+    newX = (x - xCenter) / theGeometry->rxArc;
+    newY = (y - yCenter) / theGeometry->ryArc;
+    dist = newX * newX + newY * newY;
+    if (dist < 1.0) { return TRUE; }
+
+    xCenter = - theGeometry->widthSpanBridge / 2;
+    newX = (x - xCenter) / theGeometry->rxArc;
+    newY = (y - yCenter) / theGeometry->ryArc;
+    dist = newX * newX + newY * newY;
+    if (dist < 1.0) { return TRUE; }
+
+    return FALSE;
+}
+
+int isRoadWay(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
 
-    if ((y < theGeometry->heightPillier) || (y > theGeometry->heightSubPlate + theGeometry->heightPillier)) { return FALSE; }
+    double yBridge = theGeometry->heightPillars + theGeometry->heightBridge;
+    double heigthRoadWay = 1.0;
+
+    return ((y >= yBridge - heigthRoadWay) && (y <= yBridge));
+}
+
+int isSubRoadWay(double x, double y)
+{
+    femGeometry *theGeometry = geoGetGeometry();
+
+    if ((y < theGeometry->heightPillars) || (y > theGeometry->heightSubRoadWay + theGeometry->heightPillars)) { return FALSE; }
     
-    if ((x > theGeometry->rxLongArc) && (x < theGeometry->rxLongArc + theGeometry->widthPillier)) { return FALSE; }
-    if ((x > theGeometry->rxLongArc + theGeometry->widthPillier + 2 * theGeometry->rxArc) &&
-        (x < theGeometry->rxLongArc + 2 * theGeometry->widthPillier + 2 * theGeometry->rxArc))
+    if ((x > theGeometry->rxLongArc) && (x < theGeometry->rxLongArc + theGeometry->widthPillars)) { return FALSE; }
+    if ((x > theGeometry->rxLongArc + theGeometry->widthPillars + 2 * theGeometry->rxArc) &&
+        (x < theGeometry->rxLongArc + 2 * theGeometry->widthPillars + 2 * theGeometry->rxArc))
         { return FALSE; }
 
-    if ((x < -theGeometry->rxLongArc) && (x > -theGeometry->rxLongArc - theGeometry->widthPillier)) { return FALSE; }
-    if ((x < -theGeometry->rxLongArc - theGeometry->widthPillier - 2 * theGeometry->rxArc) &&
-        (x > -theGeometry->rxLongArc - 2 * theGeometry->widthPillier - 2 * theGeometry->rxArc))
+    if ((x < -theGeometry->rxLongArc) && (x > -theGeometry->rxLongArc - theGeometry->widthPillars)) { return FALSE; }
+    if ((x < -theGeometry->rxLongArc - theGeometry->widthPillars - 2 * theGeometry->rxArc) &&
+        (x > -theGeometry->rxLongArc - 2 * theGeometry->widthPillars - 2 * theGeometry->rxArc))
         { return FALSE; }
 
     return TRUE;
 }
 
-int isCables(double x, double y)
+int isStayCables(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
 
-    if ((y <= theGeometry->heightPlate + theGeometry->heightPillier) || (y >= theGeometry->heightPlate + theGeometry->heightPillier + 5 * theGeometry->heightBigColumn / 3)) { return FALSE; }
+    if ((y <= theGeometry->heightBridge + theGeometry->heightPillars) || (y >= theGeometry->heightBridge + theGeometry->heightPillars + 5 * theGeometry->heightPylons / 3)) { return FALSE; }
 
-    if ((x < theGeometry->rxLongArc + theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 2) &&
-        (x > - theGeometry->rxLongArc - theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 2))
+    if ((x < theGeometry->rxLongArc + theGeometry->widthPillars / 2 - theGeometry->widthPylons / 2) &&
+        (x > - theGeometry->rxLongArc - theGeometry->widthPillars / 2 + theGeometry->widthPylons / 2))
         { return TRUE; }
 
-    if (x > theGeometry->rxLongArc + theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 2)  { return TRUE; }
-    if (x < -theGeometry->rxLongArc - theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 2) { return TRUE; }
+    if (x > theGeometry->rxLongArc + theGeometry->widthPillars / 2 + theGeometry->widthPylons / 2)  { return TRUE; }
+    if (x < -theGeometry->rxLongArc - theGeometry->widthPillars / 2 - theGeometry->widthPylons / 2) { return TRUE; }
 
-    if (y > theGeometry->heightPlate + theGeometry->heightPillier + theGeometry->heightBigColumn)
+    if (y > theGeometry->heightBridge + theGeometry->heightPillars + theGeometry->heightPylons)
     {
-        if ((x < theGeometry->rxLongArc + theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 4) &&
-            (x > -theGeometry->rxLongArc - theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 4))
+        if ((x < theGeometry->rxLongArc + theGeometry->widthPillars / 2 - theGeometry->widthPylons / 4) &&
+            (x > -theGeometry->rxLongArc - theGeometry->widthPillars / 2 + theGeometry->widthPylons / 4))
             { return TRUE; }
 
-        if (x > theGeometry->rxLongArc + theGeometry->widthPillier / 2 + theGeometry->widthBigColumn / 4)  { return TRUE; }
-        if (x < -theGeometry->rxLongArc - theGeometry->widthPillier / 2 - theGeometry->widthBigColumn / 4) { return TRUE; }
+        if (x > theGeometry->rxLongArc + theGeometry->widthPillars / 2 + theGeometry->widthPylons / 4)  { return TRUE; }
+        if (x < -theGeometry->rxLongArc - theGeometry->widthPillars / 2 - theGeometry->widthPylons / 4) { return TRUE; }
     }
     return FALSE;
 }
 
 
-/*************************************************************************************************************/
-/********* MATERIALS ********* MATERIALS ********* MATERIALS ********* MATERIALS ********* MATERIALS *********/
-/**************************************************************************************************************/
+/*****************************/
+/********* MATERIALS *********/
+/*****************************/
 
 double *getMaterialProperties(char *material)
 {
     double *properties = malloc(3 * sizeof(double));
+    if (properties == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return NULL; }
     if (strcmp(material, "steel") == 0)
     {
         properties[0] = 200.0e9; // E [Pa]
@@ -88,353 +179,356 @@ double *getMaterialProperties(char *material)
 
 char *getMaterials(double x, double y)
 {
-    if (isSubTablier(x, y) == TRUE || isTablier(x, y) == TRUE || isCables(x, y) == TRUE) { return "steel"; }
-    return "reinforced_concrete";
+    return (isSubRoadWay(x, y) == TRUE || isRoadWay(x, y) == TRUE || isStayCables(x, y) == TRUE) ? "steel" : "reinforced_concrete";
 }
 
 
-/************************************************************************************/
-/********* MESH ********* MESH ********* MESH ********* MESH ********* MESH *********/
-/************************************************************************************/
+/****************************/
+/********* GEO SIZE *********/
+/****************************/
 
 double geoSize(double x, double y)
 {  
-    if (isSubTablier(x, y) == TRUE) { return 0.6; }
-    if (isTablier(x, y) == TRUE)    { return 0.6; }
-    if (isCables(x, y) == TRUE)     { return 0.1; }
-    else                            { return 0.6; }
+    femGeometry *theGeometry = geoGetGeometry();
+    if (isSubRoadWay(x, y) == TRUE)  { return theGeometry->defaultSize / 2; }
+    if (isRoadWay(x, y) == TRUE)     { return theGeometry->defaultSize / 2; }
+    if (isStayCables(x, y) == TRUE)  { return theGeometry->defaultSize / 6; }
+    if (isPile(x, y) == TRUE)        { return theGeometry->defaultSize / 3;}
+    if (isFixedPillar(x, y) == TRUE) { return theGeometry->defaultSize / 3; }
+    else                             { return theGeometry->defaultSize; }
 }
 
-void createWindows(femGeometry *theGeometry, int *idWindows, int ierr)
+
+/********************************************/
+/********* Create Bridge components *********/
+/********************************************/
+
+void createWindows(femGeometry *theGeometry, int *idWindows)
 {
-    double offset = 0.5;
-    double y = theGeometry->heightPillier + theGeometry->heightSubPlate + offset;
-    double x1 = theGeometry->rxLongArc + theGeometry->widthPillier / 4;
-    double x2 = theGeometry->rxLongArc + 2 * theGeometry->rxArc + 5 * theGeometry->widthPillier / 4;
+    double width  = theGeometry->widthWindow;
+    double height = theGeometry->heightWindow;
 
-    int id1 = gmshModelOccAddRectangle(- x1 - theGeometry->widthWindow, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
-    int id2 = gmshModelOccAddRectangle(- x2 - theGeometry->widthWindow, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
-    int id3 = gmshModelOccAddRectangle(x1, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
-    int id4 = gmshModelOccAddRectangle(x2, y, 0.0, theGeometry->widthWindow, theGeometry->heightWindow, -1, 0, &ierr);
+    double offsetY = 0.5;
+    double x1 = theGeometry->rxLongArc + theGeometry->widthPillars / 4;
+    double x2 = theGeometry->rxLongArc + 2 * theGeometry->rxArc + 5 * theGeometry->widthPillars / 4;
+    double y = theGeometry->heightPillars + theGeometry->heightSubRoadWay + offsetY;
 
-    int tempId[] = {id1, id2, id3, id4};
-    memcpy(idWindows, tempId, 4 * sizeof(int));
+    idWindows[0] = createRectangle(- x1 - width, y, width, height);
+    idWindows[1] = createRectangle(- x2 - width, y, width, height);
+    idWindows[2] = createRectangle(x1, y, width, height);
+    idWindows[3] = createRectangle(x2, y, width, height);
 }
 
-void createColumns(femGeometry *theGeometry, int *idColumns, int ierr)
+void createPiles(femGeometry *theGeometry, int *idPiles)
 {
-    double offset = theGeometry->widthColumn / 2;
-    double y = theGeometry->heightPillier + theGeometry->heightSubPlate;
+    double width = theGeometry->widthPiles;
+    double height = theGeometry->ryArc;
 
-    double x1 = theGeometry->rxLongArc / 4;
-    double x2 = 3 * theGeometry->rxLongArc / 4;
-    double x3 = theGeometry->rxLongArc + theGeometry->widthPillier + theGeometry->rxArc / 2;
-    double x4 = theGeometry->rxLongArc + theGeometry->widthPillier + 3 * theGeometry->rxArc / 2;
-    double x5 = theGeometry->widthPlate / 2 - theGeometry->rxArc / 2;
+    double offsetX = theGeometry->widthPiles / 2;
+    double y = theGeometry->heightPillars + theGeometry->heightSubRoadWay;
 
-    int id1  = gmshModelOccAddRectangle(x1 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id2  = gmshModelOccAddRectangle(- x1 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id3  = gmshModelOccAddRectangle(x2 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id4  = gmshModelOccAddRectangle(- x2 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id5  = gmshModelOccAddRectangle(x3 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id6  = gmshModelOccAddRectangle(- x3 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id7  = gmshModelOccAddRectangle(x4 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id8  = gmshModelOccAddRectangle(- x4 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id9  = gmshModelOccAddRectangle(x5 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
-    int id10 = gmshModelOccAddRectangle(- x5 - offset, y, 0.0, theGeometry->widthColumn, theGeometry->ryArc, -1, 0, &ierr);
+    double x1 = theGeometry->rxLongArc / 4 - offsetX;
+    double x2 = 3 * theGeometry->rxLongArc / 4 - offsetX;
+    double x3 = theGeometry->rxLongArc + theGeometry->widthPillars + theGeometry->rxArc / 2 - offsetX;
+    double x4 = theGeometry->rxLongArc + theGeometry->widthPillars + 3 * theGeometry->rxArc / 2 - offsetX;
+    double x5 = theGeometry->widthSpanBridge / 2 - theGeometry->rxArc / 2 - offsetX;
 
-    int tempId[] = {id1, id2, id3, id4, id5, id6, id7, id8, id9, id10};
-    memcpy(idColumns, tempId, 10 * sizeof(int));
+    idPiles[0] = createRectangle(x1, y, width, height);
+    idPiles[1] = createRectangle(- x1, y, width, height);
+    idPiles[2] = createRectangle(x2, y, width, height);
+    idPiles[3] = createRectangle(- x2, y, width, height);
+    idPiles[4] = createRectangle(x3, y, width, height);
+    idPiles[5] = createRectangle(- x3, y, width, height);
+    idPiles[6] = createRectangle(x4, y, width, height);
+    idPiles[7] = createRectangle(- x4, y, width, height);
+    idPiles[8] = createRectangle(x5, y, width, height);
+    idPiles[9] = createRectangle(- x5, y, width, height);
 }
 
-void createPilliers(femGeometry *theGeometry, int *idPilliers, int ierr)
+void createPillars(femGeometry *theGeometry, int *idPillars)
 {
-    double width  = theGeometry->widthPillier;
-    double height = theGeometry->heightPillier;
+    double width  = theGeometry->widthPillars;
+    double height = theGeometry->heightPillars;
 
-    double y = 0.0;
     double x1 = theGeometry->rxLongArc;
-    double x2 = theGeometry->widthPlate / 2 - theGeometry->rxArc;
-
-    int id1 = gmshModelOccAddRectangle(- x2, y, 0.0, width, height, -1, 0, &ierr);
-    int id2 = gmshModelOccAddRectangle(- x1 - width, y, 0.0, width, height, -1, 0, &ierr);
-    int id3 = gmshModelOccAddRectangle(x1, y, 0.0, width, height, -1, 0, &ierr);
-    int id4 = gmshModelOccAddRectangle(x2 - width, y, 0.0, width, height, -1, 0, &ierr);
-
-    int tempId[] = {id1, id2, id3, id4};
-    memcpy(idPilliers, tempId, 4 * sizeof(int));
+    double x2 = theGeometry->widthSpanBridge / 2 - theGeometry->rxArc;
+    double y = 0.0;
+    
+    idPillars[0] = createRectangle(- x2, y, width, height);
+    idPillars[1] = createRectangle(- x1 - width, y, width, height);
+    idPillars[2] = createRectangle(x1, y, width, height);
+    idPillars[3] = createRectangle(x2 - width, y, width, height);
 }
 
-void createArcs(femGeometry *theGeometry, int *idArcs, int ierr)
+void createArcs(femGeometry *theGeometry, int *idArcs)
 {
     double rxArc = theGeometry->rxArc;
     double ryArc = theGeometry->ryArc;
     double rxLongArc = theGeometry->rxLongArc;
     double ryLongArc = theGeometry->ryLongArc;
 
-    double y = theGeometry->heightPillier + theGeometry->heightSubPlate;
-    double x1 = theGeometry->rxLongArc + 2 * theGeometry->widthPillier + 3 * theGeometry->rxArc;
-    double x2 = theGeometry->rxLongArc + theGeometry->widthPillier;
+    double x1 = theGeometry->rxLongArc + 2 * theGeometry->widthPillars + 3 * theGeometry->rxArc;
+    double x2 = theGeometry->rxLongArc + theGeometry->widthPillars;
+    double y = theGeometry->heightPillars + theGeometry->heightSubRoadWay;
 
-    int id1 = gmshModelOccAddDisk(- x1, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
-    int id2 = gmshModelOccAddDisk(- x2 - rxArc, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
-    int id3 = gmshModelOccAddDisk(0.0, y, 0.0, rxLongArc, ryLongArc, -1, NULL, 0, NULL, 0, &ierr);
-    int id4 = gmshModelOccAddDisk(x2 + rxArc, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
-    int id5 = gmshModelOccAddDisk(x1, y, 0.0, rxArc, ryArc, -1, NULL, 0, NULL, 0, &ierr);
-
-    int tempId[] = {id1, id2, id3, id4, id5};
-    memcpy(idArcs, tempId, 5 * sizeof(int));
+    idArcs[0] = createDisk(- x1, y, rxArc, ryArc);
+    idArcs[1] = createDisk(- x2 - rxArc, y, rxArc, ryArc);
+    idArcs[2] = createDisk(0.0, y, rxLongArc, ryLongArc);
+    idArcs[3] = createDisk(x2 + rxArc, y, rxArc, ryArc);
+    idArcs[4] = createDisk(x1, y, rxArc, ryArc);
 }
 
-void createBigColumns(femGeometry *theGeometry, int *idBigColumns, int ierr)
+void createPylons(femGeometry *theGeometry, int *idPylons)
 {
-    double width = theGeometry->widthBigColumn;
-    double height = theGeometry->heightBigColumn;
+    double width  = theGeometry->widthPylons;
+    double height = theGeometry->heightPylons;
 
-    double y = theGeometry->heightPillier + theGeometry->heightPlate;
+    double x = theGeometry->rxLongArc + theGeometry->widthPillars / 2;
+    double y = theGeometry->heightPillars + theGeometry->heightBridge;
 
-    // To change if the column position change
-    double x = theGeometry->rxLongArc + theGeometry->widthPillier / 2;
-
-    int id1 = gmshModelOccAddRectangle(-x - width / 2, y, 0.0, width, height, -1, 0, &ierr);
-    int id2 = gmshModelOccAddRectangle(-x - width / 4, y + height, 0.0, width / 2, 2 * height / 3, -1, 0, &ierr);
-    int id3 = gmshModelOccAddRectangle(-x - width / 8, y + 5 * height / 3, 0.0, width / 4, height / 3, -1, 0, &ierr);
-    int id4 = gmshModelOccAddRectangle(x - width / 2, y, 0.0, width, height, -1, 0, &ierr);
-    int id5 = gmshModelOccAddRectangle(x - width / 4, y + height, 0.0, width / 2, 2 * height / 3, -1, 0, &ierr);
-    int id6 = gmshModelOccAddRectangle(x - width / 8, y + 5 * height / 3, 0.0, width / 4, height / 3, -1, 0, &ierr);
-
-    int tempId[] = {id1, id2, id3, id4, id5, id6};
-    memcpy(idBigColumns, tempId, 6 * sizeof(int));
+    idPylons[0] = createRectangle(-x - width / 2, y, width, height);
+    idPylons[1] = createRectangle(-x - width / 4, y + height, width / 2, 2 * height / 3);
+    idPylons[2] = createRectangle(-x - width / 8, y + 5 * height / 3, width / 4, height / 3);
+    idPylons[3] = createRectangle(x - width / 2, y, width, height);
+    idPylons[4] = createRectangle(x - width / 2, y, width, height);
+    idPylons[5] = createRectangle(x - width / 4, y + height, width / 2, 2 * height / 3);
+    idPylons[6] = createRectangle(x - width / 8, y + 5 * height / 3, width / 4, height / 3);
 }
 
-void createDisk(femGeometry *theGeometry, int *idDisks, int ierr)
+void createTopBall(femGeometry *theGeometry, int *idTopBall)
 {
-    double r = theGeometry->widthBigColumn / 3;
-    // To change if the column position change
-    double x = theGeometry->rxLongArc + theGeometry->widthPillier / 2;
-    double y = theGeometry->heightPillier + theGeometry->heightPlate + 2 * theGeometry->heightBigColumn + r / 3;
+    double r = theGeometry->widthPylons / 3;
+    double x = theGeometry->rxLongArc + theGeometry->widthPillars / 2;
+    double y = theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + r / 3;
 
-    int id1 = gmshModelOccAddDisk(- x, y, 0.0, r, r, -1, NULL, 0, NULL, 0, &ierr);
-    int id2 = gmshModelOccAddDisk(x, y, 0.0, r, r, -1, NULL, 0, NULL, 0, &ierr);
-
-    int tempId[] = {id1, id2};
-    memcpy(idDisks, tempId, 2 * sizeof(int));
+    idTopBall[0] = createDisk(- x, y, r, r);
+    idTopBall[1] = createDisk(x, y, r, r);
 }
 
-void createCables(femGeometry *theGeometry, int *idCables, double *positionX, double *positionY, int ierr)
+void createStayCables(femGeometry *theGeometry, int *idStayCables, double *positionX, double *positionY)
 {
-    double width = theGeometry->widthCable;
-    double height = theGeometry->heightCable;
-    double distance = theGeometry->distanceBetweenCable;
+    double width = theGeometry->widthStayCables;
+    double height = theGeometry->heightStayCables;
+    double dist = theGeometry->distStayCables;
 
-    // To change if the column position change
-    double centerColumn = theGeometry->rxLongArc + theGeometry->widthPillier / 2;
+    double centerPile = theGeometry->rxLongArc + theGeometry->widthPillars / 2;
+    const double y  = theGeometry->heightPillars + theGeometry->heightBridge + 5 * theGeometry->heightPylons / 3;
+    double x1 = centerPile + theGeometry->widthPylons / 4;
+    double x2 = centerPile + theGeometry->widthPylons / 2;
 
-    const double y  = theGeometry->heightPillier + theGeometry->heightPlate + 5 * theGeometry->heightBigColumn / 3;
-    double x1 = centerColumn + theGeometry->widthBigColumn / 4;
-    double x2 = centerColumn + theGeometry->widthBigColumn / 2;
-
-    // Fils de droite sur la colonne de droite
-    int idR1 = gmshModelOccAddRectangle(x1, y, 0.0, width, height, -1, 0, &ierr);
-    int idR2 = gmshModelOccAddRectangle(x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
-    int idR3 = gmshModelOccAddRectangle(x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
-    int idR4 = gmshModelOccAddRectangle(x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
-    int idR5 = gmshModelOccAddRectangle(x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
-    int idR6 = gmshModelOccAddRectangle(x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
-    int idR7 = gmshModelOccAddRectangle(x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
-    int idR8 = gmshModelOccAddRectangle(x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
-    int idR9 = gmshModelOccAddRectangle(x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
-
-    for (int i = 0; i < 4; i++) { positionX[i] = x1; positionY[i] = y - i * distance; }
-    for (int i = 4; i < 9; i++) { positionX[i] = x2; positionY[i] = y - (i + 1) * distance; }
+    // Right stay cables on the right pile
+    for (int i = 0; i < 4; i++)
+    {
+        idStayCables[i] = createRectangle(x1, y - i * dist, width, height - i);
+        positionX[i] = x1;
+        positionY[i] = y - i * dist;
+    }
+    for (int i = 4; i < 9; i++)
+    {
+        idStayCables[i] = createRectangle(x2, y - (i + 1) * dist, width, height - (i + 1));
+        positionX[i] = x2;
+        positionY[i] = y - (i + 1) * dist;
+    }
 
     x1 += width;
     x2 += width;
 
-    // Fils de gauche sur la colonne de gauche
-    int idL1 = gmshModelOccAddRectangle(-x1, y, 0.0, width, height, -1, 0, &ierr);
-    int idL2 = gmshModelOccAddRectangle(-x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
-    int idL3 = gmshModelOccAddRectangle(-x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
-    int idL4 = gmshModelOccAddRectangle(-x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
-    int idL5 = gmshModelOccAddRectangle(-x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
-    int idL6 = gmshModelOccAddRectangle(-x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
-    int idL7 = gmshModelOccAddRectangle(-x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
-    int idL8 = gmshModelOccAddRectangle(-x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
-    int idL9 = gmshModelOccAddRectangle(-x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
+    // Left stay cables on the left pile
+    for (int i = 0; i < 4; i++)
+    {
+        idStayCables[18 + i] = createRectangle(-x1, y - i * dist, width, height - i);
+        positionX[18 + i] = -x1 + width;
+        positionY[18 + i] = y - i * dist;
+    }
+    for (int i = 4; i < 9; i++)
+    {
+        idStayCables[18 + i] = createRectangle(-x2, y - (i + 1) * dist, width, height - (i + 1));
+        positionX[18 + i] = -x2 + width;
+        positionY[18 + i] = y - (i + 1) * dist;
+    }
 
-    for (int i = 18; i < 22; i++) { positionX[i] = - x1 + width; positionY[i] = y - (i - 18) * distance; }
-    for (int i = 22; i < 27; i++) { positionX[i] = - x2 + width; positionY[i] = y - (i + 1 - 18) * distance; }
+    x1 = centerPile - theGeometry->widthPylons / 4 - width;
+    x2 = centerPile - theGeometry->widthPylons / 2 - width;
 
-    x1 = centerColumn - theGeometry->widthBigColumn / 4 - width;
-    x2 = centerColumn - theGeometry->widthBigColumn / 2 - width;
+    // Left stay cables on the right pile
+    for (int i = 0; i < 4; i++)
+    {
+        idStayCables[27 + i] = createRectangle(x1, y - i * dist, width, height - i);
+        positionX[27 + i] = x1 + width;
+        positionY[27 + i] = y - i * dist;
+    }
+    for (int i = 4; i < 9; i++)
+    {
+        idStayCables[27 + i] = createRectangle(x2, y - (i + 1) * dist, width, height - (i + 1));
+        positionX[27 + i] = x2 + width;
+        positionY[27 + i] = y - (i + 1) * dist;
+    }
 
-    // Fils de gauche sur la colonne de droite
-    int idL10 = gmshModelOccAddRectangle(x1, y, 0.0, width, height, -1, 0, &ierr);
-    int idL11 = gmshModelOccAddRectangle(x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
-    int idL12 = gmshModelOccAddRectangle(x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
-    int idL13 = gmshModelOccAddRectangle(x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
-    int idL14 = gmshModelOccAddRectangle(x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
-    int idL15 = gmshModelOccAddRectangle(x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
-    int idL16 = gmshModelOccAddRectangle(x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
-    int idL17 = gmshModelOccAddRectangle(x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
-    int idL18 = gmshModelOccAddRectangle(x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
+    x1 += width;
+    x2 += width;
 
-    for (int i = 27; i < 31; i++) { positionX[i] = x1 + width; positionY[i] = y - (i - 27) * distance; }
-    for (int i = 31; i < 36; i++) { positionX[i] = x2 + width; positionY[i] = y - (i + 1 - 27) * distance; }
+    // Right stay cables on the left pile
+    for (int i = 0; i < 4; i++)
+    {
+        idStayCables[9 + i] = createRectangle(-x1, y - i * dist, width, height - i);
+        positionX[9 + i] = -x1;
+        positionY[9 + i] = y - i * dist;
+    }
+    for (int i = 4; i < 9; i++)
+    {
+        idStayCables[9 + i] = createRectangle(-x2, y - (i + 1) * dist, width, height - (i + 1));
+        positionX[9 + i] = -x2;
+        positionY[9 + i] = y - (i + 1) * dist;
+    }
+}
+
+void createBridgeMainSpan(femGeometry *theGeometry, int *idBridge)
+{
+    int x = - theGeometry->widthSpanBridge / 2;
+    int y = theGeometry->heightPillars;
+    int width = theGeometry->widthSpanBridge;
+    int height = theGeometry->heightBridge;
+    *idBridge = createRectangle(x, y, width, height);
+}
+
+void createSubRoadWay(femGeometry *theGeometry, int *idSubRoadWay)
+{
+    int x = - theGeometry->widthSubRoadWay / 2;
+    int y = theGeometry->heightPillars;
+    int width = theGeometry->widthSubRoadWay;
+    int height = theGeometry->heightSubRoadWay;
+    *idSubRoadWay = createRectangle(x, y, width, height);
+}
+
+void cutHalfGeometryBySymmetry(femGeometry *theGeometry, int *bridge)
+{
+    int width = theGeometry->widthSpanBridge / 2;
+    int height = theGeometry->heightPillars + theGeometry->heightBridge + 3 * theGeometry->heightPylons;
+
+    int idRectFilterLeft = createRectangle(0.0, 0.0, width, height);
+    int *filterLeftRect = malloc(2 * sizeof(int));
+    if (filterLeftRect == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    filterLeftRect[0] = 2; filterLeftRect[1] = idRectFilterLeft;
+
+    cutElement(bridge, filterLeftRect);
     
-    x1 += width;
-    x2 += width;
-
-    // Fils de droite sur la colonne de gauche
-    int idR10 = gmshModelOccAddRectangle(-x1, y, 0.0, width, height, -1, 0, &ierr);
-    int idR11 = gmshModelOccAddRectangle(-x1, y - 1 * distance, 0.0, width, height - 1, -1, 0, &ierr);
-    int idR12 = gmshModelOccAddRectangle(-x1, y - 2 * distance, 0.0, width, height - 2, -1, 0, &ierr);
-    int idR13 = gmshModelOccAddRectangle(-x1, y - 3 * distance, 0.0, width, height - 3, -1, 0, &ierr);
-    int idR14 = gmshModelOccAddRectangle(-x2, y - 5 * distance, 0.0, width, height - 5, -1, 0, &ierr);
-    int idR15 = gmshModelOccAddRectangle(-x2, y - 6 * distance, 0.0, width, height - 6, -1, 0, &ierr);
-    int idR16 = gmshModelOccAddRectangle(-x2, y - 7 * distance, 0.0, width, height - 7, -1, 0, &ierr);
-    int idR17 = gmshModelOccAddRectangle(-x2, y - 8 * distance, 0.0, width, height - 8, -1, 0, &ierr);
-    int idR18 = gmshModelOccAddRectangle(-x2, y - 9 * distance, 0.0, width, height - 9, -1, 0, &ierr);
-
-    for (int i = 9; i < 13; i++) { positionX[i] = - x1; positionY[i] = y - (i - 9) * distance; }
-    for (int i = 13; i < 18; i++) { positionX[i] = - x2; positionY[i] = y - (i + 1 - 9) * distance; }
-
-    int tempId[] = {idR1, idR2, idR3, idR4, idR5, idR6, idR7, idR8, idR9,
-                    idR10, idR11, idR12, idR13, idR14, idR15, idR16, idR17, idR18,
-                    idL1, idL2, idL3, idL4, idL5, idL6, idL7, idL8, idL9,
-                    idL10, idL11, idL12, idL13, idL14, idL15, idL16, idL17, idL18};
-
-    memcpy(idCables, tempId, 36 * sizeof(int));
+    free(filterLeftRect);
+    filterLeftRect = NULL;
 }
 
-void createPlate(femGeometry *theGeometry, int *idPlate, int ierr)
-{
-    *idPlate = gmshModelOccAddRectangle(- theGeometry->widthPlate / 2, theGeometry->heightPillier, 0.0, theGeometry->widthPlate, theGeometry->heightPlate, -1, 0, &ierr);
-}
 
-void createSubPlate(femGeometry *theGeometry, int *idSubPlate, int ierr)
-{
-    *idSubPlate = gmshModelOccAddRectangle(- theGeometry->widthPlate / 2, theGeometry->heightPillier, 0.0, theGeometry->widthSubPlate, theGeometry->heightSubPlate, -1, 0, &ierr);
-}
+/*************************************************/
+/********* Create Bridge (Generate Mesh) *********/
+/*************************************************/
 
 void geoMeshGenerate()
 {
     femGeometry *theGeometry = geoGetGeometry();
 
     // Define the geometry parameters
-    theGeometry->widthPlate = 62.0;
-    theGeometry->heightPlate = 6.5; // Minimum 6.0
-    theGeometry->widthWindow = 1.5;
-    theGeometry->heightWindow = 0.6;
-    theGeometry->widthSubPlate = 62.0;
-    theGeometry->heightSubPlate = 1.0;
-    theGeometry->rxArc = 5.0;
-    theGeometry->ryArc = 4.0;
-    theGeometry->rxLongArc = 10.0;
-    theGeometry->ryLongArc = 3.0;
-    theGeometry->widthColumn = 0.5;
-    theGeometry->widthPillier = 3.0;
-    theGeometry->heightPillier = 5.0;
-    theGeometry->widthBigColumn = 2;
-    theGeometry->heightBigColumn = 6.0;
-    theGeometry->angleCable = 135 * M_PI / 180;
-    theGeometry->widthCable = 0.2;
-    theGeometry->heightCable = 14.5;
-    theGeometry->distanceBetweenCable = 0.8;
-    theGeometry->h = 0.6;
+    theGeometry->widthSpanBridge  = 62.0;
+    theGeometry->heightBridge     = 6.0;  // With 6.5 value, there is a bug with the geometry
+    theGeometry->widthWindow      = 1.5;
+    theGeometry->heightWindow     = 0.6;
+    theGeometry->widthSubRoadWay  = 62.0;
+    theGeometry->heightSubRoadWay = 1.0;
+    theGeometry->rxArc            = 5.0;
+    theGeometry->ryArc            = 4.0;
+    theGeometry->rxLongArc        = 10.0;
+    theGeometry->ryLongArc        = 3.0;
+    theGeometry->widthPiles       = 0.5;
+    theGeometry->widthPillars     = 3.0;
+    theGeometry->heightPillars    = 5.0;
+    theGeometry->widthPylons      = 2.0;
+    theGeometry->heightPylons     = 6.0;
+    theGeometry->angleStayCables  = 135 * M_PI / 180; // Convert to radian
+    theGeometry->widthStayCables  = 0.2;
+    theGeometry->heightStayCables = 14.5;
+    theGeometry->distStayCables   = 0.8;
+    theGeometry->defaultSize      = 0.6;
 
     theGeometry->geoSize = geoSize;
     theGeometry->getMaterialProperties = getMaterialProperties;
     theGeometry->getMaterials = getMaterials;
-
     theGeometry->elementType = FEM_TRIANGLE;
     
     int ierr;
-    int idPlate, idSubPlate;
+    int idBridge, idSubRoadWay;
 
-    int *idWindows          = malloc(4 * sizeof(int));
-    int *idColumns          = malloc(10 * sizeof(int));
-    int *idPilliers         = malloc(4 * sizeof(int));
-    int *idArcs             = malloc(5 * sizeof(int));
-    int *idBigColumns       = malloc(6 * sizeof(int));
-    int *idDisks            = malloc(2 * sizeof(int));
-    int *idCables           = malloc(36 * sizeof(int));
-    double *positionCablesX = malloc(36 * sizeof(double));
-    double *positionCablesY = malloc(36 * sizeof(double));
+    int *idWindows    = malloc(4 * sizeof(int));
+    int *idPiles      = malloc(10 * sizeof(int));
+    int *idPillars    = malloc(4 * sizeof(int));
+    int *idArcs       = malloc(5 * sizeof(int));
+    int *idPylons     = malloc(6 * sizeof(int));
+    int *idTopBall    = malloc(2 * sizeof(int));
+    int *idStayCables = malloc(36 * sizeof(int));
+    double *positionStayCablesX = malloc(36 * sizeof(double));
+    double *positionStayCablesY = malloc(36 * sizeof(double));
 
-    if (idWindows == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (idColumns == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (idPilliers == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (idArcs == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (idBigColumns == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (idDisks == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (idCables == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (positionCablesX == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    if (positionCablesY == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idWindows == NULL)           { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idPiles == NULL)             { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idPillars == NULL)           { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idArcs == NULL)              { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idPylons == NULL)            { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idTopBall == NULL)           { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (idStayCables == NULL)        { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (positionStayCablesX == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
+    if (positionStayCablesY == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
 
-    int plate[2], subPlate[2], pillier[4][2], bigColumn[6][2], cable[36][2], arc[5][2], window[4][2], disk[2][2], column[10][2];
+    int bridge[2], subRoadWay[2], pillars[4][2], pylons[6][2], stayCables[36][2], arcs[5][2], windows[4][2], topBall[2][2], piles[10][2];
 
-    createPlate(theGeometry, &idPlate, ierr);
-    createSubPlate(theGeometry, &idSubPlate, ierr);
-    createPilliers(theGeometry, idPilliers, ierr);
-    createBigColumns(theGeometry, idBigColumns, ierr);
+    // Create each part of the bridge
+    createBridgeMainSpan(theGeometry, &idBridge);
+    createPillars(theGeometry, idPillars);
+    createPylons(theGeometry, idPylons);
+    createSubRoadWay(theGeometry, &idSubRoadWay);
+    createArcs(theGeometry, idArcs);
+    createPiles(theGeometry, idPiles);
+    createWindows(theGeometry, idWindows);
+    createStayCables(theGeometry, idStayCables, positionStayCablesX, positionStayCablesY);
+    createTopBall(theGeometry, idTopBall);
 
-    subPlate[0] = 2;
-    plate[0]    = 2;
-    plate[1]    = idPlate;
-    subPlate[1] = idSubPlate;
+    bridge[0] = 2; bridge[1] = idBridge;
+    subRoadWay[0] = 2; subRoadWay[1] = idSubRoadWay;
 
-    for (int i = 0; i < 4; i++)  { pillier[i][0] = 2; pillier[i][1] = idPilliers[i]; }
-    for (int i = 0; i < 6; i++)  { bigColumn[i][0] = 2; bigColumn[i][1] = idBigColumns[i]; }
-    for (int i = 0; i < 36; i++) { cable[i][0] = 2; cable[i][1] = idCables[i]; }
+    for (int i = 0; i < 4; i++)  { pillars[i][0] = 2; pillars[i][1] = idPillars[i]; }
+    for (int i = 0; i < 6; i++)  { pylons[i][0] = 2; pylons[i][1] = idPylons[i]; }
+    for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
+    for (int i = 0; i < 5; i++)  { arcs[i][0] = 2; arcs[i][1] = idArcs[i]; }
+    for (int i = 0; i < 4; i++)  { windows[i][0] = 2; windows[i][1] = idWindows[i]; }
+    for (int i = 0; i < 2; i++)  { topBall[i][0] = 2; topBall[i][1] = idTopBall[i]; }
+    for (int i = 0; i < 10; i++) { piles[i][0] = 2; piles[i][1] = idPiles[i]; }
+    for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
 
-    createArcs(theGeometry, idArcs, ierr);
-    createWindows(theGeometry, idWindows, ierr);
+    // Cut the arcs and the windows
+    for (int i = 0; i < 5; i++) { cutElement(bridge, arcs[i]); }
+    for (int i = 0; i < 4; i++) { cutElement(bridge, windows[i]); }
 
-    for (int i = 0; i < 5; i++)  { arc[i][0] = 2; arc[i][1] = idArcs[i]; }
-    for (int i = 0; i < 4; i++)  { window[i][0] = 2; window[i][1] = idWindows[i]; }
-
-    for (int i = 0; i < 5; i++) { gmshModelOccCut(plate, 2, arc[i], 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-    for (int i = 0; i < 4; i++) { gmshModelOccCut(plate, 2, window[i], 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
+    // Rotate the stay cables
+    for (int i = 0; i < 18; i++)  { rotateElement(stayCables[i], positionStayCablesX[i], positionStayCablesY[i], -theGeometry->angleStayCables); }
+    for (int i = 18; i < 36; i++) { rotateElement(stayCables[i], positionStayCablesX[i], positionStayCablesY[i], theGeometry->angleStayCables); }
     
-    createColumns(theGeometry, idColumns, ierr);
-    createDisk(theGeometry, idDisks, ierr);
-    createCables(theGeometry, idCables, positionCablesX, positionCablesY, ierr);
-
-    for (int i = 0; i < 2; i++)  { disk[i][0] = 2; disk[i][1] = idDisks[i]; }
-    for (int i = 0; i < 10; i++) { column[i][0] = 2; column[i][1] = idColumns[i]; }
-    for (int i = 0; i < 36; i++) { cable[i][0] = 2; cable[i][1] = idCables[i]; }
-
-    // Rotate the cables
-    for (int i = 0; i < 18; i++)  { gmshModelOccRotate(cable[i], 2, positionCablesX[i], positionCablesY[i], 0.0, 0.0, 0.0, 1.0, -theGeometry->angleCable, &ierr); }
-    for (int i = 18; i < 36; i++) { gmshModelOccRotate(cable[i], 2, positionCablesX[i], positionCablesY[i], 0.0, 0.0, 0.0, 1.0, theGeometry->angleCable, &ierr); }
+    // Fuse all the elements together to create the bridge
+    fuseElement(bridge, subRoadWay);
+    for (int i = 0; i < 4; i++)  { fuseElement(bridge, pillars[i]); }
+    for (int i = 0; i < 10; i++) { fuseElement(bridge, piles[i]); }
+    for (int i = 1; i < 3; i++)  { fuseElement(pylons[0], pylons[i]); }
+    for (int i = 4; i < 6; i++)  { fuseElement(pylons[3], pylons[i]); }
+    fuseElement(pylons[0], topBall[0]);
+    fuseElement(pylons[3], topBall[1]); // TODO : BUG
+    for (int i = 0; i < 9; i++)   { fuseElement(pylons[3], stayCables[i]); }
+    for (int i = 27; i < 36; i++) { fuseElement(pylons[3], stayCables[i]); }
+    for (int i = 9; i < 27; i++)  { fuseElement(pylons[0], stayCables[i]); }
+    fuseElement(bridge, pylons[0]);
+    fuseElement(bridge, pylons[3]);
     
-    // Fuse the elements
-    gmshModelOccFuse(plate, 2, subPlate, 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    for (int i = 0; i < 4; i++)  { gmshModelOccFuse(plate, 2, pillier[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-    for (int i = 0; i < 10; i++) { gmshModelOccFuse(plate, 2, column[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-    for (int i = 1; i < 3; i++)  { gmshModelOccFuse(bigColumn[0], 2, bigColumn[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);}
-    for (int i = 4; i < 6; i++)  { gmshModelOccFuse(bigColumn[3], 2, bigColumn[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);}
-    gmshModelOccFuse(bigColumn[0], 2, disk[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(bigColumn[3], 2, disk[1], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    for (int i = 0; i < 9; i++)   { gmshModelOccFuse(bigColumn[3], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-    for (int i = 27; i < 36; i++) { gmshModelOccFuse(bigColumn[3], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-    for (int i = 9; i < 27; i++)  { gmshModelOccFuse(bigColumn[0], 2, cable[i], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr); }
-    gmshModelOccFuse(plate, 2, bigColumn[0], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    gmshModelOccFuse(plate, 2, bigColumn[3], 2, NULL, NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    
-    // Begin : Cut the half of the bridge for the symmetry
-    int idRectFilterLeft = gmshModelOccAddRectangle(0.0, 0.0, 0.0, theGeometry->widthPlate / 2, theGeometry->heightPillier + theGeometry->heightPlate + 3 * theGeometry->heightBigColumn, -1, 0, &ierr);
-    int *filterLeft = malloc(2 * sizeof(int));
-    if (filterLeft == NULL) { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
-    filterLeft[0] = 2;
-    filterLeft[1] = idRectFilterLeft;
-    gmshModelOccCut(plate, 2, filterLeft, 2, NULL ,NULL, NULL, NULL, NULL, -1, 1, 1, &ierr);
-    // End : Cut the half of the bridge for the symmetry
+    // Cut the half of the bridge by symmetry
+    // cutHalfGeometryBySymmetry(theGeometry, bridge);
 
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr); 
 
+    // Generate quads meshing
     if (theGeometry->elementType == FEM_QUAD)
     {
         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
@@ -444,33 +538,116 @@ void geoMeshGenerate()
         gmshModelGeoMeshSetRecombine(2, 1, 45, &ierr);
         gmshModelMeshGenerate(2, &ierr);
     }
+    // Generate triangles meshing
     else if (theGeometry->elementType == FEM_TRIANGLE)
     {
         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshModelMeshGenerate(2, &ierr);
     }
 
-    //  Plot of Fltk
     gmshFltkInitialize(&ierr);
 
+    // Free the memory
     free(idWindows);
-    idWindows = NULL;
-    free(idColumns);
-    idColumns = NULL;
-    free(idPilliers);
-    idPilliers = NULL;
+    free(idPiles);
+    free(idPillars);
     free(idArcs);
-    idArcs = NULL;
-    free(idBigColumns);
-    idBigColumns = NULL;
-    free(idDisks);
-    idDisks = NULL;
-    free(idCables);
-    idCables = NULL;
-    free(positionCablesX);
-    positionCablesX = NULL;
-    free(positionCablesY);
-    positionCablesY = NULL;
-    free(filterLeft);
-    filterLeft = NULL;
+    free(idPylons);
+    free(idTopBall);
+    free(idStayCables);
+    free(positionStayCablesX);
+    free(positionStayCablesY);
+
+    idWindows = NULL;
+    idPiles   = NULL;
+    idPillars = NULL;
+    idArcs    = NULL;
+    idPylons  = NULL;
+    idTopBall = NULL;
+    idStayCables = NULL;
+    positionStayCablesX = NULL;
+    positionStayCablesY = NULL;
+}
+
+
+/******************************************************/
+/********* Name Domains + Boundary Conditions *********/
+/******************************************************/
+
+void setDomainsName(void)
+{
+    typedef struct domainMapping {
+        int id;
+        char *name;
+    } domain_Mapping_t;
+
+    // TO ADD !
+    // geoSetDomainName(0, "PYLON 1 L"); // NUMERO
+    // geoSetDomainName(0, "PYLON 1 R"); // NUMERO
+    // geoSetDomainName(0, "PYLON 1 UL"); // NUMERO
+    // geoSetDomainName(0, "PYLON 1 UR"); // NUMERO
+    // geoSetDomainName(0, "PYLON 2 L"); // NUMERO
+    // geoSetDomainName(0, "PYLON 2 R"); // NUMERO
+    // geoSetDomainName(0, "PYLON 2 UL"); // NUMERO
+    // geoSetDomainName(0, "PYLON 2 UR"); // NUMERO
+    // geoSetDomainName(0, "PYLON 3 L"); // NUMERO
+    // geoSetDomainName(0, "PYLON 3 R"); // NUMERO
+
+    // geoSetDomainName(0, "TOP BALL 1"); // NUMERO
+    // geoSetDomainName(0, "TOP BALL 2"); // NUMERO
+
+    // geoSetDomainName(13, "ROADWAY U 1"); // NUMERO
+    // geoSetDomainName(24, "ROADWAY U 2"); // NUMERO
+    domain_Mapping_t domain_mapping[] = {{5, "PILAR R 1"}, {6, "PILAR D 1"}, {7, "PILAR L 1"}, {1, "PILAR R 2"},
+        {2, "PILAR D 2"}, {3, "PILAR L 2"}, {10, "SUB ROADWAY U 1"}, {33, "SUB ROADWAY U 2"}, {38, "SUB ROADWAY U 3"},
+        {42, "SUB ROADWAY U 4"}, {51, "SUB ROADWAY U 5"}, {49, "SUB ROADWAY U 6"}, {56, "SUB ROADWAY U 7"},
+        {27, "SUB ROADWAY U 8"}, {8, "SUB ROADWAY D 1"}, {4, "SUB ROADWAY D 2"}, {0, "SUB ROADWAY D 3"}, {9, "SUB ROADWAY L"},
+        {28, "SUB ROADWAY R"}, {13, "ROADWAY L"}, {24, "ROADWAY R"}, {29, "WINDOW D 1"}, {30, "WINDOW L 1"}, {31, "WINDOW R 1"},
+        {32, "WINDOW U 1"}, {43, "WINDOW D 2"}, {44, "WINDOW L 2"}, {45, "WINDOW R 2"}, {46, "WINDOW U 2"}, {11, "PILE L 1"},
+        {35, "PILE R 1"}, {37, "PILE L 2"}, {41, "PILE R 2"}, {40, "PILE L 3"}, {52, "PILE R 3"}, {48, "PILE L 4"}, {55, "PILE R 4"}, {54, "PILE L 5"},
+        {26, "PILE R 5"}, {12, "ARC 1"}, {34, "ARC 2"}, {36, "ARC 3"}, {39, "ARC 4"}, {50, "ARC 5"}, {47, "ARC 6"}, {53, "ARC 7"}, {25, "ARC 8"}
+    };
+
+    const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);
+
+    for (int i = 0; i < NB_DOMAINS; ++i)
+    {
+        domain_Mapping_t domain = domain_mapping[i];
+        geoSetDomainName(domain.id, domain.name);
+    }
+}
+
+void createBoundaryConditions(femProblem *theProblem)
+{
+    typedef struct domainBoundaryMapping {
+        char *name;
+        femBoundaryType type;
+        double value1;
+        double value2;
+    } domainBoundaryMapping_t;
+
+    domainBoundaryMapping_t mapping[] = {{"PILAR R 1", DIRICHLET_XY, 0.0, 0.0}, {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0}, {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0}, {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0}, {"SUB ROADWAY U 1", NEUMANN_Y, 800.0, NAN}, {"SUB ROADWAY U 2", NEUMANN_Y, 1000.0, NAN},
+        {"SUB ROADWAY U 3", NEUMANN_Y, 1200.0, NAN}, {"SUB ROADWAY U 4", NEUMANN_Y, 700.0, NAN}, {"SUB ROADWAY U 5", NEUMANN_Y, 20.0, NAN},
+        {"SUB ROADWAY U 6", NEUMANN_Y, 1000.0, NAN}, {"SUB ROADWAY U 7", NEUMANN_Y, 1300.0, NAN}, {"SUB ROADWAY U 8", NEUMANN_Y, 800.0, NAN},
+        {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN}, {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN}, {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
+        {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0}, {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0}, {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+        {"ROADWAY R", DIRICHLET_XY, 0.0, 0.0}, {"WINDOW D 1", NEUMANN_X, 0.0, NAN}, {"WINDOW L 1", NEUMANN_Y, 0.0, NAN},
+        {"WINDOW R 1", NEUMANN_Y, 0.0, NAN}, {"WINDOW U 1", NEUMANN_X, 0.0, NAN}, {"WINDOW D 2", NEUMANN_X, 0.0, NAN},
+        {"WINDOW L 2", NEUMANN_Y, 0.0, NAN}, {"WINDOW R 2", NEUMANN_Y, 0.0, NAN}, {"WINDOW U 2", NEUMANN_X, 0.0, NAN},
+        {"PILE L 1", NEUMANN_X, 0.0, NAN}, {"PILE R 1", NEUMANN_X, 0.0, NAN}, {"PILE L 2", NEUMANN_X, 0.0, NAN},
+        {"PILE R 2", NEUMANN_X, 0.0, NAN}, {"PILE L 3", NEUMANN_X, 0.0, NAN}, {"PILE R 3", NEUMANN_X, 0.0, NAN},
+        {"PILE L 4", NEUMANN_X, 0.0, NAN}, {"PILE R 4", NEUMANN_X, 0.0, NAN}, {"PILE L 5", NEUMANN_X, 0.0, NAN},
+        {"PILE R 5", NEUMANN_X, 0.0, NAN}, {"ARC 1", NEUMANN_X, 0.0, NAN}, {"ARC 2", NEUMANN_X, 0.0, NAN},
+        {"ARC 3", NEUMANN_X, 0.0, NAN}, {"ARC 4", NEUMANN_X, 0.0, NAN}, {"ARC 5", NEUMANN_X, 0.0, NAN},
+        {"ARC 6", NEUMANN_X, 0.0, NAN}, {"ARC 7", NEUMANN_X, 0.0, NAN}, {"ARC 8", NEUMANN_X, 0.0, NAN}};
+
+    const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
+
+    for (int i = 0; i < NB_DOMAINS; ++i)
+    {
+        domainBoundaryMapping_t domain = mapping[i];
+        femElasticityAddBoundaryCondition(theProblem, domain.name, domain.type, domain.value1, domain.value2);
+    }
 }
