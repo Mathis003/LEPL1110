@@ -22,6 +22,5 @@ void rotateElement(int *element, double posX, double posY, double angle);
 
 void setDomainsName(void);
 void createBoundaryConditions(femProblem *theProblem);
-// int geoMeshRefine(int nRefine); // TODO
 
 #endif // _FEM_GMSH_H_

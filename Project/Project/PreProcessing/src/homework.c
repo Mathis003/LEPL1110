@@ -9,6 +9,7 @@
 * - Vérifier le sens des contours (convention pour la normale)
 * - Faire en sort d'arriver à Fuse la TopBall de droite (voir le TODO dans le code)
 * - Ajouter une fonction qui determine si un point (x, y) se trouve à une distance d'une frontière => Pour raffiner les bords
+*      => Avec aide devoir 2 (interpolation d'hermite)
 */
 
 /**********************************/
@@ -195,7 +196,7 @@ double geoSize(double x, double y)
     if (isStayCables(x, y) == TRUE)  { return theGeometry->defaultSize / 6; }
     if (isPile(x, y) == TRUE)        { return theGeometry->defaultSize / 3;}
     if (isFixedPillar(x, y) == TRUE) { return theGeometry->defaultSize / 3; }
-    else                             { return theGeometry->defaultSize; }
+    else                             { return extremitateArcs(x, y); }
 }
 
 
