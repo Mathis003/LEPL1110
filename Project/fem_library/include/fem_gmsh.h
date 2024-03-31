@@ -9,12 +9,9 @@ double geoGmshSize(int dim, int tag, double x, double y, double z, double lc, vo
 void geoInitialize(void);
 void geoFinalize(void);
 void geoMeshImport(void);
-
 void femErrorGmsh(int ierr, int line, char *file);
 
+// Defined in Project/PreProcessing/homework.c
 void geoMeshGenerate(void);
-// void geoMeshGenerateGeo(void);
-// void geoMeshGenerateGeoFile(const char *filename);
-// void geoMeshGenerateMshFile(const char *filename);
 
 #endif // _FEM_GMSH_H_

@@ -71,7 +71,6 @@ void geoMeshPrint(void)
         printf("  Number of elements : %6d\n", theDomain->nElem);
         for (int i = 0; i < theDomain->nElem; i++)
         {
-            // if (i != theDomain->nElem  && (i % 10) != 0)  printf(" - ");
             printf("%6d", theDomain->elem[i]);
             if ((i + 1) != theDomain->nElem && (i + 1) % 10 == 0) { printf("\n"); }
         }
@@ -122,7 +121,6 @@ void geoMeshWrite(const char *filename)
             fprintf(file, "\n");
         }
     }
-
     fclose(file);
 }
 
@@ -134,23 +132,23 @@ void geoMeshRead(const char *filename)
     int trash, *elem;
 
     femNodes *theNodes = malloc(sizeof(femNodes));
-    if (theNodes == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theNodes = theNodes;
     ErrorScan(fscanf(file, "Number of nodes %d \n", &theNodes->nNodes));
     theNodes->X = malloc(sizeof(double) * (theNodes->nNodes));
-    if (theNodes->X == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->Y = malloc(sizeof(double) * (theNodes->nNodes));
-    if (theNodes->Y == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theNodes->nNodes; i++) { ErrorScan(fscanf(file, "%d : %le %le \n", &trash, &theNodes->X[i], &theNodes->Y[i])); }
 
     femMesh *theEdges = malloc(sizeof(femMesh));
-    if (theEdges == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     theEdges->nLocalNode = 2;
     theEdges->nodes = theNodes;
     ErrorScan(fscanf(file, "Number of edges %d \n", &theEdges->nElem));
     theEdges->elem = malloc(sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
-    if (theEdges->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theEdges->nElem; ++i)
     {
         elem = theEdges->elem;
@@ -158,7 +156,7 @@ void geoMeshRead(const char *filename)
     }
 
     femMesh *theElements = malloc(sizeof(femMesh));
-    if (theElements == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theElements = theElements;
     theElements->nLocalNode = 0;
     theElements->nodes = theNodes;
@@ -168,7 +166,7 @@ void geoMeshRead(const char *filename)
     {
         theElements->nLocalNode = 3;
         theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
-        if (theElements->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
             elem = theElements->elem;
@@ -179,7 +177,7 @@ void geoMeshRead(const char *filename)
     {
         theElements->nLocalNode = 4;
         theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
-        if (theElements->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
             elem = theElements->elem;
@@ -190,43 +188,41 @@ void geoMeshRead(const char *filename)
     ErrorScan(fscanf(file, "Number of domains %d\n", &theGeometry.nDomains));
     int nDomains = theGeometry.nDomains;
     theGeometry.theDomains = malloc(sizeof(femDomain *) * nDomains);
-    if (theGeometry.theDomains == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theGeometry.theDomains == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int iDomain = 0; iDomain < nDomains; iDomain++)
     {
         femDomain *theDomain = malloc(sizeof(femDomain));
-        if (theDomain == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theDomain == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theGeometry.theDomains[iDomain] = theDomain;
         theDomain->mesh = theEdges;
         ErrorScan(fscanf(file, "  Domain : %6d \n", &trash));
         ErrorScan(fscanf(file, "  Name : %[^\n]s \n", (char *)&theDomain->name));
         ErrorScan(fscanf(file, "  Number of elements : %6d\n", &theDomain->nElem));
         theDomain->elem = malloc(sizeof(int) * 2 * theDomain->nElem);
-        if (theDomain->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theDomain->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theDomain->nElem; i++)
         {
             ErrorScan(fscanf(file, "%6d", &theDomain->elem[i]));
             if ((i + 1) != theDomain->nElem && (i + 1) % 10 == 0) { ErrorScan(fscanf(file, "\n")); }
         }
     }
-
     fclose(file);
 }
 
 void geoSetDomainName(int iDomain, char *name)
 {
-    if (iDomain >= theGeometry.nDomains) { Error("Illegal domain number"); }
+    if (iDomain >= theGeometry.nDomains || iDomain < 0) { Error("Illegal domain number"); }
     if (geoGetDomain(name) != -1) { Error("Cannot use the same name for two domains"); }
     sprintf(theGeometry.theDomains[iDomain]->name, "%s", name);
 }
 
 int geoGetDomain(char *name)
 {
-    int theIndex = -1;
     int nDomains = theGeometry.nDomains;
     for (int iDomain = 0; iDomain < nDomains; iDomain++)
     {
         femDomain *theDomain = theGeometry.theDomains[iDomain];
-        if (strncasecmp(name, theDomain->name, MAXNAME) == 0) { theIndex = iDomain; }
+        if (strncasecmp(name, theDomain->name, MAXNAME) == 0) { return iDomain; }
     }
-    return theIndex;
+    return -1;
 }

@@ -17,8 +17,8 @@ void geoInitialize(void)
     theGeometry.theNodes    = NULL;
     theGeometry.theElements = NULL;
     theGeometry.theEdges    = NULL;
-    theGeometry.nDomains    = 0;
     theGeometry.theDomains  = NULL;
+    theGeometry.nDomains    = 0;
 }
 
 void geoFinalize(void)
@@ -41,12 +41,12 @@ void geoMeshImport(void)
     gmshModelMeshGetNodes(&node, &nNode, &xyz, &n, &trash, &m, -1, -1, 0, 0, &ierr); ErrorGmsh(ierr);
 
     femNodes *theNodes = malloc(sizeof(femNodes));
-    if (theNodes == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->nNodes = nNode;
     theNodes->X = malloc(sizeof(double) * (theNodes->nNodes));
-    if (theNodes->X == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->Y = malloc(sizeof(double) * (theNodes->nNodes));
-    if (theNodes->Y == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theNodes->nNodes; i++)
     {
         theNodes->X[i] = xyz[3 * node[i] - 3];
@@ -59,7 +59,7 @@ void geoMeshImport(void)
     gmshFree(trash);
     printf("Geo     : Importing %d nodes \n", theGeometry.theNodes->nNodes);
 
-    /* Importing elements (pas super joli : a ameliorer pour eviter la triple copie) */
+    /* Importing elements */
 
     // Triangles
     size_t nElem, *elem;
@@ -68,12 +68,12 @@ void geoMeshImport(void)
     if (nElem != 0)
     {
         femMesh *theElements = malloc(sizeof(femMesh));
-        if (theElements == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theElements->nLocalNode = 3;
         theElements->nodes = theNodes;
         theElements->nElem = nElem;
         theElements->elem = malloc(sizeof(int) * 3 * theElements->nElem);
-        if (theElements->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; i++)
         {
             for (int j = 0; j < theElements->nLocalNode; j++)
@@ -96,12 +96,12 @@ void geoMeshImport(void)
     if (nElem != 0)
     {
         femMesh *theElements = malloc(sizeof(femMesh));
-        if (theElements == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theElements->nLocalNode = 4;
         theElements->nodes = theNodes;
         theElements->nElem = nElem;
         theElements->elem = malloc(sizeof(int) * 4 * theElements->nElem);
-        if (theElements->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; i++)
         {
             for (int j = 0; j < theElements->nLocalNode; j++)
@@ -118,7 +118,7 @@ void geoMeshImport(void)
     // Compute node renumbering
     femMesh *theElements = theGeometry.theElements;
     int *connectedNodes = calloc(theNodes->nNodes, sizeof(int));
-    if (connectedNodes == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (connectedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
     for (int iElem = 0; iElem < theElements->nElem; iElem++)
     {
@@ -129,7 +129,7 @@ void geoMeshImport(void)
     }
 
     int *nodeRenumber = malloc(theNodes->nNodes * sizeof(int));
-    if (nodeRenumber == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (nodeRenumber == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     int countNodes = 0;
     for (int i = 0; i < theNodes->nNodes; i++)
     {
@@ -137,7 +137,7 @@ void geoMeshImport(void)
         else                   { nodeRenumber[i] = -2147483648; }
     }
 
-    // condensing nodes
+    // Condensing nodes
     for (int i = 0; i < theNodes->nNodes; i++)
     {
         if (nodeRenumber[i] < 0) { continue; }
@@ -146,11 +146,11 @@ void geoMeshImport(void)
     }
     theNodes->nNodes = countNodes;
     theNodes->X = realloc(theNodes->X, sizeof(double) * (theNodes->nNodes));
-    if (theNodes->X == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->Y = realloc(theNodes->Y, sizeof(double) * (theNodes->nNodes));
-    if (theNodes->Y == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
-    // renumbering elements
+    // Renumbering elements
     int nLocalNode = theElements->nLocalNode;
     for (int i = 0; i < theElements->nElem; i++)
     {
@@ -164,17 +164,17 @@ void geoMeshImport(void)
     ErrorGmsh(ierr);
 
     femMesh *theEdges = malloc(sizeof(femMesh));
-    if (theEdges == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theEdges->nLocalNode = 2;
     theEdges->nElem = nElem;
     theEdges->nodes = theNodes;
     theEdges->elem = malloc(sizeof(int) * 2 * theEdges->nElem);
-    if (theEdges->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     int countEdges = 0;
     int *connectedEdges = calloc(nElem, sizeof(int));
-    if (connectedEdges == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (connectedEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     int *edgeRenumber = malloc(nElem * sizeof(int));
-    if (edgeRenumber == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (edgeRenumber == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
     for (int i = 0; i < nElem; i++)
     {
@@ -191,7 +191,7 @@ void geoMeshImport(void)
 
     theEdges->nElem = countEdges;
     theEdges->elem = realloc(theEdges->elem, sizeof(int) * 2 * theEdges->nElem);
-    if (theEdges->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     int shiftEdges = elem[0];
     
@@ -199,14 +199,14 @@ void geoMeshImport(void)
     gmshFree(elem);
     printf("Geo     : Importing %d edges \n", theEdges->nElem);
 
-
     /* Importing 1D entities */
+
     int *dimTags;
     gmshModelGetEntities(&dimTags, &n, 1, &ierr);
     ErrorGmsh(ierr);
     theGeometry.nDomains = n / 2;
     theGeometry.theDomains = malloc(sizeof(femDomain *) * n / 2);
-    if (theGeometry.theDomains == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theGeometry.theDomains == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     printf("Geo     : Importing %d entities \n", theGeometry.nDomains);
 
     for (int i = 0; i < n / 2; i++)
@@ -214,7 +214,7 @@ void geoMeshImport(void)
         int dim = dimTags[2 * i + 0];
         int tag = dimTags[2 * i + 1];
         femDomain *theDomain = malloc(sizeof(femDomain));
-        if (theDomain == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theDomain == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theGeometry.theDomains[i] = theDomain;
         theDomain->mesh = theEdges;
         sprintf(theDomain->name, "Entity %d ", tag - 1);
@@ -224,7 +224,7 @@ void geoMeshImport(void)
         gmshModelMeshGetElements(&elementType, &nElementType, &elementTags, &nElementTags, &nnElementTags, &nodesTags, &nNodesTags, &nnNodesTags, dim, tag, &ierr);
         theDomain->nElem = nElementTags[0];
         theDomain->elem = malloc(sizeof(int) * 2 * theDomain->nElem);
-        if (theDomain->elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theDomain->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         int nElemCount = 0;
         for (int j = 0; j < theDomain->nElem; j++)
         {
@@ -249,7 +249,7 @@ void geoMeshImport(void)
     free(connectedEdges);
     free(edgeRenumber);
 
-    // filter out empty domains
+    // Filter out empty domains
     int countDomains = 0;
     for (int i = 0; i < theGeometry.nDomains; i++)
     {
@@ -263,7 +263,7 @@ void geoMeshImport(void)
 
 void femErrorGmsh(int ierr, int line, char *file)                                  
 { 
-    if (ierr == 0)  return;
+    if (ierr == 0) { return; }
     printf("\n-------------------------------------------------------------------------------- ");
     printf("\n  Error in %s at line %d : \n  error code returned by gmsh %d\n", file, line, ierr);
     printf("--------------------------------------------------------------------- Yek Yek !! \n\n");

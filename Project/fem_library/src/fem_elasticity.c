@@ -3,7 +3,7 @@
 femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
 {
     femProblem *theProblem = malloc(sizeof(femProblem));
-    if (theProblem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->E = E;
     theProblem->nu = nu;
     theProblem->gx = gx;
@@ -23,19 +23,19 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
         theProblem->C = E / (2 * (1 + nu));
     }
 
-    theProblem->planarStrainStress = iCase;
+    theProblem->planarStrainStress  = iCase;
     theProblem->nBoundaryConditions = 0;
     theProblem->conditions = NULL;
 
     int nNodes = theGeometry->theNodes->nNodes;
     int size = 2 * nNodes;
     theProblem->constrainedNodes = malloc(nNodes * sizeof(femConstrainedNode));
-    if (theProblem->constrainedNodes == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (theProblem->constrainedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     for (int i = 0; i < nNodes; i++)
     {
-        theProblem->constrainedNodes[i].type = UNDEFINED;
-        theProblem->constrainedNodes[i].nx = NAN;
-        theProblem->constrainedNodes[i].ny = NAN;
+        theProblem->constrainedNodes[i].type   = UNDEFINED;
+        theProblem->constrainedNodes[i].nx     = NAN;
+        theProblem->constrainedNodes[i].ny     = NAN;
         theProblem->constrainedNodes[i].value2 = NAN;
         theProblem->constrainedNodes[i].value2 = NAN;
     }
@@ -44,12 +44,12 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
     if (theGeometry->theElements->nLocalNode == 3)
     {
         theProblem->space = femDiscreteCreate(3, FEM_TRIANGLE);
-        theProblem->rule = femIntegrationCreate(3, FEM_TRIANGLE);
+        theProblem->rule  = femIntegrationCreate(3, FEM_TRIANGLE);
     }
     else if (theGeometry->theElements->nLocalNode == 4)
     {
         theProblem->space = femDiscreteCreate(4, FEM_QUAD);
-        theProblem->rule = femIntegrationCreate(4, FEM_QUAD);
+        theProblem->rule  = femIntegrationCreate(4, FEM_QUAD);
     }
     theProblem->solver = femSolverCreate(size);
     return theProblem;
@@ -68,17 +68,16 @@ void femElasticityFree(femProblem *theProblem)
     free(theProblem);
 }
 
-/*
-`value2` is only used for `DIRICHLET_XY` and `DIRICHLET_NT` boundary conditions. Otherwise it is ignored and set to NAN.
-*/
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2)
 {
     int iDomain = geoGetDomain(nameDomain);
     if (iDomain == -1) { Error("Undefined domain :-("); }
+
+    // This variable is only used for 'DIRICHLET_XY' and 'DIRICHLET_NT' boundary conditions. Otherwise it is ignored (set to NAN).
     value2 = ((type != DIRICHLET_XY) && (type != DIRICHLET_NT)) ? NAN : value2;
 
     femBoundaryCondition *theBoundary = malloc(sizeof(femBoundaryCondition));
-    if (theBoundary == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theBoundary == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theBoundary->domain = theProblem->geometry->theDomains[iDomain];
     theBoundary->value1 = value1;
     theBoundary->value2 = value2;
@@ -89,7 +88,7 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
     if (theProblem->conditions == NULL)
     {
         theProblem->conditions = malloc(nBoundaryConditions * sizeof(femBoundaryCondition *));
-        if (theProblem->conditions == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+        if (theProblem->conditions == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     }
 
     femNodes *theNodes = theProblem->geometry->theNodes;
@@ -127,8 +126,9 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
                 }
             }
         }
-        else // Need to compute normals
+        else
         {
+            // Need to compute normals
             int nNodes = theNodes->nNodes;
             double *NX = malloc(nNodes * sizeof(double));
             if (NX == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }

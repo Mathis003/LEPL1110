@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     const int MAXLINE = 999999;
     char res[MAXLINE];
 
-    char *nameDirectory[] = {"Project/ProjectPreProcessor/build", "../../ProjectProcessor/build", "../../ProjectPostProcessor/build"};
+    char *nameDirectory[] = {"Project/PreProcessing/build", "../../Processing/build", "../../PostProcessing/build"};
     char *stages[] = {"Pre-Processing", "Processing", "Post-Processing"};
     int nbProgram = 3;
 

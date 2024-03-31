@@ -7,6 +7,10 @@
 #include "fem_solver.h"
 #include "fem_integrate.h"
 
+// Definded in fem_geometry.h
+void geoSetDomainName(int iDomain, char *name);
+int geoGetDomain(char *name);
+
 typedef enum { PLANAR_STRESS, PLANAR_STRAIN, AXISYM } femElasticCase;
 
 typedef struct {
@@ -28,17 +32,13 @@ typedef struct {
 
 femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase);
 void femElasticityFree(femProblem *theProblem);
-void femElasticityPrint(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 double *femElasticitySolve(femProblem *theProblem);
 
+void femElasticityPrint(femProblem *theProblem);
 femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
-
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);
 int femSolutiondRead(int allocated_size, double *value, const char *filename);
-
-void geoSetDomainName(int iDomain, char *name);
-int geoGetDomain(char *name);
 
 #endif // _FEM_ELASTICITY_H_
