@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.6)
 project(myFemProject)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 # Define path to the libraries
 set(FEM_LIBRARY_PATH ../../fem_library)
 set(GMSH_PATH ../../gmsh)

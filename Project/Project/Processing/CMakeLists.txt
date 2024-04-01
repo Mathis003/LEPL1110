@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.6)
 project(myFemProject)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 set(EXEC_NAME myFem)
 set(FEM_LIBRARY_PATH ../../fem_library)
 
