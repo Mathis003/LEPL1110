@@ -20,12 +20,16 @@ int main(int argc, char *argv[])
     // Deal with the options arguments
     int opt;
     int meshVisualizer = TRUE;
-    while ((opt = getopt(argc, argv, "mh")) != -1)
+    int exampleUsage   = FALSE;
+    while ((opt = getopt(argc, argv, "meh")) != -1)
     {
         switch (opt)
         {
             case 'm':
                 meshVisualizer = FALSE;
+                break;
+            case 'e':
+                exampleUsage = TRUE;
                 break;
             case 'h':
                 printf("Usage: %s [-m] [-h]\n", argv[0]);
@@ -45,28 +49,55 @@ int main(int argc, char *argv[])
 
     geoInitialize();
     femGeometry *theGeometry = geoGetGeometry();
-    geoMeshGenerate();
-    geoMeshImport();
-    setDomainsName();
-    geoMeshWrite("../../../data/mesh.txt");
+
+    if (exampleUsage == TRUE)
+    {
+        geoMeshGenerateExample();
+        geoMeshImport();
+        geoSetDomainName(0, "Frontier 1");
+        geoSetDomainName(1, "Frontier 2");
+        geoMeshWrite("../../../data/mesh_example.txt");
+    }
+    else
+    {
+        geoMeshGenerate();
+        geoMeshImport();
+        setDomainsName();
+        geoMeshWrite("../../../data/mesh.txt");
+    }
 
     /******************************/
     /* 2 : Definition du probleme */ 
     /******************************/
 
-    double E_steel = 200.e9;
-    double E_reinforced_concrete = 35e9;
-    double nu_steel = 0.3;
-    double nu_reinforced_concrete = 0.2;
-    double rho_steel = 7.85e3;
-    double rho_reinforced_concrete = 2.5e3;
+    femProblem *theProblem;
     double gx = 0;
     double gy = -9.81;
-    
-    femProblem *theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, PLANAR_STRAIN);
-    createBoundaryConditions(theProblem);
-    femElasticityPrint(theProblem);
-    femElasticityWrite(theProblem, "../../../data/problem.txt");
+
+    if (exampleUsage == TRUE)
+    {
+        double E_example = 211.e9;
+        double nu_example = 0.3;
+        double rho_example = 7.85e3;
+        theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
+        femElasticityAddBoundaryCondition(theProblem, "Frontier 1", DIRICHLET_XY, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "Frontier 2", DIRICHLET_X, 0.0, NAN);
+        femElasticityPrint(theProblem);
+        femElasticityWrite(theProblem, "../../../data/problem_example.txt");
+    }
+    else
+    {
+        double E_steel = 200.e9;
+        double E_reinforced_concrete = 35e9;
+        double nu_steel = 0.3;
+        double nu_reinforced_concrete = 0.2;
+        double rho_steel = 7.85e3;
+        double rho_reinforced_concrete = 2.5e3;
+        theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, PLANAR_STRAIN);
+        createBoundaryConditions(theProblem);
+        femElasticityPrint(theProblem);
+        femElasticityWrite(theProblem, "../../../data/problem.txt");
+    }
 
     /***************************************************/
     /* 3 : Champ de la taille de référence du maillage */
@@ -75,14 +106,23 @@ int main(int argc, char *argv[])
 
     double *meshSizeField = malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (meshSizeField == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-
     femNodes *theNodes = theGeometry->theNodes;
-    for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = theGeometry->geoSize(theNodes->X[i], theNodes->Y[i]); }
+    double hMin, hMax;
+    if (exampleUsage == TRUE)
+    {
+        for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = theGeometry->geoSize(theNodes->X[i], theNodes->Y[i]); }
+        hMin = femMin(meshSizeField, theNodes->nNodes);
+        hMax = femMax(meshSizeField, theNodes->nNodes);
+        printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
+    }
+    else
+    {
+        for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = theGeometry->geoSize(theNodes->X[i], theNodes->Y[i]); }
+        hMin = femMin(meshSizeField, theNodes->nNodes);
+        hMax = femMax(meshSizeField, theNodes->nNodes);
+        printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
+    }
 
-    double hMin = femMin(meshSizeField, theNodes->nNodes);
-    double hMax = femMax(meshSizeField, theNodes->nNodes);
-
-    printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
     printf(" ==== Minimum h          : %14.7e \n", hMin);
     printf(" ==== Maximum h          : %14.7e \n", hMax);
 

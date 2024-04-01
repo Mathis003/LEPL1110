@@ -14,20 +14,8 @@ void femErrorGmsh(int ierr, int line, char *file);
 
 // Defined in Project/PreProcessing/homework.c
 void geoMeshGenerate(void);
-int createRectangle(double x, double y, double width, double height);
-int createDisk(double xc, double yc, double rx, double ry);
-void cutElement(int *mainElement, int *cutElement);
-void fuseElement(int *mainElement, int *fuseElement);
-void rotateElement(int *element, double posX, double posY, double angle);
-
+void geoMeshGenerateExample(void);
 void setDomainsName(void);
 void createBoundaryConditions(femProblem *theProblem);
-
-double getX_Ellipse(double a_ellipse, double b_ellipse, double xc, double yc, double x, double y);
-double geoSizeBridge(double x, double y);
-double geoSizeTopBall(double x, double y);
-double geoSizePillars(double y);
-double geoSizePylons(double x, double y);
-double geoSizeSubRoadWay(double x, double y);
 
 #endif // _FEM_GMSH_H_

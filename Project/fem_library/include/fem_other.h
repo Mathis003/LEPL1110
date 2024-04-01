@@ -67,6 +67,9 @@ typedef struct {
     double * (*getMaterialProperties)(char *material);
     char * (*getMaterials)(double x, double y);
 
+    // For the example
+    double LxPlate, LyPlate;
+
     femElementType elementType;
     femNodes *theNodes;
     femMesh  *theElements;

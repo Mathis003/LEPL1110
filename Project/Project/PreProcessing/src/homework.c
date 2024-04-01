@@ -1,15 +1,10 @@
 #include "../../../fem_library/include/fem_geometry.h"
 #include "../../../fem_library/include/fem_gmsh.h"
-#include "../../../fem_library/include/fem_elasticity.h"
 
 /*
 * TODO
-* - Raffiner le maillage
 * - Ajouter les conditions aux limites (finir)
 * - Vérifier le sens des contours (convention pour la normale)
-* - Faire en sort d'arriver à Fuse la TopBall de droite (voir le TODO dans le code)
-* - Ajouter une fonction qui determine si un point (x, y) se trouve à une distance d'une frontière => Pour raffiner les bords
-*      => Avec aide devoir 2 (interpolation d'hermite)
 */
 
 /**********************************/
@@ -499,7 +494,7 @@ void geoMeshGenerate()
     for (int i = 1; i < 3; i++)  { fuseElement(pylons[0], pylons[i]); }
     for (int i = 4; i < 6; i++)  { fuseElement(pylons[3], pylons[i]); }
     fuseElement(pylons[0], topBall[0]);
-    fuseElement(pylons[3], topBall[1]); // TODO : BUG
+    fuseElement(pylons[3], topBall[1]);
     for (int i = 0; i < 9; i++)   { fuseElement(pylons[3], stayCables[i]); }
     for (int i = 27; i < 36; i++) { fuseElement(pylons[3], stayCables[i]); }
     for (int i = 9; i < 27; i++)  { fuseElement(pylons[0], stayCables[i]); }
@@ -681,6 +676,19 @@ double geoSizeSubRoadWay(double x, double y)
     return fmin(hermiteInterpolation(d_Vertical, h_max, h_min, d_interp), hermiteInterpolation(d_Horizontal, h_max, h_min, d_interp_side));
 }
 
+double geoSizeTopBall(double x, double y)
+{
+    femGeometry *theGeometry = geoGetGeometry();
+    double h_max = theGeometry->defaultSize;
+    double h_min = h_max / 3;
+
+    double d_EuclTopBall = getEuclidianDistance(x, y, -theGeometry->rxLongArc - theGeometry->widthPillars / 2, theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + 0.2);
+    double rTopBall = 0.75;
+    double d_interp = rTopBall - 0.1;
+
+    return h_max + h_min - hermiteInterpolation(d_EuclTopBall, h_max, h_min, d_interp);
+}
+
 double geoSizePylons(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
@@ -727,17 +735,19 @@ double geoSizePylons(double x, double y)
     else { return geoSizeTopBall(x, y); }
 }
 
-double geoSizeTopBall(double x, double y)
+double getX_Ellipse(double a_ellipse, double b_ellipse, double xc, double yc, double x, double y)
 {
-    femGeometry *theGeometry = geoGetGeometry();
-    double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    if (fabs(x - xc) < 1e-6 || fabs(y - yc) < 1e-6) { return 0.0; }
 
-    double d_EuclTopBall = getEuclidianDistance(x, y, -theGeometry->rxLongArc - theGeometry->widthPillars / 2, theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + 0.2);
-    double rTopBall = 0.75;
-    double d_interp = rTopBall - 0.1;
+    double m = (y - yc) / (x - xc);
 
-    return h_max + h_min - hermiteInterpolation(d_EuclTopBall, h_max, h_min, d_interp);
+    double a = 1 / (a_ellipse * a_ellipse) + (m * m) / (b_ellipse * b_ellipse);
+    double b = - (2 * xc * m * m) / (b_ellipse * b_ellipse) - (2 * xc) / (a_ellipse * a_ellipse);
+    double c = - 1 + (m * m * xc * xc) / (b_ellipse * b_ellipse) + (xc * xc) / (a_ellipse * a_ellipse);
+
+    double discriminant = b * b - 4 * a * c;
+    if (discriminant <= 0) { Error("The discriminant must be positive !\nThere is always two solutions to this problem.\n"); }
+    return (-b + sqrt(discriminant)) / (2 * a);
 }
 
 double geoSizeBridge(double x, double y)
@@ -794,21 +804,6 @@ double geoSizeBridge(double x, double y)
     return fmin(h1, fmin(h2, fmin(h3, fmin(h4, fmin(h5, h6)))));
 }
 
-double getX_Ellipse(double a_ellipse, double b_ellipse, double xc, double yc, double x, double y)
-{
-    if (fabs(x - xc) < 1e-6 || fabs(y - yc) < 1e-6) { return 0.0; }
-
-    double m = (y - yc) / (x - xc);
-
-    double a = 1 / (a_ellipse * a_ellipse) + (m * m) / (b_ellipse * b_ellipse);
-    double b = - (2 * xc * m * m) / (b_ellipse * b_ellipse) - (2 * xc) / (a_ellipse * a_ellipse);
-    double c = - 1 + (m * m * xc * xc) / (b_ellipse * b_ellipse) + (xc * xc) / (a_ellipse * a_ellipse);
-
-    double discriminant = b * b - 4 * a * c;
-    if (discriminant <= 0) { Error("The discriminant must be positive !\nThere is always two solutions to this problem.\n"); }
-    return (-b + sqrt(discriminant)) / (2 * a);
-}
-
 double geoSize(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
@@ -821,4 +816,78 @@ double geoSize(double x, double y)
     else if (y <= theGeometry->heightPillars + theGeometry->heightSubRoadWay) { return geoSizeSubRoadWay(x, y); }
     else if (y <= theGeometry->heightPillars + theGeometry->heightBridge)     { return geoSizeBridge(x, y); }
     else                                                                      { return (isStayCables(x, y) == TRUE) ? h_min : geoSizePylons(x, y); }
+}
+
+
+/***************************************************/
+/********* MESH + GEO SIZE (ON AN EXAMPLE) *********/
+/***************************************************/
+
+double geoSizeExample(double x, double y)
+{
+  femGeometry *theGeometry = geoGetGeometry();
+  return theGeometry->defaultSize * (1.0 - 0.5 * x);
+}
+
+void geoMeshGenerateExample(void)
+{
+    /*
+    4 ------------------ 3
+    |                    |
+    |                    |
+    5 ------- 6          |
+                \         |
+                )        |
+                /         |
+    8 ------- 7          |
+    |                    |
+    |                    |
+    1 ------------------ 2
+    */
+
+    femGeometry *theGeometry = geoGetGeometry();
+    double Lx = 1.0;
+    double Ly = 1.0;
+    theGeometry->LxPlate = Lx;
+    theGeometry->LyPlate = Ly;
+    theGeometry->defaultSize = Lx * 0.05;
+    theGeometry->elementType = FEM_QUAD;
+    theGeometry->geoSize = geoSizeExample;
+
+    geoSetSizeCallback(theGeometry->geoSize);
+
+    double w = theGeometry->LxPlate;
+    double h = theGeometry->LyPlate;
+
+    int ierr;
+    double r = w / 4;
+    int idRect = createRectangle(0.0, 0.0, w, h);
+    int idDisk = createDisk(w / 2.0, h / 2.0, r, r);
+    int idSlit = createRectangle(w / 2.0, h / 2.0 - r, w, 2.0 * r);
+    int rect[] = {2, idRect};
+    int disk[] = {2, idDisk};
+    int slit[] = {2, idSlit};
+
+    cutElement(rect, disk);
+    cutElement(rect, slit);
+
+    gmshModelOccSynchronize(&ierr);
+
+    if (theGeometry->elementType == FEM_QUAD)
+    {
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+        gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
+        gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
+        gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
+        gmshModelGeoMeshSetRecombine(2, 1, 45, &ierr);
+        gmshModelMeshGenerate(2, &ierr);
+    }
+
+    if (theGeometry->elementType == FEM_TRIANGLE)
+    {
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+        gmshModelMeshGenerate(2, &ierr);
+    }
+
+    return;
 }
