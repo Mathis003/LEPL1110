@@ -3,18 +3,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
     bool meshVisualizer = true;
     bool resultVisualizer = true;
+    bool exampleUsage = false;
 
     // Deal with the options arguments
     int opt;
-    while ((opt = getopt(argc, argv, "mrah")) != -1)
+    while ((opt = getopt(argc, argv, "emrah")) != -1)
     {
         switch (opt)
         {
+            case 'e':
+                exampleUsage = true;
+                break;
             case 'm':
                 meshVisualizer = false;
                 break;
@@ -26,15 +31,16 @@ int main(int argc, char *argv[])
                 resultVisualizer = false;
                 break;
             case 'h':
-                printf("Usage: %s [-v] [-r] [-a]\n", argv[0]);
+                printf("Usage: %s [-e] [-v] [-r] [-a]\n", argv[0]);
                 printf("Options:\n");
+                printf("  -e : Start the program with the example mesh\n");
                 printf("  -m : Disable the mesh visualizer\n");
                 printf("  -r : Disable the result visualizer\n");
                 printf("  -a : Disable both visualizers\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-v] [-r] [-a] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-e] [-v] [-r] [-a] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -61,6 +67,8 @@ int main(int argc, char *argv[])
         char command[100] = "./myFem";
         if      (i == 0 && !meshVisualizer)   { sprintf(command, "./myFem -m"); }
         else if (i == 2 && !resultVisualizer) { sprintf(command, "./myFem -r"); }
+
+        if (exampleUsage) { strcat(command, " -e"); }
 
         // Execute the command "make" to build the program "./myFem"
         system("make > /dev/null");

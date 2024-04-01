@@ -20,21 +20,26 @@ int main(int argc, char *argv[])
     // Deal with the options arguments
     int opt;
     int resultVisualizer = TRUE;
-    while ((opt = getopt(argc, argv, "rh")) != -1)
+    int exampleUsage     = FALSE;
+    while ((opt = getopt(argc, argv, "reh")) != -1)
     {
         switch (opt)
         {
             case 'r':
                 resultVisualizer = FALSE;
                 break;
+            case 'e':
+                exampleUsage = TRUE;
+                break;
             case 'h':
-                printf("Usage: %s [-r] [-h]\n", argv[0]);
+                printf("Usage: %s [-r] [-e] [-h]\n", argv[0]);
                 printf("Options:\n");
                 printf("  -r : Disable the result visualizer\n");
+                printf("  -e : Start the program with the example mesh\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-r] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-r] [-e] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -48,14 +53,30 @@ int main(int argc, char *argv[])
     /***************************/
 
     femGeometry *theGeometry = geoGetGeometry();
-    geoMeshRead("../../../data/mesh.txt");
 
-    femSolverType typeSolver = FEM_FULL;
-    femProblem *theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
-    double *theSoluce = theProblem->soluce;
-    int n = theGeometry->theNodes->nNodes;
-    femSolutiondRead(2 * n, theSoluce, "../../../data/UV.txt");
-    femElasticityPrint(theProblem);
+    int n;
+    double *theSoluce;
+    femProblem *theProblem;
+    if (exampleUsage == TRUE)
+    {
+        geoMeshRead("../../../data/mesh_example.txt");
+        femSolverType typeSolver = FEM_FULL;
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem_example.txt");
+        theSoluce = theProblem->soluce;
+        n = theGeometry->theNodes->nNodes;
+        femSolutiondRead(2 * n, theSoluce, "../../../data/UV_example.txt");
+        femElasticityPrint(theProblem);
+    }
+    else
+    {
+        geoMeshRead("../../../data/mesh.txt");
+        femSolverType typeSolver = FEM_FULL;
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
+        theSoluce = theProblem->soluce;
+        n = theGeometry->theNodes->nNodes;
+        femSolutiondRead(2 * n, theSoluce, "../../../data/UV.txt");
+        femElasticityPrint(theProblem);
+    }
 
     /****************************************************/
     /* 2 : Deformation du maillage pour le plot final   */ 

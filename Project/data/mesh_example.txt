@@ -1300,7 +1300,7 @@ Number of quads 534
    533 :    592    593    610    608
 Number of domains 8
   Domain :      0 
-  Name : Frontier 1
+  Name : LEFT
   Number of elements :     20
      0
      1
@@ -1324,7 +1324,7 @@ Number of domains 8
     18
     19
   Domain :      1 
-  Name : Frontier 2
+  Name : Entity 1 
   Number of elements :     28
     20
     21
@@ -1451,7 +1451,7 @@ Number of domains 8
    122
    123
   Domain :      7 
-  Name : Entity 7 
+  Name : BOTTOM
   Number of elements :     28
    124
    125

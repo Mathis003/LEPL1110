@@ -32,13 +32,14 @@ int main(int argc, char *argv[])
                 exampleUsage = TRUE;
                 break;
             case 'h':
-                printf("Usage: %s [-m] [-h]\n", argv[0]);
+                printf("Usage: %s [-m] [-e] [-h]\n", argv[0]);
                 printf("Options:\n");
+                printf("  -e : Start the program with the example mesh\n");
                 printf("  -m : Disable the mesh visualizer\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-m] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-m] [-e] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -54,8 +55,8 @@ int main(int argc, char *argv[])
     {
         geoMeshGenerateExample();
         geoMeshImport();
-        geoSetDomainName(0, "Frontier 1");
-        geoSetDomainName(1, "Frontier 2");
+        geoSetDomainName(0, "LEFT");
+        geoSetDomainName(7, "BOTTOM");
         geoMeshWrite("../../../data/mesh_example.txt");
     }
     else
@@ -80,8 +81,8 @@ int main(int argc, char *argv[])
         double nu_example = 0.3;
         double rho_example = 7.85e3;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
-        femElasticityAddBoundaryCondition(theProblem, "Frontier 1", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Frontier 2", DIRICHLET_X, 0.0, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "LEFT", DIRICHLET_XY, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "BOTTOM", DIRICHLET_XY, 0.0, 0.0);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../../data/problem_example.txt");
     }
