@@ -23,4 +23,11 @@ void rotateElement(int *element, double posX, double posY, double angle);
 void setDomainsName(void);
 void createBoundaryConditions(femProblem *theProblem);
 
+double getX_Ellipse(double a_ellipse, double b_ellipse, double xc, double yc, double x, double y);
+double geoSizeBridge(double x, double y);
+double geoSizeTopBall(double x, double y);
+double geoSizePillars(double y);
+double geoSizePylons(double x, double y);
+double geoSizeSubRoadWay(double x, double y);
+
 #endif // _FEM_GMSH_H_
