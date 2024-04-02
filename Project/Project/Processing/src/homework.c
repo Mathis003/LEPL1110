@@ -10,6 +10,9 @@ Il faut generaliser ce code :
         => Solveur bande + renumerotation / solveur frontal / solveur multigrid / ...
 */
 
+double **A_copy = NULL;
+double *B_copy  = NULL;
+
 void femElasticityAssembleElements(femProblem *theProblem)
 {
     femSolver *theSolver     = theProblem->solver;
@@ -84,7 +87,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
                 dxdeta += x[i] * dphideta[i];
                 dydxsi += y[i] * dphidxsi[i];
                 dydeta += y[i] * dphideta[i];
-                xLoc += x[i] * phi[i];
+                xLoc   += x[i] * phi[i];
             }
 
             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
@@ -99,7 +102,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
 
             double weightedJac = jac * weight;
 
-            if (theProblem->planarStrainStress == PLANAR_STRAIN)
+            if (theProblem->planarStrainStress == PLANAR_STRAIN || theProblem->planarStrainStress == PLANAR_STRESS)
             {
                 for (i = 0; i < theSpace->n; i++)
                 {
@@ -126,10 +129,6 @@ void femElasticityAssembleElements(femProblem *theProblem)
                     }
                 }
             }
-            else if (theProblem->planarStrainStress == PLANAR_STRESS)
-            {
-                // TODO : A completer (pareil que PLANAR_STRAIN mais avec des termes supplementaires ?)
-            }
             else if (theProblem->planarStrainStress == AXISYM)
             {
                 for (i = 0; i < theSpace->n; i++)
@@ -138,7 +137,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
                     {
                         if (theSolver->type == FEM_FULL || theSolver->type == FEM_ITER)
                         {
-                            A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * jac * weight;
+                            A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + dphidx[i] * b * phi[j] + phi[i] * (b * dphidx[j] + a * phi[j] / xLoc)) * jac * weight;
                             A[mapX[i]][mapY[j]] += (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * jac * weight;
                             A[mapY[i]][mapX[j]] += (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * jac * weight;
                             A[mapY[i]][mapY[j]] += (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * jac * weight;
@@ -152,8 +151,8 @@ void femElasticityAssembleElements(femProblem *theProblem)
                         }
                         else { Error("Unexpected solver type !"); }
                     }
-                    B[mapX[i]] -= phi[i] * xLoc * gx * rho * jac * weight;
-                    B[mapY[i]] -= phi[i] * xLoc * gy * rho * jac * weight;
+                    B[mapX[i]] += phi[i] * xLoc * gx * rho * jac * weight;
+                    B[mapY[i]] += phi[i] * xLoc * gy * rho * jac * weight;
                 }
             }
             else { Error("Unexpected planarStrainStress value !"); }
@@ -190,66 +189,50 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         femBoundaryType type = theCondition->type;
         femDomain *domain = theCondition->domain;
         double value1 = theCondition->value1;
-        double value2 = theCondition->value2;
+        // double value2 = theCondition->value2;
 
-        if (type == NEUMANN_N || type == NEUMANN_T) 
+        if (type == DIRICHLET_X || type == DIRICHLET_Y || type == DIRICHLET_XY || type == DIRICHLET_N || type == DIRICHLET_T || type == DIRICHLET_NT) { continue; }
+        if (type == NEUMANN_N || type == NEUMANN_T) { continue; } // TODO : A PRENDRE EN COMPTE APRES
+
+        int shift;
+        if (type == NEUMANN_X)      { shift = 0; }
+        else if (type == NEUMANN_Y) { shift = 1; }
+
+        for (iEdge = 0; iEdge < domain->nElem; iEdge++)
         {
-            // TODO : Implement the Neumann boundary conditions (normal and tangent)
-            continue;
-        }
-        else if (type == NEUMANN_X || type == NEUMANN_Y)
-        {
-            for (iEdge = 0; iEdge < domain->nElem; iEdge++)
+            iElem = domain->elem[iEdge];
+
+            for (j = 0; j < nLocal; j++)
             {
-                iElem = domain->elem[iEdge];
+                map[j] = theEdges->elem[iElem * nLocal + j];
+                mapU[j] = 2 * map[j] + shift;
+                x[j] = theNodes->X[map[j]];
+                y[j] = theNodes->Y[map[j]];
+            }
 
-                for (j = 0; j < nLocal; j++)
+            double dx = x[1] - x[0];
+            double dy = y[1] - y[0];
+            double length = sqrt(dx * dx + dy * dy);
+            double jac = length / 2;
+
+            for (iInteg = 0; iInteg < theRule->n; iInteg++)
+            {
+                double xsi    = theRule->xsi[iInteg];
+                double weight = theRule->weight[iInteg];
+
+                femDiscretePhi(theSpace, xsi, phi);
+
+                if (theProblem->planarStrainStress == PLANAR_STRAIN || theProblem->planarStrainStress == PLANAR_STRESS)
                 {
-                    map[j] = theEdges->elem[iElem * nLocal + j];
-                    mapU[j] = 2 * map[j] + 1;
-                    x[j] = theNodes->X[map[j]];
-                    y[j] = theNodes->Y[map[j]];
+                    for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight; }
                 }
-
-                double dx = x[1] - x[0];
-                double dy = y[1] - y[0];
-                double length = sqrt(dx * dx + dy * dy);
-                double jac = length / 2;
--
-                for (iInteg = 0; iInteg < theRule->n; iInteg++)
+                else if (theProblem->planarStrainStress == AXISYM)
                 {
-                    double xsi    = theRule->xsi[iInteg];
-                    double weight = theRule->weight[iInteg];
-
-                    femDiscretePhi(theSpace, xsi, phi);
-
-                    if (theProblem->planarStrainStress == AXISYM)
-                    {
-                        // TODO : A completer
-                    } else if (theProblem->planarStrainStress == PLANAR_STRAIN)
-                    {
-                        // TODO : A completer
-                        if (theSolver->type == FEM_FULL || theSolver->type == FEM_ITER)
-                        {
-                            // TODO : A completer
-                            for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight; }
-                        }
-                        else if (theSolver->type == FEM_BAND)
-                        {
-                            // TODO : A completer
-                            for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight; }
-                        }
-                        else { Error("Unexpected solver type !"); }
-                    }
-                    else if (theProblem->planarStrainStress == PLANAR_STRESS)
-                    {
-                        // TODO : A completer
-                    }
-                    else { Error("Unexpected planarStrainStress value !"); }
+                    for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight * x[i]; }
                 }
+                else { Error("Unexpected planarStrainStress value !"); }
             }
         }
-        else { continue; }
     }
 }
 
@@ -320,11 +303,71 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
 
 double *femElasticitySolve(femProblem *theProblem)
 {
+    femSolver *theSolver = theProblem->solver;
+    femSolverInit(theSolver);
     femElasticityAssembleElements(theProblem);
     femElasticityAssembleNeumann(theProblem);
+
+    int size;
+    double **A, *B;
+    if (theSolver->type == FEM_FULL || theSolver->type == FEM_ITER)
+    {
+        femFullSystem *theSystem = (femFullSystem *) theSolver;
+        A = theSystem->A;
+        B = theSystem->B;
+        size = theSystem->size;
+    }
+    else if (theSolver->type == FEM_BAND)
+    {
+        femBandSystem *theSystem = (femBandSystem *) theSolver;
+        A = theSystem->A;
+        B = theSystem->B;
+        size = theSystem->size;
+    }
+    else { Error("Unexpected solver type !"); }
+
+    if (A_copy == NULL)
+    {
+        A_copy = (double **) malloc(sizeof(double *) * size);
+        for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
+    }
+    if (B_copy == NULL) { B_copy = (double *) malloc(sizeof(double) * size); }
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++) { A_copy[i][j] = A[i][j]; }
+        B_copy[i] = B[i];
+    }
+
     femElasticityApplyDirichlet(theProblem);
 
     double *soluce = femSolverEliminate(theProblem->solver);
     memcpy(theProblem->soluce, soluce, theProblem->solver->local->size * sizeof(double));
     return theProblem->soluce;
+}
+
+double *femElasticityForces(femProblem *theProblem)
+{
+    double *residuals = theProblem->residuals;
+    double *soluce    = theProblem->soluce;
+    int size          = theProblem->solver->local->size;
+
+    if (residuals == NULL) { residuals = (double *) malloc(sizeof(double) * size); }
+    for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
+
+    /*
+    Compute residuals: R = A * U - B where A and B are the system matrix
+    and load vector before applying Dirichlet boundary conditions.
+    */
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
+        residuals[i] -= B_copy[i];
+    }
+
+    for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL;}
+    free(A_copy); free(B_copy);
+    A_copy = NULL; B_copy = NULL;
+
+    return residuals;
 }

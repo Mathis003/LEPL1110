@@ -34,6 +34,7 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
 void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 double *femElasticitySolve(femProblem *theProblem);
+double *femElasticityForces(femProblem *theProblem);
 
 void femElasticityPrint(femProblem *theProblem);
 femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename);

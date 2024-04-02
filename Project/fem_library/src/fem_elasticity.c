@@ -3,6 +3,7 @@
 femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
 {
     femProblem *theProblem = malloc(sizeof(femProblem));
+
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->E = E;
     theProblem->nu = nu;
@@ -51,7 +52,10 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
         theProblem->space = femDiscreteCreate(4, FEM_QUAD);
         theProblem->rule  = femIntegrationCreate(4, FEM_QUAD);
     }
-    theProblem->solver = femSolverCreate(size);
+    theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
+    theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
+    theProblem->solver    = femSolverCreate(size);
+
     return theProblem;
 }
 
@@ -293,6 +297,8 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
         theProblem->space = femDiscreteCreate(4, FEM_QUAD);
         theProblem->rule = femIntegrationCreate(4, FEM_QUAD);
     }
+    theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
+    theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
 
     switch (typeSolver)
     {

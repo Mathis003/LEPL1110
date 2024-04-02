@@ -18,6 +18,12 @@ femIntegration *femIntegrationCreate(int n, femElementType type)
         theRule->eta    = _gaussTri3Eta;
         theRule->weight = _gaussTri3Weight;
     }
+    else if (type == FEM_EDGE && n == 2) {
+        theRule->n      = 2;
+        theRule->xsi    = _gaussEdge2Xsi;
+        theRule->eta    = NULL;
+        theRule->weight = _gaussEdge2Weight;
+        }
     else { Error("Cannot create such an integration rule !"); }
     return theRule;
 }
@@ -72,6 +78,24 @@ void _p1c0_dphidx(double xsi, double eta, double *dphidxsi, double *dphideta)
     dphideta[2] =  1.0;
 }
 
+void _e1c0_x(double *xsi) 
+{
+    xsi[0] = -1.0;  
+    xsi[1] =  1.0;  
+}
+
+void _e1c0_phi(double xsi,  double *phi)
+{
+    phi[0] = (1 - xsi) / 2.0;  
+    phi[1] = (1 + xsi) / 2.0;
+}
+
+void _e1c0_dphidx(double xsi, double *dphidxsi)
+{
+    dphidxsi[0] = -0.5;  
+    dphidxsi[1] =  0.5;
+}
+
 femDiscrete *femDiscreteCreate(int n, femElementType type)
 {
     femDiscrete *theSpace = malloc(sizeof(femDiscrete));
@@ -90,6 +114,13 @@ femDiscrete *femDiscreteCreate(int n, femElementType type)
         theSpace->phi2    = _p1c0_phi;
         theSpace->dphi2dx = _p1c0_dphidx;
     }
+    else if (type == FEM_EDGE && n == 2)
+    {
+        theSpace->n       = 2;
+        theSpace->x       = _e1c0_x;
+        theSpace->phi     = _e1c0_phi;
+        theSpace->dphidx  = _e1c0_dphidx;
+        }
     else { Error("Cannot create such a discrete space !"); }
     return theSpace;
 }

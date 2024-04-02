@@ -2023,7 +2023,7 @@ Number of triangles 1197
   1196 :    207    670    609
 Number of domains 8
   Domain :      0 
-  Name : LEFT
+  Name : Symmetry
   Number of elements :     20
      0
      1
@@ -2047,7 +2047,7 @@ Number of domains 8
     18
     19
   Domain :      1 
-  Name : Entity 1 
+  Name : Top
   Number of elements :     28
     20
     21
@@ -2171,7 +2171,7 @@ Number of domains 8
    119
    120
   Domain :      7 
-  Name : BOTTOM
+  Name : Bottom
   Number of elements :     28
    121
    122

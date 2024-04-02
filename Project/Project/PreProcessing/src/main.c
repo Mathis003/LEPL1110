@@ -55,8 +55,9 @@ int main(int argc, char *argv[])
     {
         geoMeshGenerateExample();
         geoMeshImport();
-        geoSetDomainName(0, "LEFT");
-        geoSetDomainName(7, "BOTTOM");
+        geoSetDomainName(0,"Symmetry");
+        geoSetDomainName(7,"Bottom");
+        geoSetDomainName(1,"Top");
         geoMeshWrite("../../../data/mesh_example.txt");
     }
     else
@@ -81,8 +82,9 @@ int main(int argc, char *argv[])
         double nu_example = 0.3;
         double rho_example = 7.85e3;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
-        femElasticityAddBoundaryCondition(theProblem, "LEFT", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "BOTTOM", DIRICHLET_XY, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_X, 0.0, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_Y, 0.0, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e4, NAN);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../../data/problem_example.txt");
     }

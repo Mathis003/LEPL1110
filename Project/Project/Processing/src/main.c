@@ -62,7 +62,10 @@ int main(int argc, char *argv[])
     }
     
     femElasticityPrint(theProblem);
+
     double *theSoluce = femElasticitySolve(theProblem);
+    double *theForces = femElasticityForces(theProblem); // TODO : Use theForces
+
     int nNodes = theGeometry->theNodes->nNodes;
     if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../../../data/UV_example.txt"); }
     else                      { femSolutionWrite(nNodes, 2, theSoluce, "../../../data/UV.txt"); }

@@ -832,6 +832,8 @@ double geoSize(double x, double y)
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
 
+    return h_max; // TODO : To remove
+
     if (x > 0) { return h_max; }
 
     if (y < theGeometry->heightPillars)                                       { return geoSizePillars(x, y); }
