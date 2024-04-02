@@ -278,7 +278,7 @@ void createTopBall(femGeometry *theGeometry, int *idTopBall)
 {
     double r = theGeometry->widthPylons / 3;
     double x = theGeometry->rxLongArc + theGeometry->widthPillars / 2;
-    double y = theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + r / 3;
+    double y = theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + r / 3 + 0.35; 
 
     idTopBall[0] = createDisk(- x, y, r, r);
     idTopBall[1] = createDisk(x, y, r, r);
@@ -424,7 +424,7 @@ void geoMeshGenerate()
     theGeometry->widthStayCables  = 0.2;
     theGeometry->heightStayCables = 14.4; // Be carefull (if too long, the stay cables will overlap an arc)
     theGeometry->distStayCables   = 0.8;
-    theGeometry->defaultSize      = 0.8;
+    theGeometry->defaultSize      = 1.4;
 
     theGeometry->geoSize = geoSize;
     theGeometry->getMaterialProperties = getMaterialProperties;
@@ -500,7 +500,7 @@ void geoMeshGenerate()
     for (int i = 0; i < 9; i++)   { fuseElement(bridge, stayCables[i]); }
     for (int i = 27; i < 36; i++) { fuseElement(bridge, stayCables[i]); }
     for (int i = 9; i < 27; i++)  { fuseElement(bridge, stayCables[i]); }
-    
+
     // Cut the half of the bridge by symmetry
     cutHalfGeometryBySymmetry(theGeometry, bridge);
 
@@ -650,39 +650,59 @@ double getVerticalDistance(double y1, double y2) { return fabs(y1 - y2); }
 
 double getHorizontalDistance(double x1, double x2) { return fabs(x1 - x2); }
 
-double geoSizePillars(double y)
+double geoSizePillars(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    double h_min = h_max / 7;
 
-    double d_Vertical  = getVerticalDistance(y, 0.0);
-    double d_interp = theGeometry->heightPillars;
+    double d_Vertical     = getVerticalDistance(y, 0.0);
+    double d_Horizontal_L_1 = getHorizontalDistance(x, -theGeometry->rxLongArc - 2 * theGeometry->rxArc - 2 * theGeometry->widthPillars);
+    double d_Horizontal_R_1 = getHorizontalDistance(x, -theGeometry->rxLongArc - 2 * theGeometry->rxArc - theGeometry->widthPillars);
+    double d_Horizontal_L_2 = getHorizontalDistance(x, -theGeometry->rxLongArc - theGeometry->widthPillars);
+    double d_Horizontal_R_2 = getHorizontalDistance(x, -theGeometry->rxLongArc);
+    double d_interp      = theGeometry->heightPillars;
+    double d_interp_side = theGeometry->widthPillars / 4;
 
-    return hermiteInterpolation(d_Vertical, h_max, h_min, d_interp);
+    double h1 = hermiteInterpolation(d_Vertical, h_max, h_min, d_interp);
+    double h2 = hermiteInterpolation(d_Horizontal_L_1, h_max, h_min, d_interp_side);
+    double h3 = hermiteInterpolation(d_Horizontal_R_1, h_max, h_min, d_interp_side);
+    double h4 = hermiteInterpolation(d_Horizontal_L_2, h_max, h_min, d_interp_side);
+    double h5 = hermiteInterpolation(d_Horizontal_R_2, h_max, h_min, d_interp_side);
+
+    return fmin(h1, fmin(h2, fmin(h3, fmin(h4, h5))));
 }
 
 double geoSizeSubRoadWay(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    double h_min = h_max / 10;
 
-    double d_Vertical   = getVerticalDistance(y, theGeometry->heightPillars + theGeometry->heightSubRoadWay);
-    double d_Horizontal = getHorizontalDistance(x, -theGeometry->widthSpanBridge / 2);
-    double d_interp      = 1.3 * theGeometry->heightSubRoadWay;
+    // if ((x >= 0.1 -theGeometry->rxLongArc - theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc) || (x >= 0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - 2 * theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - theGeometry->widthPillars)) { return 0.7 * h_max; }
+    if ((y <= theGeometry->heightPillars + 0.1) && ((x >= 0.1 -theGeometry->rxLongArc - theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc) || (x >= 0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - 2 * theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - theGeometry->widthPillars))) { return 0.7 * h_max; }
+
+    double d_Vertical_U  = getVerticalDistance(y, theGeometry->heightPillars + theGeometry->heightSubRoadWay);
+    double d_Horizontal  = getHorizontalDistance(x, -theGeometry->widthSpanBridge / 2);
+    double d_interp      = 3 * theGeometry->heightSubRoadWay / 4;
     double d_interp_side = 1.0;
 
-    return fmin(hermiteInterpolation(d_Vertical, h_max, h_min, d_interp), hermiteInterpolation(d_Horizontal, h_max, h_min, d_interp_side));
+    double d_Vertical_B = getVerticalDistance(y, theGeometry->heightPillars);
+
+    double h1 = hermiteInterpolation(d_Vertical_U, h_max, h_min, 2 * d_interp);
+    double h2 = hermiteInterpolation(d_Horizontal, h_max, h_min, d_interp_side);
+    double h3 = hermiteInterpolation(d_Vertical_B, h_max, h_min, d_interp / 2);
+
+    return fmin(h1, fmin(h2, h3));
 }
 
 double geoSizeTopBall(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    double h_min = h_max / 7;
 
-    double d_EuclTopBall = getEuclidianDistance(x, y, -theGeometry->rxLongArc - theGeometry->widthPillars / 2, theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + 0.2);
+    double d_EuclTopBall = getEuclidianDistance(x, y, -theGeometry->rxLongArc - theGeometry->widthPillars / 2, theGeometry->heightPillars + theGeometry->heightBridge + 2 * theGeometry->heightPylons + 0.55);
     double rTopBall = 0.75;
     double d_interp = rTopBall - 0.1;
 
@@ -693,11 +713,11 @@ double geoSizePylons(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    double h_min = h_max / 7;
 
     const double LIMIT_HEIGHT_PYLONS_STAGE1 = theGeometry->heightPillars + theGeometry->heightBridge + theGeometry->heightPylons;
     const double LIMIT_HEIGHT_PYLONS_STAGE2 = LIMIT_HEIGHT_PYLONS_STAGE1 + 2 * theGeometry->heightPylons / 3;
-    const double LIMIT_HEIGHT_PYLONS_STAGE3 = LIMIT_HEIGHT_PYLONS_STAGE2 + theGeometry->heightPylons / 3 - 0.5;
+    const double LIMIT_HEIGHT_PYLONS_STAGE3 = LIMIT_HEIGHT_PYLONS_STAGE2 + theGeometry->heightPylons / 3;
 
     if (y <= LIMIT_HEIGHT_PYLONS_STAGE1)
     {
@@ -754,7 +774,7 @@ double geoSizeBridge(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    double h_min = h_max / 10;
 
     double d_Horizontal_RoadWay  = getHorizontalDistance(x, -theGeometry->widthSpanBridge / 2);
     double d_Vertical_RoadWay    = getVerticalDistance(y, theGeometry->heightPillars + theGeometry->heightBridge);
@@ -767,6 +787,8 @@ double geoSizeBridge(double x, double y)
     double h1 = hermiteInterpolation(d_Vertical_RoadWay, h_max, h_min, d_interp_RoadWay);
     double h2 = hermiteInterpolation(d_Horizontal_RoadWay, h_max, h_min, d_interp_RoadWay_Side);
     double h3 = hermiteInterpolation(d_Vertical_SubRoadWay, h_max, h_min, d_interp_SubRoadWay);
+
+    h_min = h_max / 7;
 
     double r_min = fmin(fmin(fmin(theGeometry->rxArc, theGeometry->ryArc), theGeometry->ryLongArc), theGeometry->rxLongArc);
     double d_interp_Arcs = 1.5;
@@ -808,14 +830,14 @@ double geoSize(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
-    double h_min = h_max / 3;
+    double h_stayCables_min = h_max / 15;
 
     if (x > 0) { return h_max; }
 
-    if (y < theGeometry->heightPillars)                                       { return geoSizePillars(y); }
+    if (y < theGeometry->heightPillars)                                       { return geoSizePillars(x, y); }
     else if (y <= theGeometry->heightPillars + theGeometry->heightSubRoadWay) { return geoSizeSubRoadWay(x, y); }
     else if (y <= theGeometry->heightPillars + theGeometry->heightBridge)     { return geoSizeBridge(x, y); }
-    else                                                                      { return (isStayCables(x, y) == TRUE) ? h_min : geoSizePylons(x, y); }
+    else                                                                      { return (isStayCables(x, y) == TRUE) ? h_stayCables_min : geoSizePylons(x, y); }
 }
 
 
