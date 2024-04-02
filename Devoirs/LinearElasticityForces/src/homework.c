@@ -106,6 +106,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 
         // Skip Dirichlet boundary conditions
         if (type == DIRICHLET_X || type == DIRICHLET_Y) { continue; }
+
+        int shift = (type == NEUMANN_X) ? 0 : 1;
         
         // Iterate over the elements of the domain
         for (iEdge = 0; iEdge < domain->nElem; iEdge++)
@@ -117,11 +119,11 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
             for (j = 0; j < nLocal; j++)
             {
                 map[j] = theEdges->elem[iElem * nLocal + j];
-                mapU[j] = 2 * map[j] + 1;
+                mapU[j] = 2 * map[j] + shift;
                 x[j] = theNodes->X[map[j]];
                 y[j] = theNodes->Y[map[j]];
             }
-
+            
             // Compute the constant Jacobian
             double dx = x[1] - x[0];
             double dy = y[1] - y[0];
@@ -149,13 +151,18 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
 // // Strip : BEGIN
 double *femElasticitySolve(femProblem *theProblem)
 {
+    femFullSystem *theSystem = theProblem->system;
+
+    // Initialize the system
+    femFullSystemInit(theSystem);
+
     // Assembly of stiffness matrix and load vector
     femElasticityAssembleElements(theProblem);
 
     // Assembly of Neumann boundary conditions
     femElasticityAssembleNeumann(theProblem);
 
-    femFullSystem *theSystem = theProblem->system;
+    // Get the size of the system
     int size = theSystem->size;
 
     // Allocate memory for the copy of the stiffness matrix A and the load vector B
@@ -185,8 +192,8 @@ double *femElasticitySolve(femProblem *theProblem)
     }
 
     // Solve the system and return the solution
-    double *soluce = femFullSystemEliminate(theProblem->system);
-    memcpy(theProblem->soluce, soluce, theProblem->system->size * sizeof(double));
+    femFullSystemEliminate(theSystem);
+    memcpy(theProblem->soluce, theSystem->B, theSystem->size * sizeof(double));
     return theProblem->soluce;
 }
 // Strip : END
@@ -220,6 +227,6 @@ double *femElasticityForces(femProblem *theProblem)
     A_copy = NULL; B_copy = NULL;
 
     // Return the residuals corresponding to the forces
-    return theProblem->residuals;
+    return residuals;
 }
 // Strip : END

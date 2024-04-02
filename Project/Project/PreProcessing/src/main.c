@@ -107,23 +107,14 @@ int main(int argc, char *argv[])
 
     double *meshSizeField = malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (meshSizeField == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    
     femNodes *theNodes = theGeometry->theNodes;
-    double hMin, hMax;
-    if (exampleUsage == TRUE)
-    {
-        for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = theGeometry->geoSize(theNodes->X[i], theNodes->Y[i]); }
-        hMin = femMin(meshSizeField, theNodes->nNodes);
-        hMax = femMax(meshSizeField, theNodes->nNodes);
-        printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
-    }
-    else
-    {
-        for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = theGeometry->geoSize(theNodes->X[i], theNodes->Y[i]); }
-        hMin = femMin(meshSizeField, theNodes->nNodes);
-        hMax = femMax(meshSizeField, theNodes->nNodes);
-        printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
-    }
+    for (int i = 0; i < theNodes->nNodes; ++i) { meshSizeField[i] = theGeometry->geoSize(theNodes->X[i], theNodes->Y[i]); }
 
+    double hMin = femMin(meshSizeField, theNodes->nNodes);
+    double hMax = femMax(meshSizeField, theNodes->nNodes);
+
+    printf(" ==== Global requested h : %14.7e \n", theGeometry->defaultSize);
     printf(" ==== Minimum h          : %14.7e \n", hMin);
     printf(" ==== Maximum h          : %14.7e \n", hMax);
 

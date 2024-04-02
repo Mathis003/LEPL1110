@@ -12,9 +12,9 @@
 
 /*
 * BE CAREFULL TO THESE PATHNAMES (DO NOT REMOVE IT!)
-*   geoMeshRead("../data/mesh.txt"); // DO NOT CHANGE THIS PATHNAME
+*   geoMeshRead("../data/mesh.txt");                                                // DO NOT CHANGE THIS PATHNAME
 *   femProblem *theProblem = femElasticityRead(theGeometry, "../data/problem.txt"); // DO NOT CHANGE THIS PATHNAME
-*   femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); // DO NOT CHANGE THIS PATHNAME
+*   femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt");                       // DO NOT CHANGE THIS PATHNAME
 */
 
 #include "../../../fem_library/include/fem_elasticity.h"

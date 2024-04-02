@@ -163,10 +163,10 @@ void femElasticityAssembleElements(femProblem *theProblem)
 
 void femElasticityAssembleNeumann(femProblem *theProblem)
 {
-    femSolver *theSolver = theProblem->solver;
+    femSolver *theSolver     = theProblem->solver;
     femIntegration *theRule  = theProblem->ruleEdge;
     femDiscrete *theSpace    = theProblem->spaceEdge;
-    femGeometry *theGeometry      = theProblem->geometry;
+    femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theEdges        = theGeometry->theEdges;
 
@@ -215,7 +215,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 double dy = y[1] - y[0];
                 double length = sqrt(dx * dx + dy * dy);
                 double jac = length / 2;
-
+-
                 for (iInteg = 0; iInteg < theRule->n; iInteg++)
                 {
                     double xsi    = theRule->xsi[iInteg];
