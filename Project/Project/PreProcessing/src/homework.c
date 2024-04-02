@@ -422,7 +422,7 @@ void geoMeshGenerate()
     theGeometry->heightPylons     = 6.0;
     theGeometry->angleStayCables  = 135 * M_PI / 180; // Convert to radian
     theGeometry->widthStayCables  = 0.2;
-    theGeometry->heightStayCables = 14.5;
+    theGeometry->heightStayCables = 14.4; // Be carefull (if too long, the stay cables will overlap an arc)
     theGeometry->distStayCables   = 0.8;
     theGeometry->defaultSize      = 0.8;
 
@@ -460,23 +460,23 @@ void geoMeshGenerate()
     createBridgeMainSpan(theGeometry, &idBridge);
     createPillars(theGeometry, idPillars);
     createPylons(theGeometry, idPylons);
-    createSubRoadWay(theGeometry, &idSubRoadWay);
-    createArcs(theGeometry, idArcs);
-    createPiles(theGeometry, idPiles);
-    createWindows(theGeometry, idWindows);
-    createStayCables(theGeometry, idStayCables, positionStayCablesX, positionStayCablesY);
     createTopBall(theGeometry, idTopBall);
+    createStayCables(theGeometry, idStayCables, positionStayCablesX, positionStayCablesY);
+    createArcs(theGeometry, idArcs);
+    createWindows(theGeometry, idWindows);
+    createSubRoadWay(theGeometry, &idSubRoadWay);
+    createPiles(theGeometry, idPiles);
 
     bridge[0] = 2; bridge[1] = idBridge;
     subRoadWay[0] = 2; subRoadWay[1] = idSubRoadWay;
 
     for (int i = 0; i < 4; i++)  { pillars[i][0] = 2; pillars[i][1] = idPillars[i]; }
     for (int i = 0; i < 6; i++)  { pylons[i][0] = 2; pylons[i][1] = idPylons[i]; }
-    for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
     for (int i = 0; i < 5; i++)  { arcs[i][0] = 2; arcs[i][1] = idArcs[i]; }
     for (int i = 0; i < 4; i++)  { windows[i][0] = 2; windows[i][1] = idWindows[i]; }
     for (int i = 0; i < 2; i++)  { topBall[i][0] = 2; topBall[i][1] = idTopBall[i]; }
     for (int i = 0; i < 10; i++) { piles[i][0] = 2; piles[i][1] = idPiles[i]; }
+    for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
     for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
 
     // Cut the arcs and the windows
@@ -489,17 +489,17 @@ void geoMeshGenerate()
     
     // Fuse all the elements together to create the bridge
     fuseElement(bridge, subRoadWay);
-    for (int i = 0; i < 4; i++)  { fuseElement(bridge, pillars[i]); }
-    for (int i = 0; i < 10; i++) { fuseElement(bridge, piles[i]); }
-    for (int i = 1; i < 3; i++)  { fuseElement(pylons[0], pylons[i]); }
-    for (int i = 4; i < 6; i++)  { fuseElement(pylons[3], pylons[i]); }
-    fuseElement(pylons[0], topBall[0]);
-    fuseElement(pylons[3], topBall[1]);
-    for (int i = 0; i < 9; i++)   { fuseElement(pylons[3], stayCables[i]); }
-    for (int i = 27; i < 36; i++) { fuseElement(pylons[3], stayCables[i]); }
-    for (int i = 9; i < 27; i++)  { fuseElement(pylons[0], stayCables[i]); }
+    fuseElement(pylons[2], topBall[0]);
+    fuseElement(pylons[5], topBall[1]);
+    for (int i = 0; i < 4; i++)   { fuseElement(bridge, pillars[i]); }
+    for (int i = 0; i < 10; i++)  { fuseElement(bridge, piles[i]); }
+    for (int i = 1; i < 3; i++)   { fuseElement(pylons[0], pylons[i]); }
+    for (int i = 4; i < 6; i++)   { fuseElement(pylons[3], pylons[i]); }
     fuseElement(bridge, pylons[0]);
     fuseElement(bridge, pylons[3]);
+    for (int i = 0; i < 9; i++)   { fuseElement(bridge, stayCables[i]); }
+    for (int i = 27; i < 36; i++) { fuseElement(bridge, stayCables[i]); }
+    for (int i = 9; i < 27; i++)  { fuseElement(bridge, stayCables[i]); }
     
     // Cut the half of the bridge by symmetry
     cutHalfGeometryBySymmetry(theGeometry, bridge);
