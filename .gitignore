@@ -8,3 +8,5 @@ Project/main
 Project/Project/PreProcessing/Makefile
 Project/Project/PostProcessing/Makefile
 Project/Project/Processing/Makefile
+Project/.vscode/settings.json
+**/myFem
