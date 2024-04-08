@@ -9,7 +9,7 @@
 
 #include "fem_other.h"
 
-femGeometry theGeometry;
+extern femGeometry theGeometry;
 
 femGeometry *geoGetGeometry(void);
 double geoSize(double x, double y);

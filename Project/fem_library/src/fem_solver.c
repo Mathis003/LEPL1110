@@ -4,7 +4,7 @@
 /*********************************************************************************************************************/
 /******* FULL SOLVER ***** FULL SOLVER ***** FULL SOLVER ***** FULL SOLVER ***** FULL SOLVER ***** FULL SOLVER *******/
 /*********************************************************************************************************************/
-
+double *positionMeshNodes; // To renumber the mesh nodes
 
 femFullSystem *femFullSystemCreate(int size)
 {

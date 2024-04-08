@@ -10,7 +10,7 @@
 typedef enum {FEM_FULL,FEM_BAND,FEM_ITER} femSolverType;
 typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM} femRenumType;
 
-double *positionMeshNodes; // To renumber the mesh nodes
+extern double *positionMeshNodes; // To renumber the mesh nodes
 
 typedef struct {
     double *B;
