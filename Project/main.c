@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
+#include <sys/stat.h>
 
 int main(int argc, char *argv[])
 {
@@ -49,19 +50,35 @@ int main(int argc, char *argv[])
     const int MAXLINE = 999999;
     char res[MAXLINE];
 
-    char *nameDirectory[] = {"Project/PreProcessing/build", "../../Processing/build", "../../PostProcessing/build"};
+    char *nameDirectory[] = {"Project/PreProcessing/build/", "../../Processing/build/", "../../PostProcessing/build/"};
     char *stages[] = {"Pre-Processing", "Processing", "Post-Processing"};
     int nbProgram = 3;
 
     for (int i = 0; i < nbProgram; i++)
-    {   
-        // Change the directory to the current program
-        if (chdir(nameDirectory[i]) != 0) { perror("Erreur lors du changement de répertoire"); return EXIT_FAILURE; }
+    {
+        struct stat st;
+        stat(nameDirectory[i], &st);
+        if (!S_ISDIR(st.st_mode))
+        {
+            // Create the directory 'build' if it does not exist
+            char command[50];
+            sprintf(command, "mkdir -p %s", nameDirectory[i]);
+            system(command);
+        }
         
+        // Change the current directory to the 'build' directory
+        if (chdir(nameDirectory[i]) != 0) { perror("Erreur lors du changement de répertoire"); return EXIT_FAILURE; }
+
+        // Execute the command "cmake .." to generate the Makefile
+        system("cmake .. > /dev/null 2>&1");
+
         // Print the current step
         printf("\n\n/**************************/\n");
         printf("Stage %d : %s\n", i + 1, stages[i]);
         printf("/**************************/\n\n");
+
+        // Execute the command "make" to build the program "./myFem"
+        system("make > /dev/null 2>&1");
 
         // Define the command to execute
         char command[100] = "./myFem";
@@ -69,9 +86,6 @@ int main(int argc, char *argv[])
         else if (i == 2 && !resultVisualizer) { sprintf(command, "./myFem -r"); }
 
         if (exampleUsage) { strcat(command, " -e"); }
-
-        // Execute the command "make" to build the program "./myFem"
-        system("make > /dev/null");
 
         // Execute the program "./myFem" with the option(s)
         fp = popen(command, "r");
