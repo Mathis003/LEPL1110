@@ -1,3 +1,10 @@
 **/.DS_Store
 **/build/
 Project/main
+**/CMakeFiles/
+**/glfw_binary/
+**/CMakeCache.txt
+**/cmake_install.cmake
+Project/Project/PreProcessing/Makefile
+Project/Project/PostProcessing/Makefile
+Project/Project/Processing/Makefile
