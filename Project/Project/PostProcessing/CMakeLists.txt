@@ -57,11 +57,7 @@ include_directories(${GMSH_INCLUDE_DIR})
 
 # link the aforementioned libraries
 add_executable(${EXEC_NAME}
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_other.c
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_solver.c
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_integrate.c
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_geometry.c
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem_elasticity.c
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/fem.c
     ${CMAKE_SOURCE_DIR}/${GLFEM_LIBRARY_PATH}/glfem.c
     src/main.c
 )

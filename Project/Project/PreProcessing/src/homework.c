@@ -1,5 +1,4 @@
-#include "../../../fem_library/include/fem_geometry.h"
-#include "../../../fem_library/include/fem_gmsh.h"
+#include "../../../fem_library/fem.h"
 
 /*
 * TODO

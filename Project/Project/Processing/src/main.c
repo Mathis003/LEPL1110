@@ -17,8 +17,7 @@
 *   femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt");                       // DO NOT CHANGE THIS PATHNAME
 */
 
-#include "../../../fem_library/include/fem_elasticity.h"
-#include "../../../fem_library/include/fem_geometry.h"
+#include "../../../fem_library/fem.h"
 
 #include <getopt.h>
 

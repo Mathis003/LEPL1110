@@ -1,4 +1,4 @@
-#include "../../../fem_library/include/fem_elasticity.h"
+#include "../../../fem_library/fem.h"
 
 /*
 TODO
@@ -85,60 +85,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
 
             double weightedJac = jac * weight;
 
-            if (theProblem->planarStrainStress == PLANAR_STRAIN || theProblem->planarStrainStress == PLANAR_STRESS)
-            {
-                for (i = 0; i < theSpace->n; i++)
-                {
-                    for (j = 0; j < theSpace->n; j++)
-                    {
-                        if (theSolver->type == FEM_FULL || theSolver->type == FEM_ITER)
-                        {
-                            A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac;
-                            A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac;
-                            A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac;
-                            A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac;
-                        }
-                        else if (theSolver->type == FEM_BAND)
-                        {
-                            A[mapX[i]][mapX[j]] += (mapX[j] >= mapX[i]) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
-                            A[mapX[i]][mapY[j]] += (mapY[j] >= mapX[i]) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
-                            A[mapY[i]][mapX[j]] += (mapX[j] >= mapY[i]) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
-                            A[mapY[i]][mapY[j]] += (mapY[j] >= mapY[i]) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
-                        }
-                        else { Error("Unexpected solver type !"); }
-
-                    B[mapX[i]] += phi[i] * gx * rho * jac * weight;
-                    B[mapY[i]] += phi[i] * gy * rho * jac * weight;
-                    }
-                }
-            }
-            else if (theProblem->planarStrainStress == AXISYM)
-            {
-                for (i = 0; i < theSpace->n; i++)
-                {
-                    for (j = 0; j < theSpace->n; j++)
-                    {
-                        if (theSolver->type == FEM_FULL || theSolver->type == FEM_ITER)
-                        {
-                            A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + dphidx[i] * b * phi[j] + phi[i] * (b * dphidx[j] + a * phi[j] / xLoc)) * jac * weight;
-                            A[mapX[i]][mapY[j]] += (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * jac * weight;
-                            A[mapY[i]][mapX[j]] += (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * jac * weight;
-                            A[mapY[i]][mapY[j]] += (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * jac * weight;
-                        }
-                        else if (theSolver->type == FEM_BAND)
-                        {
-                            A[mapX[i]][mapX[j]] += (mapX[j] >= mapX[i]) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * jac * weight : 0.0;
-                            A[mapX[i]][mapY[j]] += (mapY[j] >= mapX[i]) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * jac * weight : 0.0;
-                            A[mapY[i]][mapX[j]] += (mapX[j] >= mapY[i]) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * jac * weight : 0.0;
-                            A[mapY[i]][mapY[j]] += (mapY[j] >= mapY[i]) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * jac * weight : 0.0;
-                        }
-                        else { Error("Unexpected solver type !"); }
-                    }
-                    B[mapX[i]] += phi[i] * xLoc * gx * rho * jac * weight;
-                    B[mapY[i]] += phi[i] * xLoc * gy * rho * jac * weight;
-                }
-            }
-            else { Error("Unexpected planarStrainStress value !"); }
+            femSolverAssemble(theSolver, theProblem, mapX, mapY, phi, dphidx, dphidy, weightedJac, xLoc, theSpace->n);
         }
     }
 }
@@ -156,7 +103,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
 
     int nLocal = 2;
-    double *B  = theSolver->local->B;
+    double *B  = getVectorB(theSolver);
 
     for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
     {
@@ -293,7 +240,7 @@ double *femElasticitySolve(femProblem *theProblem)
 
     int size;
     double **A, *B;
-    if (theSolver->type == FEM_FULL || theSolver->type == FEM_ITER)
+    if (theSolver->type == FEM_FULL)
     {
         femFullSystem *theSystem = (femFullSystem *) theSolver;
         A = theSystem->A;
@@ -325,7 +272,7 @@ double *femElasticitySolve(femProblem *theProblem)
     femElasticityApplyDirichlet(theProblem);
 
     double *soluce = femSolverEliminate(theProblem->solver);
-    memcpy(theProblem->soluce, soluce, theProblem->solver->local->size * sizeof(double));
+    memcpy(theProblem->soluce, soluce, getSizeMatrix(theProblem->solver) * sizeof(double));
     return theProblem->soluce;
 }
 
@@ -333,7 +280,7 @@ double *femElasticityForces(femProblem *theProblem)
 {
     double *residuals = theProblem->residuals;
     double *soluce    = theProblem->soluce;
-    int size          = theProblem->solver->local->size;
+    int size          = getSizeMatrix(theProblem->solver);
 
     if (residuals == NULL) { residuals = (double *) malloc(sizeof(double) * size); }
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }

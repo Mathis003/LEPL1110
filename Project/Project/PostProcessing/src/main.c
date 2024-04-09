@@ -12,8 +12,8 @@
 
 #include <getopt.h>
 
+#include "../../fem_library/fem.h"
 #include "../../glfem_library/glfem.h"
-#include "../../../fem_library/include/fem_geometry.h"
 
 int main(int argc, char *argv[])
 {
