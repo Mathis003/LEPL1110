@@ -1,4 +1,4 @@
-#include "../../../fem_library/fem.h"
+#include "../../../fem_library/include/fem.h"
 
 /*
 TODO

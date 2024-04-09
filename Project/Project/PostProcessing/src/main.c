@@ -12,7 +12,7 @@
 
 #include <getopt.h>
 
-#include "../../fem_library/fem.h"
+#include "../../fem_library/include/fem.h"
 #include "../../glfem_library/glfem.h"
 
 int main(int argc, char *argv[])

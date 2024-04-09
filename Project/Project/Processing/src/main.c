@@ -17,7 +17,7 @@
 *   femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt");                       // DO NOT CHANGE THIS PATHNAME
 */
 
-#include "../../../fem_library/fem.h"
+#include "../../../fem_library/include/fem.h"
 
 #include <getopt.h>
 

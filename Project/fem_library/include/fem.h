@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <math.h>
 #include <string.h>
-#include "gmshc.h"
 
 /* Preprocessor directive */
 
@@ -240,23 +239,6 @@ void geoMeshWrite(const char *filename);
 void geoMeshRead(const char *filename);
 void geoSetDomainName(int iDomain, char *name);
 int geoGetDomain(char *name);
-
-/******************/
-/* Gmsh functions */
-/******************/
-
-double geoSizeDefault(double x, double y);
-double geoGmshSize(int dim, int tag, double x, double y, double z, double lc, void *data);
-void geoInitialize(void);
-void geoFinalize(void);
-void geoMeshImport(void);
-void femErrorGmsh(int ierr, int line, char *file);
-
-// Defined in Project/PreProcessing/homework.c
-void geoMeshGenerate(void);
-void geoMeshGenerateExample(void);
-void setDomainsName(void);
-void createBoundaryConditions(femProblem *theProblem);
 
 /************************/
 /* Elasticity functions */

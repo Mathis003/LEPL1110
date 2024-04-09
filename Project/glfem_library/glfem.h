@@ -16,7 +16,7 @@
 #define GLFW_INCLUDE_GLU
 
 #include <GLFW/glfw3.h>
-#include "../fem_library/fem.h"
+#include "../fem_library/include/fem.h"
 
 void glfemDrawColorElement(float *x, float *y, double *u, int n);
 void glfemDrawElement(float *x, float *y, int n);

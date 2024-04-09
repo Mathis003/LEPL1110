@@ -57,7 +57,8 @@ include_directories(${GMSH_INCLUDE_DIR})
 
 # link the aforementioned libraries
 add_executable(${EXEC_NAME}
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/fem.c
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem.c
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/gmsh.c
     ${CMAKE_SOURCE_DIR}/${GLFEM_LIBRARY_PATH}/glfem.c
     src/homework.c
     src/main.c

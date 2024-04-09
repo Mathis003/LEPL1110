@@ -10,7 +10,8 @@
 *
 */
 
-#include "../../../fem_library/fem.h"
+#include "../../../fem_library/include/fem.h"
+#include "../../../fem_library/include/gmsh.h"
 #include "../../../glfem_library/glfem.h"
 
 #include <getopt.h>
