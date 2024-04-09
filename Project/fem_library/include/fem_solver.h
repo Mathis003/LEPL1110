@@ -92,5 +92,8 @@ void femSolverAssemble(femSolver *mySolver, double *Aloc, double *Bloc, double *
 void femSolverSystemConstrain(femSolver *mySolver, double node, double value);
 double *femSolverEliminate(femSolver *mySolver);
 int femSolverConverged(femSolver *mySolver);
+double **getMatrixA(femSolver *mySolver);
+double *getVectorB(femSolver *mySolver);
+double getSizeMatrix(femSolver *mySolver);
 
 #endif // _FEM_SOLVER_H_

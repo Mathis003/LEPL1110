@@ -595,3 +595,36 @@ int femSolverConverged(femSolver *mySolver)
     }
     return testConvergence;
 }
+
+double **getMatrixA(femSolver *mySolver)
+{
+    switch(mySolver->type)
+    {
+        case FEM_FULL : return ((femFullSystem *) mySolver->solver)->A;
+        case FEM_BAND : return ((femBandSystem *) mySolver->solver)->A;
+        case FEM_ITER : return ((femFullSystem *) mySolver->local)->A;
+        default :       Error("Unexpected solver type");
+    }
+}
+
+double *getVectorB(femSolver *mySolver)
+{
+    switch(mySolver->type)
+    {
+        case FEM_FULL : return ((femFullSystem *) mySolver->solver)->B;
+        case FEM_BAND : return ((femBandSystem *) mySolver->solver)->B;
+        case FEM_ITER : return ((femFullSystem *) mySolver->local)->B;
+        default :       Error("Unexpected solver type");
+    }
+}
+
+double getSizeMatrix(femSolver *mySolver)
+{
+    switch(mySolver->type)
+    {
+        case FEM_FULL : return ((femFullSystem *) mySolver->solver)->size;
+        case FEM_BAND : return ((femBandSystem *) mySolver->solver)->size;
+        case FEM_ITER : return ((femFullSystem *) mySolver->local)->size;
+        default :       Error("Unexpected solver type");
+    }
+}

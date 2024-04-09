@@ -26,6 +26,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
 
     double x[4], y[4], phi[4], dphidxsi[4], dphideta[4], dphidx[4], dphidy[4];
     int size, iElem, iInteg, iEdge, i, j, d, map[4], mapX[4], mapY[4];
+    void *theSystem;
     double **A, *B;
 
     int nLocal = theMesh->nLocalNode;
@@ -36,27 +37,9 @@ void femElasticityAssembleElements(femProblem *theProblem)
     double gx  = theProblem->gx;
     double gy  = theProblem->gy;
 
-    if (theSolver->type == FEM_FULL)
-    {
-        femFullSystem *theFullSystem = (femFullSystem *) theSolver->solver;
-        A = theFullSystem->A;
-        B = theFullSystem->B;
-    }
-    else if (theSolver->type == FEM_BAND)
-    {
-        femBandSystem *theBandSystem = (femBandSystem *) theSolver->solver;
-        A = theBandSystem->A;
-        B = theBandSystem->B;
-        size = theBandSystem->size;
-    }
-    else if (theSolver->type == FEM_ITER)
-    {
-        femFullSystem *theFullSystem = theSolver->local;
-        A = theFullSystem->A;
-        B = theFullSystem->B;
-        size = theFullSystem->size;
-    }
-    else { Error("Unexpected solver type !"); }
+    A     = getMatrixA(theSolver);
+    B     = getVectorB(theSolver);
+    size = getSizeMatrix(theSolver);
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {
