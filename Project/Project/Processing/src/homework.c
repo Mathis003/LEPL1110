@@ -181,6 +181,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
     for (int node = 0; node < theNodes->nNodes; node++)
     {
         femConstrainedNode *theConstrainedNode = &theProblem->constrainedNodes[node];
+        // Skip if the node is not constrained
         if (theConstrainedNode->type == UNDEFINED) { continue; }
         femBoundaryType type = theConstrainedNode->type;
 
@@ -208,10 +209,9 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double nx = theConstrainedNode->nx;
             double ny = theConstrainedNode->ny;
 
-            //We normalise the normal vector
+            // Normalise the normal vector
             double norm = sqrt(nx * nx + ny * ny);
-            nx /= norm;
-            ny /= norm;
+            nx /= norm; ny /= norm;
 
             femSolverSystemConstrain(theSolver, 2 * node + 0, value * nx);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value * ny);
@@ -224,9 +224,9 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double tx = ny;
             double ty = -nx;
 
+            // Normalise the tangent vector
             double norm = sqrt(tx * tx + ty * ty);
-            tx /= norm;
-            ty /= norm;
+            tx /= norm; ty /= norm;
 
             femSolverSystemConstrain(theSolver, 2 * node + 0, value * tx);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value * ty);
@@ -240,14 +240,11 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double tx = ny;
             double ty = -nx;
             
+            // Normalise the normal and tangent vectors
             double norm_n = sqrt(nx * nx + ny * ny);
             double norm_t = sqrt(tx * tx + ty * ty);
-
-            //We normalise the normal and tangent vectors
-            nx /= norm_n;
-            ny /= norm_n;
-            tx /= norm_t;
-            ty /= norm_t;
+            nx /= norm_n; ny /= norm_n;
+            tx /= norm_t; ty /= norm_t;
 
             femSolverSystemConstrain(theSolver, 2 * node + 0, value_n * nx + value_t * tx);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value_n * ny + value_t * ty);

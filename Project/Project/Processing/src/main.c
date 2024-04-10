@@ -51,13 +51,13 @@ int main(int argc, char *argv[])
     femProblem *theProblem;
     if (exampleUsage == TRUE)
     {
-        geoMeshRead("../../../data/mesh_example.txt");
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem_example.txt");
+        geoMeshRead("../data/mesh_example.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt");
     }
     else
     {
-        geoMeshRead("../../../data/mesh.txt");
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
+        geoMeshRead("../data/mesh.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt");
     }
     
     femElasticityPrint(theProblem);
@@ -66,8 +66,8 @@ int main(int argc, char *argv[])
     double *theForces = femElasticityForces(theProblem); // TODO : Use theForces
 
     int nNodes = theGeometry->theNodes->nNodes;
-    if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../../../data/UV_example.txt"); }
-    else                      { femSolutionWrite(nNodes, 2, theSoluce, "../../../data/UV.txt"); }
+    if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV_example.txt"); }
+    else                      { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); }
     femElasticityFree(theProblem);
     geoFree();
     return EXIT_SUCCESS;

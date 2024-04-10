@@ -59,14 +59,14 @@ int main(int argc, char *argv[])
         geoSetDomainName(0,"Symmetry");
         geoSetDomainName(7,"Bottom");
         geoSetDomainName(1,"Top");
-        geoMeshWrite("../../../data/mesh_example.txt");
+        geoMeshWrite("../../Processing/data/mesh_example.txt");
     }
     else
     {
         geoMeshGenerate();
         geoMeshImport();
         setDomainsName();
-        geoMeshWrite("../../../data/mesh.txt");
+        geoMeshWrite("../../Processing/data/mesh.txt");
     }
 
     /******************************/
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_Y, 0.0, NAN);
         femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e4, NAN);
         femElasticityPrint(theProblem);
-        femElasticityWrite(theProblem, "../../../data/problem_example.txt");
+        femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
     }
     else
     {
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, PLANAR_STRAIN);
         createBoundaryConditions(theProblem);
         femElasticityPrint(theProblem);
-        femElasticityWrite(theProblem, "../../../data/problem.txt");
+        femElasticityWrite(theProblem, "../../Processing/data/problem.txt");
     }
 
     /***************************************************/

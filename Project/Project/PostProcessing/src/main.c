@@ -59,22 +59,22 @@ int main(int argc, char *argv[])
     femProblem *theProblem;
     if (exampleUsage == TRUE)
     {
-        geoMeshRead("../../../data/mesh_example.txt");
+        geoMeshRead("../../Processing/data/mesh_example.txt");
         femSolverType typeSolver = FEM_FULL;
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem_example.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem_example.txt");
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../../data/UV_example.txt");
+        femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV_example.txt");
         femElasticityPrint(theProblem);
     }
     else
     {
-        geoMeshRead("../../../data/mesh.txt");
+        geoMeshRead("../../Processing/data/mesh.txt");
         femSolverType typeSolver = FEM_FULL;
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../../data/problem.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem.txt");
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../../data/UV.txt");
+        femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV.txt");
         femElasticityPrint(theProblem);
     }
 
