@@ -850,8 +850,7 @@ double geoSize(double x, double y)
 double geoSizeExample(double x, double y)
 {
   femGeometry *theGeometry = geoGetGeometry();
-  return 1.0;
-  // return theGeometry->defaultSize * (1.0 - 0.5 * x);
+  return theGeometry->defaultSize * (1.0 - 0.5 * x);
 }
 
 void geoMeshGenerateExample(void)
@@ -861,9 +860,9 @@ void geoMeshGenerateExample(void)
     |                    |
     |                    |
     5 ------- 6          |
-                \         |
+                \        |
                 )        |
-                /         |
+                /        |
     8 ------- 7          |
     |                    |
     |                    |
