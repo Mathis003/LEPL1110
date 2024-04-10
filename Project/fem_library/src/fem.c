@@ -1,5 +1,11 @@
 #include "../include/fem.h"
 
+
+/* Variables (needed for linux compilation)*/
+
+double *positionMeshNodes; // To renumber the mesh nodes
+femGeometry theGeometry;
+
 /**********************************/
 /******* Solvers functions *******/
 /**********************************/

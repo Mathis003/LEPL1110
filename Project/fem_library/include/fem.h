@@ -146,8 +146,8 @@ typedef struct {
 
 /* Variables */
 
-double *positionMeshNodes; // To renumber the mesh nodes
-femGeometry theGeometry;
+extern double *positionMeshNodes; // To renumber the mesh nodes
+extern femGeometry theGeometry;
 
 /* Functions declaration */
 
