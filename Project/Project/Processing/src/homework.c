@@ -159,14 +159,13 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     tx /= norm_t; ty /= norm_t;
         
                     //     nx * Ux + ny * Uy = value
-                    // <=> Ux = (value/nx) * Uy - ny/nx
-                    a = value1 / nx;
-                    b = - ny / nx;
-                    printf("nx = %f, ny = %f, tx = %f, ty = %f\n", nx, ny, tx, ty);
-                    printf("Ux = %d, Uy = %d, a = %f, b = %f\n", Ux, Uy, a, b);
+                    // <=> Ux = (value/nx) - (ny/nx) * Uy
+                    b = value1 / nx;
+                    a = - ny / nx;
                     for (int i = 0; i < size; i++) { A[Uy][i] += a * A[Ux][i]; }
                     for (int i = 0; i < size; i++) { A[i][Uy] += a * A[i][Ux]; }
                     B[Uy] -= b * B[Ux];
+                    // printf("Ux = %d, Uy = %d\n", Ux, Uy);
                 }
             }
             else if (type == NEUMANN_T)
@@ -188,11 +187,9 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     tx /= norm_t; ty /= norm_t;
         
                     //     tx * Ux + ty * Uy = value
-                    // <=> Ux = (value/tx) * Uy - ty/tx
-                    a = value1 / tx;
-                    b = - ty / tx;
-                    printf("nx = %f, ny = %f, tx = %f, ty = %f\n", nx, ny, tx, ty);
-                    printf("Ux = %d, Uy = %d, a = %f, b = %f\n", Ux, Uy, a, b);
+                    // <=> Ux = (value/tx) - (ty/tx) * Uy
+                    b = value1 / tx;
+                    a = - ty / tx;
                     for (int i = 0; i < size; i++) { A[Uy][i] += a * A[Ux][i]; }
                     for (int i = 0; i < size; i++) { A[i][Uy] += a * A[i][Ux]; }
                     B[Uy] -= b * B[Ux];
