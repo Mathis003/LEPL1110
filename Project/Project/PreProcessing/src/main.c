@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
         femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_X, 0.0, NAN);
         femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_Y, 0.0, NAN);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e4, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, -1e4, NAN);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
     }

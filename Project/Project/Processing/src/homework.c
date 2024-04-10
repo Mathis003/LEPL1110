@@ -160,7 +160,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 // Modify the system matrix and vector to apply the boundary condition on the normal (or tangent) vector
                 for (int i = 0; i < size; i++) { A[node1][i] += a * A[node2][i]; }
                 for (int i = 0; i < size; i++) { A[i][node1] += a * A[i][node2]; }
-                for (int i = 0; i < size; i++) { B[i] -= b * A[i][node2]; }
+                B[node1] -= b * B[node2];
             }
 
             double dx = x[1] - x[0];
@@ -185,13 +185,13 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     }
                     else if (type == NEUMANN_N)
                     {
-                        B[node1] += phi[i] * value1 * nx * weightedJac;
-                        B[node2] += phi[i] * value1 * ny * weightedJac;
+                        B[node1] += phi[0] * value1 * nx * weightedJac;
+                        B[node2] += phi[1] * value1 * ny * weightedJac;
                     }
                     else if (type == NEUMANN_T)
                     {
-                        B[node1] += phi[i] * value1 * tx * weightedJac;
-                        B[node2] += phi[i] * value1 * ty * weightedJac;
+                        B[node1] += phi[0] * value1 * tx * weightedJac;
+                        B[node2] += phi[1] * value1 * ty * weightedJac;
                     }
                 }
                 else if (theProblem->planarStrainStress == AXISYM)
@@ -202,13 +202,13 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     }
                     else if (type == NEUMANN_N)
                     {
-                        B[node1] += phi[i] * value1 * nx * jac * weight * xLoc;
-                        B[node2] += phi[i] * value1 * ny * jac * weight * xLoc;
+                        B[node1] += phi[0] * value1 * nx * jac * weight * xLoc;
+                        B[node2] += phi[1] * value1 * ny * jac * weight * xLoc;
                     }
                     else if (type == NEUMANN_T)
                     {
-                        B[node1] += phi[i] * value1 * tx * jac * weight * xLoc;
-                        B[node2] += phi[i] * value1 * ty * jac * weight * xLoc;
+                        B[node1] += phi[0] * value1 * tx * jac * weight * xLoc;
+                        B[node2] += phi[1] * value1 * ty * jac * weight * xLoc;
                     }
                 }
                 else { Error("Unexpected planarStrainStress value !"); }
