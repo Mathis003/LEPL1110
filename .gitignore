@@ -10,3 +10,4 @@ Project/Project/PostProcessing/Makefile
 Project/Project/Processing/Makefile
 Project/.vscode/settings.json
 **/myFem
+Project/data/mesh.txt

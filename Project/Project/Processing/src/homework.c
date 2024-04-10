@@ -115,6 +115,12 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         // double nx = ty;
         // double ny = -tx;
 
+        // A completer (COMPRENDS RIEN)
+        // double tx = theNodes->X[node + 1] - theNodes->X[node];
+        // double ty = theNodes->Y[node + 1] - theNodes->Y[node];
+        // double nx = ty;
+        // double ny = -tx;
+
         femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
         femBoundaryType type = theCondition->type;
         femDomain *domain = theCondition->domain;
@@ -196,18 +202,19 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             femSolverSystemConstrain(theSolver, 2 * node + 0, value_x);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value_y);
         }
-
         else if (type == DIRICHLET_N)
         {
             double value = theConstrainedNode->value1;
             double nx = theConstrainedNode->nx;
             double ny = theConstrainedNode->ny;
 
-            // A completer (COMPRENDS RIEN)
-            // double tx = theNodes->X[node + 1] - theNodes->X[node];
-            // double ty = theNodes->Y[node + 1] - theNodes->Y[node];
-            // double nx = ty;
-            // double ny = -tx;
+            //We normalise the normal vector
+            double norm = sqrt(nx * nx + ny * ny);
+            nx /= norm;
+            ny /= norm;
+
+            femSolverSystemConstrain(theSolver, 2 * node + 0, value * nx);
+            femSolverSystemConstrain(theSolver, 2 * node + 1, value * ny);
         }
         else if (type == DIRICHLET_T)
         {
@@ -216,7 +223,13 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double ny = theConstrainedNode->ny;
             double tx = ny;
             double ty = -nx;
-            // A completer
+
+            double norm = sqrt(tx * tx + ty * ty);
+            tx /= norm;
+            ty /= norm;
+
+            femSolverSystemConstrain(theSolver, 2 * node + 0, value * tx);
+            femSolverSystemConstrain(theSolver, 2 * node + 1, value * ty);
         }
         else if (type == DIRICHLET_NT)
         {
@@ -226,7 +239,18 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double ny = theConstrainedNode->ny;
             double tx = ny;
             double ty = -nx;
-            // A completer
+            
+            double norm_n = sqrt(nx * nx + ny * ny);
+            double norm_t = sqrt(tx * tx + ty * ty);
+
+            //We normalise the normal and tangent vectors
+            nx /= norm_n;
+            ny /= norm_n;
+            tx /= norm_t;
+            ty /= norm_t;
+
+            femSolverSystemConstrain(theSolver, 2 * node + 0, value_n * nx + value_t * tx);
+            femSolverSystemConstrain(theSolver, 2 * node + 1, value_n * ny + value_t * ty);
         }
     }
 }
