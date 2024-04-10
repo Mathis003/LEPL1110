@@ -1,13 +1,14 @@
 #include "../../../fem_library/include/fem.h"
 
 /*
-TODO
-Il faut generaliser ce code :
-    - Ajouter l'axisymetrique (obligatoire)
-    - Ajouter les conditions de Neumann (obligatoire)
-    - Ajouter les conditions en normal et tangentiel (fortement conseille)
-    - Remplacer le solveur plein par un solveur plus subtil (obligatoire)
-        => Solveur bande + renumerotation / solveur frontal / solveur multigrid / ...
+TODO :
+    - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
+    - Ajouter les conditions de Neumann (t, n)
+
+DONE :
+    - Ajouter l'axisymetrique
+    - Ajouter les conditions de Dirichlet (x, y, xy, n, t, nt)
+    - Ajouter les conditions de Neumann (x, y)
 */
 
 double **A_copy = NULL;
@@ -103,12 +104,12 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
 
     int nLocal = 2;
+    double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
+    int size   = getSizeMatrix(theSolver);
 
     for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
     {
-        // Attention, pour le normal tangent on calcule la normale (sortante) au SEGMENT, surtout PAS celle de constrainedNodes
-
         femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
         femBoundaryType type = theCondition->type;
         femDomain *domain = theCondition->domain;
@@ -128,20 +129,26 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 x[j] = theNodes->X[map[j]];
                 y[j] = theNodes->Y[map[j]];
             }
+            
+            double tx, ty, nx, ny, norm_n, norm_t, a, b;
 
-            //Calcul of normal and tangent vectors
-            double tx = x[1] - x[0];
-            double ty = y[1] - y[0];
-            double nx = ty;
-            double ny = -tx;
+            // Compute the normal and tangent vectors
+            if (theCondition->type == NEUMANN_N || theCondition->type == NEUMANN_T)
+            {
+                tx = x[1] - x[0];
+                ty = y[1] - y[0];
+                nx = ty;
+                ny = -tx;
 
-            double norm_n = sqrt(nx * nx + ny * ny);
-            double norm_t = sqrt(tx * tx + ty * ty);
+                norm_n = sqrt(nx * nx + ny * ny);
+                norm_t = sqrt(tx * tx + ty * ty);
 
-            nx /= norm_n;
-            ny /= norm_n;
-            tx /= norm_t;
-            ty /= norm_t;
+                nx /= norm_n; ny /= norm_n;
+                tx /= norm_t; ty /= norm_t;
+
+                a = 1 / nx;
+                b = -ny / nx;
+            }
 
             double dx = x[1] - x[0];
             double dy = y[1] - y[0];
@@ -153,26 +160,39 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 double xsi    = theRule->xsi[iInteg];
                 double weight = theRule->weight[iInteg];
 
+                double weightedJac = jac * weight;
+
                 femDiscretePhi(theSpace, xsi, phi);
 
                 if (theProblem->planarStrainStress == PLANAR_STRAIN || theProblem->planarStrainStress == PLANAR_STRESS)
                 {
-                    if(theCondition->type==NEUMANN_X)
+                    if (theCondition->type == NEUMANN_X)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight; }
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * weightedJac; }
                     }
-                    else if(theCondition->type==NEUMANN_Y)
+                    else if (theCondition->type == NEUMANN_Y)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i] + 1] += phi[i] * value1 * jac * weight; }
-                    } else if(theCondition->type==NEUMANN_N)
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i] + 1] += phi[i] * value1 * weightedJac; }
+                    }
+                    else if (theCondition->type == NEUMANN_N)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight * nx; }
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i] + 1] += phi[i] * value1 * jac * weight * ny; }
-                    } else if(theCondition->type==NEUMANN_T)
+                        for (int i = 0; i < size; i++) { A[mapU[0]][i] += a * A[mapU[1]][i]; }
+                        for (int i = 0; i < size; i++) { A[i][mapU[0]] += a * A[i][mapU[1]]; }
+                        for (int i = 0; i < size; i++) { B[i] -= b * A[i][mapU[1]]; }
+                        
+                        B[mapU[i]] += phi[i] * value1 * weightedJac * nx;
+                        B[mapU[i] + 1] += phi[i] * value1 * weightedJac * ny;
+                    }
+                    else if (theCondition->type == NEUMANN_T)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight * tx; }
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i] + 1] += phi[i] * value1 * jac * weight * ty; }
-                    } else
+                        for (int i = 0; i < size; i++) { A[mapU[0]][i] += a * A[mapU[1]][i]; }
+                        for (int i = 0; i < size; i++) { A[i][mapU[0]] += a * A[i][mapU[1]]; }
+                        for (int i = 0; i < size; i++) { B[i] -= b * A[i][mapU[1]]; }
+
+                        B[mapU[i]] += phi[i] * value1 * weightedJac * tx;
+                        B[mapU[i] + 1] += phi[i] * value1 * weightedJac * ty;
+                    }
+                    else
                     {
                         Error("Unexpected boundary condition type !");
                     }
@@ -223,10 +243,8 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double nx = theConstrainedNode->nx;
             double ny = theConstrainedNode->ny;
 
-            //We normalise the normal vector
             double norm = sqrt(nx * nx + ny * ny);
-            nx /= norm;
-            ny /= norm;
+            nx /= norm; ny /= norm;
 
             femSolverSystemConstrain(theSolver, 2 * node + 0, value * nx);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value * ny);
@@ -240,8 +258,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double ty = -nx;
 
             double norm = sqrt(tx * tx + ty * ty);
-            tx /= norm;
-            ty /= norm;
+            tx /= norm; ty /= norm;
 
             femSolverSystemConstrain(theSolver, 2 * node + 0, value * tx);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value * ty);
@@ -258,11 +275,8 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double norm_n = sqrt(nx * nx + ny * ny);
             double norm_t = sqrt(tx * tx + ty * ty);
 
-            //We normalise the normal and tangent vectors
-            nx /= norm_n;
-            ny /= norm_n;
-            tx /= norm_t;
-            ty /= norm_t;
+            nx /= norm_n; ny /= norm_n;
+            tx /= norm_t; ty /= norm_t;
 
             femSolverSystemConstrain(theSolver, 2 * node, value_n * nx + value_t * tx);
             femSolverSystemConstrain(theSolver, 2 * node + 1, value_n * ny + value_t * ty);
@@ -277,23 +291,9 @@ double *femElasticitySolve(femProblem *theProblem)
     femElasticityAssembleElements(theProblem);
     femElasticityAssembleNeumann(theProblem);
 
-    int size;
-    double **A, *B;
-    if (theSolver->type == FEM_FULL)
-    {
-        femFullSystem *theSystem = (femFullSystem *) theSolver;
-        A = theSystem->A;
-        B = theSystem->B;
-        size = theSystem->size;
-    }
-    else if (theSolver->type == FEM_BAND)
-    {
-        femBandSystem *theSystem = (femBandSystem *) theSolver;
-        A = theSystem->A;
-        B = theSystem->B;
-        size = theSystem->size;
-    }
-    else { Error("Unexpected solver type !"); }
+    double **A = getMatrixA(theSolver);
+    double *B  = getVectorB(theSolver);
+    int size   = getSizeMatrix(theSolver);
 
     if (A_copy == NULL)
     {
@@ -310,8 +310,8 @@ double *femElasticitySolve(femProblem *theProblem)
 
     femElasticityApplyDirichlet(theProblem);
 
-    double *soluce = femSolverEliminate(theProblem->solver);
-    memcpy(theProblem->soluce, soluce, getSizeMatrix(theProblem->solver) * sizeof(double));
+    double *soluce = femSolverEliminate(theSolver);
+    memcpy(theProblem->soluce, soluce, size * sizeof(double));
     return theProblem->soluce;
 }
 
