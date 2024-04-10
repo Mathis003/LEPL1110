@@ -3,6 +3,13 @@ project(myFemProject)
 
 set(CMAKE_BUILD_TYPE Debug)
 
+set_source_files_properties(
+    src/homework.c
+    src/main.c
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem.c
+    PROPERTIES COMPILE_FLAGS "-Werror"
+)
+
 # Define path to the libraries
 set(FEM_LIBRARY_PATH ../../fem_library)
 set(GMSH_PATH ../../gmsh)

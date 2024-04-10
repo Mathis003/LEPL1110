@@ -10,6 +10,13 @@ set(GLFW_PATH ../../glfw)
 set(GLFEM_LIBRARY_PATH ../../glfem_library)
 set(EXEC_NAME myFem)
 
+set_source_files_properties(
+    src/main.c
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem.c
+    PROPERTIES COMPILE_FLAGS "-Werror"
+)
+
+
 # Set GMSH Version : example gmsh-4.12.2 -> GMSH_VERSION=gmsh-4.12, GMSH_MINOR=2
 set(GMSH_VERSION gmsh-4.12)
 set(GMSH_MINOR 2)

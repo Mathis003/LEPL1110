@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
-#include <sys/stat.h>
 
 int main(int argc, char *argv[])
 {
@@ -46,19 +45,13 @@ int main(int argc, char *argv[])
         }
     }
     
-    FILE *fp;
-    const int MAXLINE = 999999;
-    char res[MAXLINE];
-
     char *nameDirectory[] = {"Project/PreProcessing/build/", "../../Processing/build/", "../../PostProcessing/build/"};
     char *stages[] = {"Pre-Processing", "Processing", "Post-Processing"};
     int nbProgram = 3;
 
     for (int i = 0; i < nbProgram; i++)
     {
-        struct stat st;
-        stat(nameDirectory[i], &st);
-        if (!S_ISDIR(st.st_mode))
+        if (access(nameDirectory[i], F_OK) == -1)
         {
             // Create the directory 'build' if it does not exist
             char command[50];
@@ -78,24 +71,26 @@ int main(int argc, char *argv[])
         printf("/**************************/\n\n");
 
         // Execute the command "make" to build the program "./myFem"
-        system("make > /dev/null 2>&1");
+        int ret_make = system("make 2>&1");
+        if (ret_make != 0)
+        {
+            fprintf(stderr, "Erreur lors de l'exécution de la commande make lors de l'étape '%s'\n", stages[i]);
+            exit(EXIT_FAILURE);
+        }
 
         // Define the command to execute
         char command[100] = "./myFem";
         if      (i == 0 && !meshVisualizer)   { sprintf(command, "./myFem -m"); }
         else if (i == 2 && !resultVisualizer) { sprintf(command, "./myFem -r"); }
-
         if (exampleUsage) { strcat(command, " -e"); }
+        strcat(command, " 2>&1");
 
-        // Execute the program "./myFem" with the option(s)
-        fp = popen(command, "r");
-        if (fp == NULL) { printf("Error : fp == NULL\n"); return EXIT_FAILURE; }
-
-        // Display the output of the command
-        while (fgets(res, MAXLINE, fp) != NULL) { printf("%s", res); }
-
-        // Close the file
-        if (pclose(fp) == -1) { printf("Error : pclose(fp) == -1\n"); return EXIT_FAILURE; }
+        int ret_myFem = system(command);
+        if (ret_myFem != 0)
+        {
+            fprintf(stderr, "Erreur lors de l'exécution de la commande '%s' lors de l'étape '%s'\n", command, stages[i]);
+            exit(EXIT_FAILURE);
+        }
     }
 
     return EXIT_SUCCESS;

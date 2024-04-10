@@ -21,10 +21,13 @@ femFullSystem *femFullSystemCreate(int size)
 }
 
 void femFullSystemFree(femFullSystem *system)
-{
-    free(system->A);
-    free(system->B);
-    free(system);
+{   
+    if (system != NULL)
+    {
+        if (system->A != NULL) { free(system->A); system->A = NULL; }
+        if (system->B != NULL) { free(system->B); system->B = NULL; }
+        free(system); system = NULL;
+    }
 }
 
 void femFullSystemAlloc(femFullSystem *system, int size)
@@ -789,12 +792,17 @@ void femElasticityFree(femProblem *theProblem)
     femSolverFree(theProblem->solver);
     femIntegrationFree(theProblem->rule);
     femDiscreteFree(theProblem->space);
-    for (int i = 0; i < theProblem->nBoundaryConditions; i++) { free(theProblem->conditions[i]); }
+    for (int i = 0; i < theProblem->nBoundaryConditions; i++) { free(theProblem->conditions[i]); theProblem->conditions[i] = NULL; }
     free(theProblem->conditions);
+    theProblem->conditions = NULL;
     free(theProblem->soluce);
+    theProblem->soluce = NULL;
     free(theProblem->residuals);
+    theProblem->residuals = NULL;
     free(theProblem->constrainedNodes);
+    theProblem->constrainedNodes = NULL;
     free(theProblem);
+    theProblem = NULL;
 }
 
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2)
