@@ -832,14 +832,15 @@ double geoSize(double x, double y)
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
 
-    return h_max; // TODO : To remove
+    // return h_max; // TODO : To remove
 
-    if (x > 0) { return h_max; }
+    double factor_size = 3.0;
+    if (x > 0) { return factor_size * h_max; }
 
-    if (y < theGeometry->heightPillars)                                       { return geoSizePillars(x, y); }
-    else if (y <= theGeometry->heightPillars + theGeometry->heightSubRoadWay) { return geoSizeSubRoadWay(x, y); }
-    else if (y <= theGeometry->heightPillars + theGeometry->heightBridge)     { return geoSizeBridge(x, y); }
-    else                                                                      { return (isStayCables(x, y) == TRUE) ? h_stayCables_min : geoSizePylons(x, y); }
+    if (y < theGeometry->heightPillars)                                       { return factor_size * geoSizePillars(x, y); }
+    else if (y <= theGeometry->heightPillars + theGeometry->heightSubRoadWay) { return factor_size * geoSizeSubRoadWay(x, y); }
+    else if (y <= theGeometry->heightPillars + theGeometry->heightBridge)     { return factor_size * geoSizeBridge(x, y); }
+    else                                                                      { return (isStayCables(x, y) == TRUE) ? factor_size * h_stayCables_min : factor_size * geoSizePylons(x, y); }
 }
 
 

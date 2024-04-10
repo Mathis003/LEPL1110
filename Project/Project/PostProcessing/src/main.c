@@ -84,7 +84,9 @@ int main(int argc, char *argv[])
     /****************************************************/
 
     femNodes *theNodes = theGeometry->theNodes;
-    double deformationFactor = 1e5;
+    double deformationFactor;
+    if (exampleUsage == TRUE) { deformationFactor = 1e5; }
+    else                      { deformationFactor = 1e4; }
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
     if (normDisplacement == NULL) { printf("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
 
