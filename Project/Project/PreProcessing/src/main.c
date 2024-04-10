@@ -84,11 +84,10 @@ int main(int argc, char *argv[])
         double nu_example = 0.3;
         double rho_example = 7.85e3;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
-        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, -1e4, NAN);
+        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_Y, 1e4, NAN);
         femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
         femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e4, NAN);
-        femElasticityAddBoundaryCondition(theProblem, "Circle", NEUMANN_N, 1e4, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, -1e4, NAN);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
     }

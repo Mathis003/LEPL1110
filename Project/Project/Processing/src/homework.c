@@ -3,7 +3,7 @@
 /*
 TODO :
     - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
-    - Ajouter les conditions de Neumann (t, n)
+    - Ajouter les conditions de Neumann (t, n) [DONE => To test]
 
 DONE :
     - Ajouter l'axisymetrique
@@ -100,7 +100,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theEdges        = theGeometry->theEdges;
 
-    double x[2], y[2], phi[2];
+    double x[2], y[2], phi[2], tx, ty, nx, ny, norm_n, norm_t;
     int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
 
     int nLocal = 2;
@@ -115,12 +115,9 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
         femDomain *domain = theCondition->domain;
         double value1 = theCondition->value1;
         
-        int shift = -1;
-        if      (type == NEUMANN_X ) { shift = 0; }
-        else if (type == NEUMANN_Y)  { shift = 1; }
-        else if (type == NEUMANN_N)  { shift = 0; }
-        else if (type == NEUMANN_T)  { shift = 1; }
-        else                         { continue; }
+        int shift = 0;
+        if (type == NEUMANN_Y)  { shift = 1; }
+        else if (type == DIRICHLET_X || type == DIRICHLET_Y || type == DIRICHLET_N || type == DIRICHLET_T || type == DIRICHLET_NT) { continue; }
 
         for (iEdge = 0; iEdge < domain->nElem; iEdge++)
         {
@@ -135,71 +132,11 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                 y[j] = theNodes->Y[map[j]];
                 xLoc += phi[j] * x[j];
             }
-            
-            double tx, ty, nx, ny, norm_n, norm_t, a, b;
-            int Ux = mapU[0];
-            int Uy = mapU[1];
-
-            if (type == NEUMANN_N)
-            {
-                tx = x[1] - x[0];
-                ty = y[1] - y[0];
-
-                if      (tx == 0.0) { type = NEUMANN_X; }
-                else if (ty == 0.0) { type = NEUMANN_Y; }
-                else
-                {
-                    nx = ty;
-                    ny = -tx;
-
-                    norm_n = sqrt(nx * nx + ny * ny);
-                    norm_t = sqrt(tx * tx + ty * ty);
-
-                    nx /= norm_n; ny /= norm_n;
-                    tx /= norm_t; ty /= norm_t;
-        
-                    //     nx * Ux + ny * Uy = value
-                    // <=> Ux = (value/nx) - (ny/nx) * Uy
-                    b = value1 / nx;
-                    a = - ny / nx;
-                    for (int i = 0; i < size; i++) { A[Uy][i] += a * A[Ux][i]; }
-                    for (int i = 0; i < size; i++) { A[i][Uy] += a * A[i][Ux]; }
-                    B[Uy] -= b * B[Ux];
-                    // printf("Ux = %d, Uy = %d\n", Ux, Uy);
-                }
-            }
-            else if (type == NEUMANN_T)
-            {
-                tx = x[1] - x[0];
-                ty = y[1] - y[0];
-
-                if      (tx == 0.0) { type = NEUMANN_Y; }
-                else if (ty == 0.0) { type = NEUMANN_X; }
-                else
-                {
-                    nx = ty;
-                    ny = -tx;
-
-                    norm_n = sqrt(nx * nx + ny * ny);
-                    norm_t = sqrt(tx * tx + ty * ty);
-
-                    nx /= norm_n; ny /= norm_n;
-                    tx /= norm_t; ty /= norm_t;
-        
-                    //     tx * Ux + ty * Uy = value
-                    // <=> Ux = (value/tx) - (ty/tx) * Uy
-                    b = value1 / tx;
-                    a = - ty / tx;
-                    for (int i = 0; i < size; i++) { A[Uy][i] += a * A[Ux][i]; }
-                    for (int i = 0; i < size; i++) { A[i][Uy] += a * A[i][Ux]; }
-                    B[Uy] -= b * B[Ux];
-                }
-            }
 
             double dx = x[1] - x[0];
             double dy = y[1] - y[0];
             double length = sqrt(dx * dx + dy * dy);
-            double jac = length / 2;
+            double jac = length / 2.0;
 
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
@@ -216,12 +153,62 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     {
                         for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * weightedJac; }
                     }
+                    else if (type == NEUMANN_N)
+                    {
+                        tx = x[1] - x[0];
+                        ty = y[1] - y[0];
+                        nx = ty; ny = -tx;
+                        norm_n = sqrt(nx * nx + ny * ny);
+                        nx /= norm_n; ny /= norm_n;
+                        for (i = 0; i < theSpace->n; i++)
+                        {
+                            B[mapU[i]] += phi[i] * value1 * nx * weightedJac;
+                            B[mapU[i] + 1] += phi[i] * value1 * ny * weightedJac;
+                        }
+                    }
+                    else if (type == NEUMANN_T)
+                    {
+                        tx = x[1] - x[0];
+                        ty = y[1] - y[0];
+                        norm_t = sqrt(tx * tx + ty * ty);
+                        tx /= norm_t; ty /= norm_t;
+                        for (i = 0; i < theSpace->n; i++)
+                        {
+                            B[mapU[i]] += phi[i] * value1 * tx * weightedJac;
+                            B[mapU[i] + 1] += phi[i] * value1 * ty * weightedJac;
+                        }
+                    }
                 }
                 else if (theProblem->planarStrainStress == AXISYM)
                 {
                     if (type == NEUMANN_X || type == NEUMANN_Y)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * jac * weight * xLoc; }
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * weightedJac * xLoc; }
+                    }
+                    else if (type == NEUMANN_N)
+                    {
+                        tx = x[1] - x[0];
+                        ty = y[1] - y[0];
+                        nx = ty; ny = -tx;
+                        norm_n = sqrt(nx * nx + ny * ny);
+                        nx /= norm_n; ny /= norm_n;
+                        for (i = 0; i < theSpace->n; i++)
+                        {
+                            B[mapU[i]] += phi[i] * value1 * nx * weightedJac * xLoc;
+                            B[mapU[i] + 1] += phi[i] * value1 * ny * weightedJac * xLoc;
+                        }
+                    }
+                    else if (type == NEUMANN_T)
+                    {
+                        tx = x[1] - x[0];
+                        ty = y[1] - y[0];
+                        norm_t = sqrt(tx * tx + ty * ty);
+                        tx /= norm_t; ty /= norm_t;
+                        for (i = 0; i < theSpace->n; i++)
+                        {
+                            B[mapU[i]] += phi[i] * value1 * tx * weightedJac * xLoc;
+                            B[mapU[i] + 1] += phi[i] * value1 * ty * weightedJac * xLoc;
+                        }
                     }
                 }
                 else { Error("Unexpected planarStrainStress value !"); }
