@@ -898,7 +898,7 @@ void geoMeshGenerateExample(void)
     cutElement(rect, disk);
     cutElement(rect, slit);
 
-    gmshModelMeshReverse(rect, 2, &ierr);
+    gmshModelOccRotate(rect, 2, w / 2, h / 2, 0.0, 0.0, 0.0, 1.0, 90.0, &ierr);
 
     gmshModelOccSynchronize(&ierr);
 

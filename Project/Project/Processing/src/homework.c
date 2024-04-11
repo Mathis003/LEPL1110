@@ -260,7 +260,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             int Ux = 2 * node;
             int Uy = 2 * node + 1;
 
-            double a, b;
+            double a_n, b_n;
             int node1, node2;
 
             // nx * Ux + ny * Uy = value_n
@@ -268,22 +268,26 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             // <=> Ux = (value_n/nx) - (ny/nx) * Uy    (if fabs(nx) >= fabs(ny)
             if (fabs(nx) >= fabs(ny))
             {
-                a = - ny / nx;
-                b = value / nx;
+                a_n = - ny / nx;
+                b_n = value / nx;
                 node1 = Ux;
                 node2 = Uy;
             }
             else
             {
-                a = - nx / ny;
-                b = value / ny;
+                a_n = - nx / ny;
+                b_n = value / ny;
                 node1 = Uy;
                 node2 = Ux;
             }
 
-            for (int i = 0; i < size; i++) { A[node2][i] += a * A[node1][i]; }
-            for (int i = 0; i < size; i++) { A[i][node2] += a * A[i][node1]; }
-            B[node2] -= b * B[node1];  
+            for (int i = 0; i < size; i++)
+            {
+                if (i == node2) { A[node2][i] = 1.0; }
+                else if (i == node1) { A[node2][i] = - a_n; }
+                else { A[node2][i] = 0.0; }
+            }
+            B[node2] = b_n;
         }
         else if (type == DIRICHLET_T)
         {
@@ -299,7 +303,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             int Ux = 2 * node;
             int Uy = 2 * node + 1;
 
-            double a, b;
+            double a_t, b_t;
             int node1, node2;
 
             // tx * Ux + ty * Uy = value_t
@@ -307,22 +311,26 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             // <=> Ux = (value_t/tx) - (ty/tx) * Uy    (if fabs(tx) >= fabs(ty)
             if (fabs(tx) >= fabs(ty))
             {
-                a = - ty / tx;
-                b = value / tx;
+                a_t = - ty / tx;
+                b_t = value / tx;
                 node1 = Ux;
                 node2 = Uy;
             }
             else
             {
-                a = - tx / ty;
-                b = value / ty;
+                a_t = - tx / ty;
+                b_t = value / ty;
                 node1 = Uy;
                 node2 = Ux;
             }
 
-            for (int i = 0; i < size; i++) { A[node2][i] += a * A[node1][i]; }
-            for (int i = 0; i < size; i++) { A[i][node2] += a * A[i][node1]; }
-            B[node2] -= b * B[node1];
+            for (int i = 0; i < size; i++)
+            {
+                if (i == node2) { A[node2][i] = 1.0; }
+                else if (i == node1) { A[node2][i] = - a_t; }
+                else { A[node2][i] = 0.0; }
+            }
+            B[node2] = b_t;
         }
         else if (type == DIRICHLET_NT)
         {
@@ -362,9 +370,13 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
                 node2 = Ux;
             }
 
-            for (int i = 0; i < size; i++) { A[node2][i] += a_n * A[node1][i]; }
-            for (int i = 0; i < size; i++) { A[i][node2] += a_n * A[i][node1]; }
-            B[node2] -= b_n * B[node1];
+            for (int i = 0; i < size; i++)
+            {
+                if (i == node2) { A[node2][i] = 1.0; }
+                else if (i == node1) { A[node2][i] = - a_n; }
+                else { A[node2][i] = 0.0; }
+            }
+            B[node2] = b_n;
 
 
             // tx * Ux + ty * Uy = value_t
@@ -386,9 +398,13 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
                 node2 = Ux;
             }
 
-            for (int i = 0; i < size; i++) { A[node2][i] += a_t * A[node1][i]; }
-            for (int i = 0; i < size; i++) { A[i][node2] += a_t * A[i][node1]; }
-            B[node2] -= b_t * B[node1];
+            for (int i = 0; i < size; i++)
+            {
+                if (i == node2) { A[node2][i] = 1.0; }
+                else if (i == node1) { A[node2][i] = - a_t; }
+                else { A[node2][i] = 0.0; }
+            }
+            B[node2] = b_t;
         }
     }
 }
