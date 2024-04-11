@@ -108,6 +108,8 @@ int main(int argc, char *argv[])
         femElasticityPrint(theProblem);
     }
 
+
+    // Create the solver with the final system to visualize the matrix by pressing 'S'
     femSolver *theSolver = theProblem->solver;
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
@@ -115,7 +117,6 @@ int main(int argc, char *argv[])
     femSystemRead(&A, &B, &size, "../../Processing/data/finalSystem.txt");
 
     femSolverSetSystem(theSolver, A, B);
-    theSolver->size = size;
 
     double rho = theProblem->rho;
     double gy = theProblem->gy;
