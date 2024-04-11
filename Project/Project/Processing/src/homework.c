@@ -2,16 +2,24 @@
 
 /*
 TODO :
-    - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
-    - Faire la visualisation des résidus dans le post-processing
-    - Faire la visualisation de la matrice dans le post-processing
-    - Verifier la validite de l'axisymetrique
+    - Faire un solveur bande                  (IN PROGRESS)
+    - Renumerotation des noeuds X/Y           (IN PROGRESS)
+    - Verifier la validite de l'axisymetrique (IN PROGRESS)
+    - Renumerotation des noeuds RCMK
+    - Solveur frontal creux
+    - Renumerotation des elements (pour solveur frontal)
+    - Elements billineaire (fonction de forme du deuxieme degre)
+    - Finir les conditions sur la geometrie du pont
+    - Calcul des tensions aux noeuds (PAS COMPRIS => + FORCES ?)
+    - Ecrire un script permettant de faire une animation des résultats
 
 DONE :
-    - Ajouter l'axisymetrique.
-    - Ajouter les conditions de Dirichlet (x, y, xy, n, t, nt).
-    - Ajouter les conditions de Neumann (x, y, n, t).
-    - Faire les résidus pour les forces.
+    - Axisymetrique / tension plane / deformation plane
+    - Conditions de Dirichlet (X, Y, XY, N, T, NT)
+    - Conditions de Neumann (X, Y, N, T)
+    - Résidus pour les forces (par noeud + globale)
+    - Visualisation des résidus (Post-Processing avec 'X' et 'Y')
+    - Visualisation de la matrice (Post-Processing avec 'S')
 */
 
 void femElasticityAssembleElements(femProblem *theProblem)
@@ -318,10 +326,14 @@ double *femElasticitySolve(femProblem *theProblem)
     // Copy the Dirichlet unconstrained system
     femSystemWrite(A, B, size, "../data/dirichletUnconstrainedSystem.txt");
 
+    femElasticityApplyDirichlet(theProblem);
+
+    A = getMatrixA(theSolver);
+    B = getVectorB(theSolver);
+    size = getSizeMatrix(theSolver);
+
     // Copy the final system
     femSystemWrite(A, B, size, "../data/finalSystem.txt");
-
-    femElasticityApplyDirichlet(theProblem);
 
     double *soluce = femSolverEliminate(theSolver);
     memcpy(theProblem->soluce, soluce, size * sizeof(double));

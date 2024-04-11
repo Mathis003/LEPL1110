@@ -188,10 +188,10 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 
 void femSolverSetSystem(femSolver *mySolver, double **A, double *B);
-femSolver *femSolverCreate(int sizeLoc);
-femSolver *femSolverFullCreate(int size, int sizeLoc);
-femSolver *femSolverBandCreate(int size, int sizeLoc, int band);
-femSolver *femSolverIterativeCreate(int size, int sizeLoc);
+femSolver *femSolverCreate(int size);
+femSolver *femSolverFullCreate(int size);
+femSolver *femSolverBandCreate(int size, int band);
+femSolver *femSolverIterativeCreate(int size);
 void femSolverFree(femSolver *mySolver);
 void femSolverInit(femSolver *mySolver);
 double femSolverGet(femSolver *mySolver, int i, int j);

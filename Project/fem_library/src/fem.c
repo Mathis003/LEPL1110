@@ -262,6 +262,7 @@ void femBandSystemPrintInfos(femBandSystem *system, int size)
     printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (band + 1));
 }
 
+// TODO : Check if it's correct
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     double **A = system->A;
@@ -311,42 +312,35 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
     return (myCol >= myRow && myCol < myRow + system->band) ? system->A[myRow][myCol] : 0.0;
 }
 
+// TODO : Is this good ?
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size)
 {
     double **A, *B;
-    int i, j, band;
+    int i, band;
 
     A = system->A;
     B = system->B;
     band = system->band;
 
-    // for (int i = 0; i < size; i++)
-    // {
-    //     for (int j = i; j < i + band; j++)
-    //     {
-    //         if (A[i][j] == 0) { printf("         "); }
-    //         else              { printf(" %+.1e",A[i][j]); }
-    //     }
-    //     printf(" :  %+.1e \n",B[i]);
-    // }
-
-    for (i = 0; i < size; i++)
+    int lowerBound = (node >= band) ? node - band + 1 : 0;
+    for (i = lowerBound ; i < node; i++)
     {
         B[i] -= value * A[i][node];
         A[i][node] = 0;
-        // if (i >= node && i < node + band) { A[node][i] = (i == node) ? 1 : 0; }
-        // else { B[i] -= value * A[i][node]; A[i][node] = 0; }
     }
-    for (int i = 0; i < size; i++) { A[node][i] = 0; }
-    
+
+    int upperBound = (node + band >= size) ? size : node + band;
+    for (i = node + 1; i < upperBound ; i++)
+    {
+        B[i] -= value * A[node][i];
+        A[node][i] = 0;
+    }
+
     A[node][node] = 1;
     B[node] = value;
-
-    // for (i = 0; i < size; i++) { B[i] -= value * A[i][node]; A[i][node] = 0; }
-    // for (i = 0; i < size; i++) { A[node][i] = 0; }
 }
 
-// TODO : Check if the condition on the band is correct
+// TODO : Implement this function (Not good for now) 
 void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b)
 {
     double **A, *B;
@@ -359,7 +353,7 @@ void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int no
     // Force this constraint to be applied : node2 = b + a * node1
     for (int i = 0; i < size; i++)
     {
-        if (!(i >= node2 && i < node2 + band)) { continue; } // Skip the non-band
+        // if (!(i >= node2 && i < node2 + band)) { continue; } // Skip the non-band
         if      (i == node2) { A[node2][i] = 1.0; }
         else if (i == node1) { A[node2][i] = - a; }
         else                 { A[node2][i] = 0.0; }
@@ -410,11 +404,12 @@ int comparPositionNode(const void *a, const void *b)
     return (diff < 0) - (diff > 0);
 }
 
+ // TODO
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
 {
     int nNodes = theMesh->nodes->nNodes;
     int *mapper = (int *) malloc(nNodes * sizeof(int));
-    if (mapper == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (mapper == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
 
     switch (renumType)
@@ -435,12 +430,11 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
         default : Error("Unexpected renumbering option");
     }
 
-    // TODO : Check if this is correct
-    for (int i = 0; i < nNodes; i++) { theMesh->elem[mapper[i]] = i; }
-
+    for (int i = 0; i < nNodes; i++) { theMesh->elem[mapper[i]] = i; } // TODO : Is this line correct ? (The rest is Ok (Homework 6))
     free(mapper); 
 }
 
+ // TODO
 int femMeshComputeBand(femMesh *theMesh)
 {
     int maxNum, minNum, nodeNum, elemNum;
@@ -454,8 +448,7 @@ int femMeshComputeBand(femMesh *theMesh)
         for (int j = 0; j < theMesh->nLocalNode; j++)
         {
             elemNum = theMesh->elem[iElem * theMesh->nLocalNode + j];
-            // TODO : Check if this is correct
-            nodeNum = theMesh->elem[elemNum];
+            nodeNum = theMesh->elem[elemNum]; // TODO : Is this line correct ? (The rest is Ok (Homework 6))
 
             maxNum = (nodeNum > maxNum) ? nodeNum : maxNum;
             minNum = (nodeNum < minNum) ? nodeNum : minNum;
@@ -468,28 +461,28 @@ int femMeshComputeBand(femMesh *theMesh)
 
 /* Solver Abstraction */
 
-femSolver *femSolverCreate(int sizeLoc)
+femSolver *femSolverCreate(int size)
 {
     femSolver *solver = malloc(sizeof(femSolver));
-    solver->size=sizeLoc;
-    solver->type=FEM_FULL; //by default
-    if (solver == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (solver == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    solver->size = size;
+    if (solver == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     return solver;
 }
 
-femSolver *femSolverFullCreate(int size, int sizeLoc)
+femSolver *femSolverFullCreate(int size)
 {
-    femSolver *mySolver = femSolverCreate(sizeLoc);
+    femSolver *mySolver = femSolverCreate(size);
     mySolver->type = FEM_FULL;
     mySolver->solver = (femSolver *) femFullSystemCreate(size);
     return mySolver;
 }
 
-femSolver *femSolverBandCreate(int size, int sizeLoc, int band)
+femSolver *femSolverBandCreate(int size, int band)
 {
-    femSolver *mySolver = femSolverCreate(sizeLoc);
+    femSolver *mySolver = femSolverCreate(size);
     mySolver->type = FEM_BAND;
-    mySolver->solver = (femSolver *) femBandSystemCreate(size,band);
+    mySolver->solver = (femSolver *) femBandSystemCreate(size, band);
     return mySolver;
 }
 
@@ -1109,12 +1102,16 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
 
-    switch (typeSolver)
+    if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
+    else if (typeSolver == FEM_BAND)
     {
-        case FEM_FULL: theProblem->solver = femSolverFullCreate(size, size); break;
-        case FEM_BAND: theProblem->solver = femSolverBandCreate(size, size, femMeshComputeBand(theGeometry->theElements)); break;
-        default: Error("Unknown solver type");
+        // TODO
+        // femMeshRenumber(theGeometry->theElements, FEM_XNUM); // Create Bug + mesh oriented in reverse
+        int band = femMeshComputeBand(theGeometry->theElements);
+        // printf("Band = %d, size = %d\n", band, size);
+        theProblem->solver = femSolverBandCreate(size, band);
     }
+    else { Error("Unknown solver type"); }
 
     char theLine[MAXNAME];
     char theDomain[MAXNAME];
