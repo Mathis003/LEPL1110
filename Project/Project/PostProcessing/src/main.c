@@ -33,8 +33,8 @@ double *femElasticityForces(femProblem *theProblem)
 
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { residuals[i] -= A_copy[i][j] * soluce[j]; }
-        residuals[i] += B_copy[i];
+        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
+        residuals[i] -= B_copy[i];
     }
     return residuals;
 }

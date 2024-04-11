@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     femGeometry *theGeometry = geoGetGeometry();
 
     theGeometry->elementType = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
-    femElasticCase theCase = AXISYM;         // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
+    femElasticCase theCase = PLANAR_STRESS;  // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
 
     if (exampleUsage == TRUE)
     {
@@ -86,9 +86,14 @@ int main(int argc, char *argv[])
         double nu_example = 0.3;
         double rho_example = 7.85e3;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase);
-        femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 1e4, NAN);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e3, NAN);
-        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
+        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 1e3, NAN);
+        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_NT, 0.0, 0.0);
+        // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e4, NAN);
+        // femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_NT, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_X, 0.0, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_Y, 0.0, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e4, NAN);
+
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
     }
