@@ -3,12 +3,12 @@
 /*
 TODO :
     - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
-    - Ajouter les conditions de Neumann (t, n) [DONE => To test]
+    - Ajouter les conditions de Dirichlets (N, T, NT)
 
 DONE :
     - Ajouter l'axisymetrique
-    - Ajouter les conditions de Dirichlet (x, y, xy, n, t, nt)
-    - Ajouter les conditions de Neumann (x, y)
+    - Ajouter les conditions de Dirichlet (x, y, xy)
+    - Ajouter les conditions de Neumann (x, y, n, t)
 */
 
 double **A_copy = NULL;
@@ -108,7 +108,6 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     int nLocal = 2;
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
-    int size   = getSizeMatrix(theSolver);
 
     for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
     {
@@ -221,6 +220,10 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
     femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
 
+    double **A = getMatrixA(theSolver);
+    double *B  = getVectorB(theSolver);
+    int size   = getSizeMatrix(theSolver);
+
     for (int node = 0; node < theNodes->nNodes; node++)
     {
         femConstrainedNode *theConstrainedNode = &theProblem->constrainedNodes[node];
@@ -254,10 +257,33 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double norm_n = sqrt(nx * nx + ny * ny);
             nx /= norm_n; ny /= norm_n;
 
-            double a = - ny / nx;
-            double b = value / nx;
+            int Ux = 2 * node;
+            int Uy = 2 * node + 1;
 
+            double a, b;
+            int node1, node2;
 
+            // nx * Ux + ny * Uy = value_n
+            // <=> Uy = (value_n/ny) - (nx/ny) * Ux    (if fabs(ny) >= fabs(nx)
+            // <=> Ux = (value_n/nx) - (ny/nx) * Uy    (if fabs(nx) >= fabs(ny)
+            if (fabs(nx) >= fabs(ny))
+            {
+                a = - ny / nx;
+                b = value / nx;
+                node1 = Ux;
+                node2 = Uy;
+            }
+            else
+            {
+                a = - nx / ny;
+                b = value / ny;
+                node1 = Uy;
+                node2 = Ux;
+            }
+
+            for (int i = 0; i < size; i++) { A[node2][i] += a * A[node1][i]; }
+            for (int i = 0; i < size; i++) { A[i][node2] += a * A[i][node1]; }
+            B[node2] -= b * B[node1];  
         }
         else if (type == DIRICHLET_T)
         {
@@ -270,10 +296,33 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double norm_t = sqrt(tx * tx + ty * ty);
             tx /= norm_t; ty /= norm_t;
 
-            double a = - ty / tx;
-            double b = value / tx;
+            int Ux = 2 * node;
+            int Uy = 2 * node + 1;
 
+            double a, b;
+            int node1, node2;
 
+            // tx * Ux + ty * Uy = value_t
+            // <=> Uy = (value_t/ty) - (tx/ty) * Ux    (if fabs(ty) >= fabs(tx)
+            // <=> Ux = (value_t/tx) - (ty/tx) * Uy    (if fabs(tx) >= fabs(ty)
+            if (fabs(tx) >= fabs(ty))
+            {
+                a = - ty / tx;
+                b = value / tx;
+                node1 = Ux;
+                node2 = Uy;
+            }
+            else
+            {
+                a = - tx / ty;
+                b = value / ty;
+                node1 = Uy;
+                node2 = Ux;
+            }
+
+            for (int i = 0; i < size; i++) { A[node2][i] += a * A[node1][i]; }
+            for (int i = 0; i < size; i++) { A[i][node2] += a * A[i][node1]; }
+            B[node2] -= b * B[node1];
         }
         else if (type == DIRICHLET_NT)
         {
@@ -290,12 +339,56 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             nx /= norm_n; ny /= norm_n;
             tx /= norm_t; ty /= norm_t;
 
-            double a_n = - ny / nx;
-            double b_n = value_n / nx;
-            double a_t = - ty / tx;
-            double b_t = value_t / tx;
+            int Ux = 2 * node;
+            int Uy = 2 * node + 1;
+
+            // nx * Ux + ny * Uy = value_n
+            // <=> Uy = (value_n/ny) - (nx/ny) * Ux    (if fabs(ny) >= fabs(nx)
+            // <=> Ux = (value_n/nx) - (ny/nx) * Uy    (if fabs(nx) >= fabs(ny)
+            double a_n, b_n;
+            int node1, node2;
+            if (fabs(nx) >= fabs(ny))
+            {
+                a_n = - ny / nx;
+                b_n = value_n / nx;
+                node1 = Ux;
+                node2 = Uy;
+            }
+            else
+            {
+                a_n = - nx / ny;
+                b_n = value_n / ny;
+                node1 = Uy;
+                node2 = Ux;
+            }
+
+            for (int i = 0; i < size; i++) { A[node2][i] += a_n * A[node1][i]; }
+            for (int i = 0; i < size; i++) { A[i][node2] += a_n * A[i][node1]; }
+            B[node2] -= b_n * B[node1];
 
 
+            // tx * Ux + ty * Uy = value_t
+            // <=> Uy = (value_t/ty) - (tx/ty) * Ux    (if fabs(ty) >= fabs(tx)
+            // <=> Ux = (value_t/tx) - (ty/tx) * Uy    (if fabs(tx) >= fabs(ty)
+            double a_t, b_t;
+            if (fabs(tx) >= fabs(ty))
+            {
+                a_t = - ty / tx;
+                b_t = value_t / tx;
+                node1 = Ux;
+                node2 = Uy;
+            }
+            else
+            {
+                a_t = - tx / ty;
+                b_t = value_t / ty;
+                node1 = Uy;
+                node2 = Ux;
+            }
+
+            for (int i = 0; i < size; i++) { A[node2][i] += a_t * A[node1][i]; }
+            for (int i = 0; i < size; i++) { A[i][node2] += a_t * A[i][node1]; }
+            B[node2] -= b_t * B[node1];
         }
     }
 }
