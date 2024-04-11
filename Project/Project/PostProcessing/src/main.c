@@ -202,6 +202,8 @@ int main(int argc, char *argv[])
         if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
         if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
         if (glfwGetKey(window, 'S') == GLFW_PRESS) { mode = 2; }
+        if (glfwGetKey(window,'X') == GLFW_PRESS) { mode = 3;}
+        if (glfwGetKey(window,'Y') == GLFW_PRESS) { mode = 4;}
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -225,11 +227,29 @@ int main(int argc, char *argv[])
             sprintf(theMessage, "%s : %d ", theGeometry->theDomains[domain]->name, domain);
             glColor3f(1.0, 0.0, 0.0);
             glfemMessage(theMessage);
-        } else if (mode == 2)
+        } 
+        else if (mode == 2)
         {
             glColor3f(1.0, 0.0, 0.0);
             glfemPlotSolver(theSolver, theSolver->size, w, h);
+        } 
+        else if (mode==3)
+        {
+            glfemPlotField(theGeometry->theElements,forcesX);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
         }
+        else if (mode==4)
+        {
+            glfemPlotField(theGeometry->theElements,forcesY);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+        } else {
+            printf("Mode %d not implemented\n", mode);
+        }
+        
 
         glfwSwapBuffers(window);
         glfwPollEvents();
