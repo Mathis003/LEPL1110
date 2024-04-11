@@ -46,7 +46,7 @@ void femFullSystemInit(femFullSystem *system, int size)
     for (int i = 0; i < size * (size + 1); i++) { system->B[i] = 0; }
 }
 
-void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc)
+void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     double **A = system->A;
     double *B  = system->B;
@@ -189,7 +189,7 @@ void femFullSystemPrintInfos(femFullSystem *system, int size)
 femBandSystem *femBandSystemCreate(int size, int band)
 {
     femBandSystem *system = malloc(sizeof(femBandSystem));
-    if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (system == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     femBandSystemAlloc(system, size, band);
     femBandSystemInit(system, size);
     return system;
@@ -198,9 +198,9 @@ femBandSystem *femBandSystemCreate(int size, int band)
 void femBandSystemAlloc(femBandSystem *system, int size, int band)
 {   
     system->B = malloc(sizeof(double) * size * (band + 1));
-    if (system->B == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (system->B == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->A = malloc(sizeof(double *) * size);
-    if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }     
+    if (system->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }     
     system->band = band;
     system->A[0] = system->B + size;
     for (int i = 1 ; i < size ; i++) { system->A[i] = system->A[i-1] + band - 1; }
@@ -249,7 +249,7 @@ void femBandSystemPrintInfos(femBandSystem *system, int size)
     printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (band + 1));
 }
 
-void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc)
+void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     double **A = system->A;
     double *B  = system->B;
@@ -301,19 +301,36 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size)
 {
     double **A, *B;
-    int i, band;
+    int i, j, band;
 
     A = system->A;
     B = system->B;
     band = system->band;
 
+    // for (int i = 0; i < size; i++)
+    // {
+    //     for (int j = i; j < i + band; j++)
+    //     {
+    //         if (A[i][j] == 0) { printf("         "); }
+    //         else              { printf(" %+.1e",A[i][j]); }
+    //     }
+    //     printf(" :  %+.1e \n",B[i]);
+    // }
+
     for (i = 0; i < size; i++)
     {
-        if (i >= node && i < node + band) { A[node][i] = (i == node) ? 1 : 0; }
-        else { B[i] -= value * A[i][node]; A[i][node] = 0; }
+        B[i] -= value * A[i][node];
+        A[i][node] = 0;
+        // if (i >= node && i < node + band) { A[node][i] = (i == node) ? 1 : 0; }
+        // else { B[i] -= value * A[i][node]; A[i][node] = 0; }
     }
+    for (int i = 0; i < size; i++) { A[node][i] = 0; }
+    
     A[node][node] = 1;
     B[node] = value;
+
+    // for (i = 0; i < size; i++) { B[i] -= value * A[i][node]; A[i][node] = 0; }
+    // for (i = 0; i < size; i++) { A[node][i] = 0; }
 }
 
 // TODO : Check if the condition on the band is correct
@@ -517,7 +534,7 @@ void femSolverPrintInfos(femSolver *mySolver)
     }
 }
 
-void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc)
+void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     switch (mySolver->type)
     {

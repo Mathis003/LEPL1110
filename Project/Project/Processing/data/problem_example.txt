@@ -1,9 +1,9 @@
-Type of problem    :  Planar strains 
+Type of problem    :  Axi-symetric problem 
 Young modulus      :  2.1100000e+11  
 Poisson ratio      :  3.0000000e-01  
 Mass density       :  7.8500000e+03  
 Gravity-X          :  0.0000000e+00  
 Gravity-Y          : -9.8100000e+00  
-Boundary condition :  Neumann-N          =  1.0000000e+03,            nan : Symmetry
-Boundary condition :  Neumann-N          =  1.0000000e+04,            nan : Top
-Boundary condition :  Dirichlet-NT       =  0.0000000e+00,  0.0000000e+00 : Bottom
+Boundary condition :  Neumann-N          =  1.0000000e+04,            nan : Symmetry
+Boundary condition :  Neumann-N          =  1.0000000e+03,            nan : Top
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : Bottom

@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
     geoInitialize();
     femGeometry *theGeometry = geoGetGeometry();
 
-    theGeometry->elementType = FEM_TRIANGLE; // FEM_QUAD ou FEM_TRIANGLE
+    theGeometry->elementType = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
+    femElasticCase theCase = AXISYM;         // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
 
     if (exampleUsage == TRUE)
     {
@@ -84,10 +85,10 @@ int main(int argc, char *argv[])
         double E_example = 211.e9;
         double nu_example = 0.3;
         double rho_example = 7.85e3;
-        theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
-        femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 1e3, NAN);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e4, NAN);
-        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_NT, 0.0, 0.0);
+        theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase);
+        femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 1e4, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e3, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
     }
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
         double nu_reinforced_concrete = 0.2;
         double rho_steel = 7.85e3;
         double rho_reinforced_concrete = 2.5e3;
-        theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, PLANAR_STRAIN);
+        theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, theCase);
         createBoundaryConditions(theProblem);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem.txt");

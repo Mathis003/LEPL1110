@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    femSolverType typeSolver = FEM_FULL; // Chosing the solver type
+    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
 
     femGeometry *theGeometry = geoGetGeometry();
     

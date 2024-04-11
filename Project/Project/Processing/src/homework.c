@@ -5,7 +5,6 @@ TODO :
     - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
     - Faire la visualisation des résidus dans le post-processing
 
-
 DONE :
     - Ajouter l'axisymetrique.
     - Ajouter les conditions de Dirichlet (x, y, xy, n, t, nt).
