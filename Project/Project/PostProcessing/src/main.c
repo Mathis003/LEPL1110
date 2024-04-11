@@ -33,8 +33,8 @@ double *femElasticityForces(femProblem *theProblem)
 
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
-        residuals[i] -= B_copy[i];
+        for (int j = 0; j < size; j++) { residuals[i] -= A_copy[i][j] * soluce[j]; }
+        residuals[i] += B_copy[i];
     }
     return residuals;
 }
@@ -67,10 +67,15 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
     }
-
-    printf("\n\n    V : Mesh and displacement norm \n");
+    
+    printf("\n\n");
+    printf("    V : Mesh and displacement norm \n");
     printf("    D : Domains \n");
-    printf("    N : Next domain highlighted\n\n\n");
+    printf("    N : Next domain highlighted\n");
+    printf("    M : Display the matrix \n");
+    printf("    X : Display the horizontal forces \n");
+    printf("    Y : Display the vertical forces \n");
+    printf("\n\n");
 
     /***************************/
     /* 1 : Lecture des donnees */ 
@@ -212,7 +217,7 @@ int main(int argc, char *argv[])
         } else if (mode == 2)
         {
             glColor3f(1.0,0.0,0.0);
-            glfemPlotSolver(theProblem->solver,theProblem->solver->size,w,h);
+            glfemPlotSolver(theProblem->solver, theProblem->solver->size, w, h);
         }
 
         glfwSwapBuffers(window);

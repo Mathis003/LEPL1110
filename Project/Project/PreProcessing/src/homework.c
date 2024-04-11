@@ -429,7 +429,6 @@ void geoMeshGenerate()
     theGeometry->geoSize = geoSize;
     theGeometry->getMaterialProperties = getMaterialProperties;
     theGeometry->getMaterials = getMaterials;
-    theGeometry->elementType = FEM_TRIANGLE;
     
     int ierr;
     int idBridge, idSubRoadWay;
@@ -878,7 +877,6 @@ void geoMeshGenerateExample(void)
     theGeometry->LxPlate = Lx;
     theGeometry->LyPlate = Ly;
     theGeometry->defaultSize = Lx * 0.05;
-    theGeometry->elementType = FEM_TRIANGLE;
     theGeometry->geoSize = geoSizeExample;
 
     geoSetSizeCallback(theGeometry->geoSize);

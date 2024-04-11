@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
     geoInitialize();
     femGeometry *theGeometry = geoGetGeometry();
 
+    theGeometry->elementType = FEM_TRIANGLE; // FEM_QUAD ou FEM_TRIANGLE
+
     if (exampleUsage == TRUE)
     {
         geoMeshGenerateExample();
