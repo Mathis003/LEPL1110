@@ -306,7 +306,6 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
 double *femElasticitySolve(femProblem *theProblem)
 {
     femSolver *theSolver = theProblem->solver;
-    femSystemCopy *theCopy = theProblem->copySystem;
     femSolverInit(theSolver);
     femElasticityAssembleElements(theProblem);
     femElasticityAssembleNeumann(theProblem);
@@ -314,22 +313,9 @@ double *femElasticitySolve(femProblem *theProblem)
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
     int size   = getSizeMatrix(theSolver);
-
-    // Initialize the copy system
-    theCopy->size = size;
-    theCopy->A = (double **) malloc(sizeof(double *) * size);
-    if (theCopy->A == NULL) { Error("Memory allocation error !"); return NULL; }
-    theCopy->B = (double *) malloc(sizeof(double) * size);
-    if (theCopy->B == NULL) { Error("Memory allocation error !"); return NULL; }
-    for (int i = 0; i < size; i++)
-    {
-        theCopy->A[i] = (double *) malloc(sizeof(double) * size);
-        if (theCopy->A[i] == NULL) { Error("Memory allocation error !"); return NULL; }
-    }
-
-    // Copy the system into the copy system
-    memcpy(theCopy->B, B, size * sizeof(double));
-    for (int i = 0; i < size; i++) { memcpy(theCopy->A[i], A[i], size * sizeof(double)); }
+    
+    // Copy  the copy system
+    femSystemWrite(A, B, size, "../data/system.txt");
 
     femElasticityApplyDirichlet(theProblem);
 

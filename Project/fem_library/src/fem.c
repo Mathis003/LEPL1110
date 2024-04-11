@@ -90,7 +90,7 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
     else { Error("Unexpected problem type"); }
 }
 
-void femFullSystemConstrainXY(femFullSystem *system, int size, int node, double value)
+void femFullSystemConstrainXY(femFullSystem *system, int node, double value, int size)
 {
     double **A, *B;
     int i;
@@ -298,7 +298,7 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
     return (myCol >= myRow && myCol < myRow + system->band) ? system->A[myRow][myCol] : 0.0;
 }
 
-void femBandSystemConstrainXY(femBandSystem *system, int size, int node, double value)
+void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size)
 {
     double **A, *B;
     int i, band;
@@ -437,22 +437,6 @@ int femMeshComputeBand(femMesh *theMesh)
 
 
 /* Solver Abstraction */
-
-void femSystemCopyFree(femSystemCopy *theCopy)
-{
-    if(theCopy == NULL) { return; }
-    if (theCopy->A != NULL)
-    {
-        for (int i = 0; i < theCopy->size; i++)
-        {
-            free(theCopy->A[i]);
-            theCopy->A[i] = NULL;
-        }
-    }
-    free(theCopy->A);
-    theCopy->A = NULL;
-    if (theCopy->B != NULL) { free(theCopy->B); theCopy->B = NULL; }
-}
 
 femSolver *femSolverCreate(int sizeLoc)
 {
@@ -841,7 +825,6 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
 
 void femElasticityFree(femProblem *theProblem)
 {
-    if (theProblem->copySystem != NULL) { femSystemCopyFree(theProblem->copySystem); }
     femSolverFree(theProblem->solver);
     femIntegrationFree(theProblem->rule);
     femDiscreteFree(theProblem->space);
@@ -1060,8 +1043,6 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     theProblem->residuals = malloc(size * sizeof(double));
     if (theProblem->residuals == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     for (int i = 0; i < size; i++) { theProblem->soluce[i] = 0.0; theProblem->residuals[i] = 0.0; }
-    theProblem->copySystem = malloc(sizeof(femSystemCopy));
-    if (theProblem->copySystem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
 
     theProblem->constrainedNodes = malloc(nNodes * sizeof(femConstrainedNode));
     if (theProblem->constrainedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
@@ -1153,6 +1134,47 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
 
     fclose(file);
     return theProblem;
+}
+
+void femSystemWrite(double **A, double *B, int size, const char *filename)
+{
+    FILE *file = fopen(filename, "w");
+    if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+    fprintf(file, "Size %d\n", size);
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++) { fprintf(file, "%.18le\t", A[i][j]); }
+        fprintf(file, "\n");
+    }
+    for (int i = 0; i < size; i++) { fprintf(file, "%.18le\t", B[i]); }
+}
+
+int femSystemRead(double ***A, double **B, int *size, const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+
+    ErrorScan(fscanf(file, "Size %d\n", size));
+
+    *A = (double **) malloc((*size) * sizeof(double *));
+    *B = (double *) malloc((*size) * sizeof(double));
+    if (*A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    if (*B == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    for (int i = 0; i < *size; i++)
+    {
+        (*A)[i] = (double *) malloc((*size) * sizeof(double));
+        if ((*A)[i] == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    }
+
+    for (int i = 0; i < *size; i++)
+    {
+        for (int j = 0; j < *size; j++) { fscanf(file, "%le\t", &(*A)[i][j]); }
+        fscanf(file, "\n");
+    }
+    for (int i = 0; i < *size; i++) { fscanf(file, "%le\t", &(*B)[i]); }
+
+    fclose(file);
+    return EXIT_SUCCESS;
 }
 
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename)

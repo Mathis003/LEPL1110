@@ -113,11 +113,6 @@ typedef struct {
     double *B;
     double **A;
     int size;
-} femSystemCopy;
-
-typedef struct {
-    double *B;
-    double **A;
 } femFullSystem;
 
 typedef struct {
@@ -146,7 +141,6 @@ typedef struct {
     femDiscrete *spaceEdge;
     femIntegration *ruleEdge;
     femSolver *solver;
-    femSystemCopy *copySystem;
     femConstrainedNode *constrainedNodes;
 } femProblem;
 
@@ -166,7 +160,7 @@ void femFullSystemFree(femFullSystem *mySystem);
 void femFullSystemAlloc(femFullSystem *mySystem, int size);
 void femFullSystemInit(femFullSystem *mySystem, int size);
 void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc);
-void femFullSystemConstrainXY(femFullSystem *mySystem, int size, int myNode, double value);
+void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double value, int size);
 void femFullSystemConstrainNT(femFullSystem *system, int size, int node1, int node2, double a, double b);
 double femFullSystemGet(femFullSystem* myFullSystem, int myRow, int myCol);
 double *femFullSystemEliminate(femFullSystem *mySystem, int size);
@@ -182,7 +176,7 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc);
 double femBandSystemGet(femBandSystem* myBandSystem, int myRow, int myCol);
-void femBandSystemConstrainXY(femBandSystem *system, int size, int node, double value); 
+void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size);
 void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b);
 double *femBandSystemEliminate(femBandSystem *myBand, int size);
 void femBandSystemPrint(femBandSystem *myBand, int size);
@@ -262,6 +256,8 @@ double *femElasticityForces(femProblem *theProblem);
 void femElasticityPrint(femProblem *theProblem);
 femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
+void femSystemWrite(double **A, double *b, int size, const char *path);
+int femSystemRead(double ***A, double **B, int *size, const char *filename);
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);
 int femSolutiondRead(int allocated_size, double *value, const char *filename);
 

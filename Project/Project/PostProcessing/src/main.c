@@ -19,13 +19,15 @@ double constFunct(double x, double y) { return 1.0; }
 
 double *femElasticityForces(femProblem *theProblem)
 {
-    femSystemCopy *theCopy = theProblem->copySystem;
     double *residuals = theProblem->residuals;
     double *soluce    = theProblem->soluce;
 
-    double **A_copy = theCopy->A;
-    double *B_copy = theCopy->B;
-    int size = theCopy->size;
+    double **A_copy;
+    double *B_copy;
+    int size;
+    
+    // Read the system from the file
+    femSystemRead(&A_copy, &B_copy, &size, "../../Processing/data/system.txt");
 
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
 
