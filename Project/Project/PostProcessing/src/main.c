@@ -17,6 +17,26 @@
 
 double constFunct(double x, double y) { return 1.0; }
 
+double *femElasticityForces(femProblem *theProblem)
+{
+    femSystemCopy *theCopy = theProblem->copySystem;
+    double *residuals = theProblem->residuals;
+    double *soluce    = theProblem->soluce;
+
+    double **A_copy = theCopy->A;
+    double *B_copy = theCopy->B;
+    int size = theCopy->size;
+
+    for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
+        residuals[i] -= B_copy[i];
+    }
+    return residuals;
+}
+
 int main(int argc, char *argv[])
 {
     // Deal with the options arguments
