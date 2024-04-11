@@ -420,7 +420,7 @@ void glfemPlotSolver(femSolver *mySolver, int n, int w, int h)
             double value = femSolverGet(mySolver, j, i);
             if (fabs(value) >= 1e-12)
             {    
-            	printf("value %d, %d : %f \n", i, j, fabs(value));
+            	// printf("value %d, %d : %f \n", i, j, fabs(value));
             	glVertex2f(i * 40.0, (n - j - 1) * 40.0);
             }
        }

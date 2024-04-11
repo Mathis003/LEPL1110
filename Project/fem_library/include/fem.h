@@ -163,6 +163,7 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
 void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double value, int size);
 void femFullSystemConstrainNT(femFullSystem *system, int size, int node1, int node2, double a, double b);
 double femFullSystemGet(femFullSystem* myFullSystem, int myRow, int myCol);
+void femFullSystemSetSystem(femFullSystem *system, double **A, double *B);
 double *femFullSystemEliminate(femFullSystem *mySystem, int size);
 void femFullSystemPrint(femFullSystem *mySystem, int size);
 void femFullSystemPrintInfos(femFullSystem *mySystem, int size);
@@ -178,6 +179,7 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
 double femBandSystemGet(femBandSystem* myBandSystem, int myRow, int myCol);
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size);
 void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b);
+void femBandSystemSetSystem(femBandSystem *system, double **A, double *B);
 double *femBandSystemEliminate(femBandSystem *myBand, int size);
 void femBandSystemPrint(femBandSystem *myBand, int size);
 void femBandSystemPrintInfos(femBandSystem *myBand, int size);
@@ -185,6 +187,7 @@ int comparPositionNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 
+void femSolverSetSystem(femSolver *mySolver, double **A, double *B);
 femSolver *femSolverCreate(int sizeLoc);
 femSolver *femSolverFullCreate(int size, int sizeLoc);
 femSolver *femSolverBandCreate(int size, int sizeLoc, int band);

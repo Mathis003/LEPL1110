@@ -123,6 +123,12 @@ void femFullSystemConstrainNT(femFullSystem *system, int size, int node1, int no
     B[node2] = b;
 }
 
+void femFullSystemSetSystem(femFullSystem *system, double **A, double *B)
+{
+    system->A = A;
+    system->B = B;
+}
+
 double femFullSystemGet(femFullSystem *system, int row, int col) { return system->A[row][col]; }
 
 double *femFullSystemEliminate(femFullSystem *system, int size)
@@ -218,6 +224,13 @@ void femBandSystemFree(femBandSystem *system)
     free(system->A); 
     free(system);
 }
+
+void femBandSystemSetSystem(femBandSystem *system, double **A, double *B)
+{
+    system->A = A;
+    system->B = B;
+}
+
 
 void femBandSystemPrint(femBandSystem *system, int size)
 {
@@ -490,6 +503,16 @@ void femSolverFree(femSolver *mySolver)
         default :       Error("Unexpected solver type");
     }
     free(mySolver);
+}
+
+void femSolverSetSystem(femSolver *mySolver, double **A, double *B)
+{
+    switch (mySolver->type)
+    {
+        case FEM_FULL : femFullSystemSetSystem((femFullSystem *) mySolver->solver, A, B); break;
+        case FEM_BAND : femBandSystemSetSystem((femBandSystem *) mySolver->solver, A, B); break;
+        default :       Error("Unexpected solver type");
+    }
 }
 
 void femSolverInit(femSolver *mySolver)

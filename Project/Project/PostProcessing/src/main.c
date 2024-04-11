@@ -108,6 +108,15 @@ int main(int argc, char *argv[])
         femElasticityPrint(theProblem);
     }
 
+    femSolver *theSolver = theProblem->solver;
+    double **A = getMatrixA(theSolver);
+    double *B  = getVectorB(theSolver);
+    int size   = theSolver->size;
+    femSystemRead(&A, &B, &size, "../../Processing/data/finalSystem.txt");
+
+    femSolverSetSystem(theSolver, A, B);
+    theSolver->size = size;
+
     double rho = theProblem->rho;
     double gy = theProblem->gy;
 
@@ -218,7 +227,7 @@ int main(int argc, char *argv[])
         } else if (mode == 2)
         {
             glColor3f(1.0, 0.0, 0.0);
-            glfemPlotSolver(theProblem->solver, theProblem->solver->size, w, h);
+            glfemPlotSolver(theSolver, theSolver->size, w, h);
         }
 
         glfwSwapBuffers(window);
