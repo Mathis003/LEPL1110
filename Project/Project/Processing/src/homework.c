@@ -100,8 +100,10 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theEdges        = theGeometry->theEdges;
 
-    double x[2], y[2], phi[2], tx, ty, nx, ny, norm_n, norm_t;
+    double x[2], y[2], phi[2], tx, ty, nx, ny, norm_n, norm_t, a, b;
     int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
+    double oldValue, oldType;
+    int changeType;
 
     int nLocal = 2;
     double **A = getMatrixA(theSolver);
@@ -155,8 +157,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     }
                     else if (type == NEUMANN_N)
                     {
-                        tx = x[1] - x[0];
-                        ty = y[1] - y[0];
+                        tx = dx; ty = dy;
                         nx = ty; ny = -tx;
                         norm_n = sqrt(nx * nx + ny * ny);
                         nx /= norm_n; ny /= norm_n;
@@ -168,8 +169,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     }
                     else if (type == NEUMANN_T)
                     {
-                        tx = x[1] - x[0];
-                        ty = y[1] - y[0];
+                        tx = dx; ty = dy;
                         norm_t = sqrt(tx * tx + ty * ty);
                         tx /= norm_t; ty /= norm_t;
                         for (i = 0; i < theSpace->n; i++)
@@ -187,8 +187,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     }
                     else if (type == NEUMANN_N)
                     {
-                        tx = x[1] - x[0];
-                        ty = y[1] - y[0];
+                        tx = dx; ty = dy;
                         nx = ty; ny = -tx;
                         norm_n = sqrt(nx * nx + ny * ny);
                         nx /= norm_n; ny /= norm_n;
@@ -200,8 +199,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
                     }
                     else if (type == NEUMANN_T)
                     {
-                        tx = x[1] - x[0];
-                        ty = y[1] - y[0];
+                        tx = dx; ty = dy;
                         norm_t = sqrt(tx * tx + ty * ty);
                         tx /= norm_t; ty /= norm_t;
                         for (i = 0; i < theSpace->n; i++)
@@ -253,11 +251,13 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double nx = theConstrainedNode->nx;
             double ny = theConstrainedNode->ny;
 
-            double norm = sqrt(nx * nx + ny * ny);
-            nx /= norm; ny /= norm;
+            double norm_n = sqrt(nx * nx + ny * ny);
+            nx /= norm_n; ny /= norm_n;
 
-            femSolverSystemConstrain(theSolver, 2 * node + 0, value * nx);
-            femSolverSystemConstrain(theSolver, 2 * node + 1, value * ny);
+            double a = - ny / nx;
+            double b = value / nx;
+
+
         }
         else if (type == DIRICHLET_T)
         {
@@ -267,11 +267,13 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             double tx = ny;
             double ty = -nx;
 
-            double norm = sqrt(tx * tx + ty * ty);
-            tx /= norm; ty /= norm;
+            double norm_t = sqrt(tx * tx + ty * ty);
+            tx /= norm_t; ty /= norm_t;
 
-            femSolverSystemConstrain(theSolver, 2 * node + 0, value * tx);
-            femSolverSystemConstrain(theSolver, 2 * node + 1, value * ty);
+            double a = - ty / tx;
+            double b = value / tx;
+
+
         }
         else if (type == DIRICHLET_NT)
         {
@@ -288,8 +290,12 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             nx /= norm_n; ny /= norm_n;
             tx /= norm_t; ty /= norm_t;
 
-            femSolverSystemConstrain(theSolver, 2 * node, value_n * nx + value_t * tx);
-            femSolverSystemConstrain(theSolver, 2 * node + 1, value_n * ny + value_t * ty);
+            double a_n = - ny / nx;
+            double b_n = value_n / nx;
+            double a_t = - ty / tx;
+            double b_t = value_t / tx;
+
+
         }
     }
 }

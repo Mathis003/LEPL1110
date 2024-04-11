@@ -501,6 +501,8 @@ void geoMeshGenerate()
     for (int i = 27; i < 36; i++) { fuseElement(bridge, stayCables[i]); }
     for (int i = 9; i < 27; i++)  { fuseElement(bridge, stayCables[i]); }
 
+    // gmshModelMeshReverse(const int * dimTags, const size_t dimTags_n, &ierr);
+
     // Cut the half of the bridge by symmetry
     cutHalfGeometryBySymmetry(theGeometry, bridge);
 
@@ -895,6 +897,8 @@ void geoMeshGenerateExample(void)
 
     cutElement(rect, disk);
     cutElement(rect, slit);
+
+    gmshModelMeshReverse(rect, 2, &ierr);
 
     gmshModelOccSynchronize(&ierr);
 

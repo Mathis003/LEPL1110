@@ -3,7 +3,6 @@ Young modulus      :  2.1100000e+11
 Poisson ratio      :  3.0000000e-01  
 Mass density       :  7.8500000e+03  
 Gravity-X          :  0.0000000e+00  
-Gravity-Y          : -9.8100000e+00  
-Boundary condition :  Neumann-Y          =  1.0000000e+04,            nan : Symmetry
+Gravity-Y          :  0.0000000e+00  
+Boundary condition :  Neumann-X          = -1.0000000e+04,            nan : Symmetry
 Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : Bottom
-Boundary condition :  Neumann-N          = -1.0000000e+04,            nan : Top
