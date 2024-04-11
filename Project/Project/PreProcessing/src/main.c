@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
         double nu_example = 0.3;
         double rho_example = 7.85e3;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, PLANAR_STRAIN);
-        femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 5e5, NAN);
-        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_NT, 1e-6, 0.0);
+        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 5e5, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_NT, 1e-6, 1e-6);
         femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_NT, 0.0, 0.0);
         // femElasticityAddBoundaryCondition(theProblem, "Bottom", NEUMANN_N, 1e4, NAN);
         // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e4, NAN);

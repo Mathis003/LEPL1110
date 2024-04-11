@@ -92,7 +92,7 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
     else { Error("Unexpected problem type"); }
 }
 
-void femFullSystemConstrain(femFullSystem *system, int node, double value)
+void femFullSystemConstrainXY(femFullSystem *system, int node, double value)
 {
     double **A, *B;
     int i, size;
@@ -106,6 +106,25 @@ void femFullSystemConstrain(femFullSystem *system, int node, double value)
 
     A[node][node] = 1;
     B[node] = value;
+}
+
+void femFullSystemConstrainNT(femFullSystem *system, int node1, int node2, double a, double b)
+{
+    double **A, *B;
+    int i, size;
+
+    A = system->A;
+    B = system->B;
+    size = system->size;
+
+    // Force this constraint to be applied : node2 = b + a * node1
+    for (int i = 0; i < size; i++)
+    {
+        if      (i == node2) { A[node2][i] = 1.0; }
+        else if (i == node1) { A[node2][i] = - a; }
+        else                 { A[node2][i] = 0.0; }
+    }
+    B[node2] = b;
 }
 
 double femFullSystemGet(femFullSystem *system, int row, int col) { return system->A[row][col]; }
@@ -290,7 +309,7 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
     return (myCol >= myRow && myCol < myRow + system->band) ? system->A[myRow][myCol] : 0.0;
 }
 
-void femBandSystemConstrain(femBandSystem *system, int node, double value)
+void femBandSystemConstrainXY(femBandSystem *system, int node, double value)
 {
     double **A, *B;
     int i, size, band;
@@ -307,6 +326,28 @@ void femBandSystemConstrain(femBandSystem *system, int node, double value)
     }
     A[node][node] = 1;
     B[node] = value;
+}
+
+// TODO : Check if the condition on the band is correct
+void femBandSystemConstrainNT(femBandSystem *system, int node1, int node2, double a, double b)
+{
+    double **A, *B;
+    int i, size, band;
+
+    A = system->A;
+    B = system->B;
+    size = system->size;
+    band = system->band;
+
+    // Force this constraint to be applied : node2 = b + a * node1
+    for (int i = 0; i < size; i++)
+    {
+        if (!(i >= node2 && i < node2 + band)) { continue; } // Skip the non-band
+        if      (i == node2) { A[node2][i] = 1.0; }
+        else if (i == node1) { A[node2][i] = - a; }
+        else                 { A[node2][i] = 0.0; }
+    }
+    B[node2] = b;
 }
 
 double *femBandSystemEliminate(femBandSystem *system)
@@ -496,12 +537,22 @@ void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, i
     }
 }
 
-void femSolverSystemConstrain(femSolver *mySolver, double node, double value)
+void femSolverSystemConstrainXY(femSolver *mySolver, int node, double value)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemConstrain((femFullSystem *) mySolver->solver, node, value); break;
-        case FEM_BAND : femBandSystemConstrain((femBandSystem *) mySolver->solver, node, value); break;
+        case FEM_FULL : femFullSystemConstrainXY((femFullSystem *) mySolver->solver, node, value); break;
+        case FEM_BAND : femBandSystemConstrainXY((femBandSystem *) mySolver->solver, node, value); break;
+        default :       Error("Unexpected solver type");
+    }
+}
+
+void femSolverSystemConstrainNT(femSolver *mySolver, int node1, int node2, double a, double b)
+{
+    switch (mySolver->type)
+    {
+        case FEM_FULL : femFullSystemConstrainNT((femFullSystem *) mySolver->solver, node1, node2, a, b); break;
+        case FEM_BAND : femBandSystemConstrainNT((femBandSystem *) mySolver->solver, node1, node2, a, b); break;
         default :       Error("Unexpected solver type");
     }
 }

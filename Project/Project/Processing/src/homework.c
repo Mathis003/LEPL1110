@@ -214,15 +214,27 @@ void femElasticityAssembleNeumann(femProblem *theProblem)
     }
 }
 
+void getValueConditionsNT(double vect_x, double vect_y, double value, int Ux, int Uy, int *node1, int *node2, double *a, double *b)
+{
+    if (fabs(vect_x) >= fabs(vect_y))
+    {
+        *a = - vect_y / vect_x;
+        *b = value / vect_x;
+        *node1 = Ux; *node2 = Uy;
+    }
+    else
+    {
+        *a = - vect_x / vect_y;
+        *b = value / vect_y;
+        *node1 = Uy; *node2 = Ux;
+    }
+}
+
 void femElasticityApplyDirichlet(femProblem *theProblem)
 {
     femSolver *theSolver     = theProblem->solver;
     femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
-
-    double **A = getMatrixA(theSolver);
-    double *B  = getVectorB(theSolver);
-    int size   = getSizeMatrix(theSolver);
 
     for (int node = 0; node < theNodes->nNodes; node++)
     {
@@ -230,181 +242,64 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
         if (theConstrainedNode->type == UNDEFINED) { continue; }
         femBoundaryType type = theConstrainedNode->type;
 
+        int Ux = 2 * node;
+        int Uy = 2 * node + 1;
+
         if (type == DIRICHLET_X)
         {
             double value = theConstrainedNode->value1;
-            femSolverSystemConstrain(theSolver, 2 * node + 0, value);
+            femSolverSystemConstrainXY(theSolver, Ux, value);
         }
         else if (type == DIRICHLET_Y)
         {
             double value = theConstrainedNode->value1;
-            femSolverSystemConstrain(theSolver, 2 * node + 1, value);
+            femSolverSystemConstrainXY(theSolver, Uy, value);
         }
         else if (type == DIRICHLET_XY)
         {
             double value_x = theConstrainedNode->value1;
             double value_y = theConstrainedNode->value2;
             
-            femSolverSystemConstrain(theSolver, 2 * node + 0, value_x);
-            femSolverSystemConstrain(theSolver, 2 * node + 1, value_y);
+            femSolverSystemConstrainXY(theSolver, Ux, value_x);
+            femSolverSystemConstrainXY(theSolver, Uy, value_y);
         }
-        else if (type == DIRICHLET_N)
+        else
         {
-            double value = theConstrainedNode->value1;
-            double nx = theConstrainedNode->nx;
-            double ny = theConstrainedNode->ny;
-
-            double norm_n = sqrt(nx * nx + ny * ny);
-            nx /= norm_n; ny /= norm_n;
-
-            int Ux = 2 * node;
-            int Uy = 2 * node + 1;
-
-            double a_n, b_n;
+            double nx, ny, norm_n, tx, ty, norm_t, a_n, b_n, value_n, a_t, b_t, value_t;
             int node1, node2;
 
-            // nx * Ux + ny * Uy = value_n
-            // <=> Uy = (value_n/ny) - (nx/ny) * Ux    (if fabs(ny) >= fabs(nx)
-            // <=> Ux = (value_n/nx) - (ny/nx) * Uy    (if fabs(nx) >= fabs(ny)
-            if (fabs(nx) >= fabs(ny))
+            value_n = theConstrainedNode->value1;
+            value_t = theConstrainedNode->value2;
+            nx = theConstrainedNode->nx;
+            ny = theConstrainedNode->ny;
+
+            if (type == DIRICHLET_N)
             {
-                a_n = - ny / nx;
-                b_n = value / nx;
-                node1 = Ux;
-                node2 = Uy;
+                norm_n = sqrt(nx * nx + ny * ny);
+                nx /= norm_n; ny /= norm_n;
+                getValueConditionsNT(nx, ny, value_n, Ux, Uy, &node1, &node2, &a_n, &b_n);
+                femSolverSystemConstrainNT(theSolver, node1, node2, a_n, b_n);
             }
-            else
+            else if (type == DIRICHLET_T)
             {
-                a_n = - nx / ny;
-                b_n = value / ny;
-                node1 = Uy;
-                node2 = Ux;
+                tx = ny; ty = -nx;
+                norm_t = sqrt(tx * tx + ty * ty);
+                tx /= norm_t; ty /= norm_t;
+                getValueConditionsNT(tx, ty, value_t, Ux, Uy, &node1, &node2, &a_t, &b_t);
+                femSolverSystemConstrainNT(theSolver, node1, node2, a_t, b_t);
             }
-
-            for (int i = 0; i < size; i++)
+            else if (type == DIRICHLET_NT)
             {
-                if (i == node2) { A[node2][i] = 1.0; }
-                else if (i == node1) { A[node2][i] = - a_n; }
-                else { A[node2][i] = 0.0; }
+                tx = ny; ty = -nx;
+                norm_n = sqrt(nx * nx + ny * ny);
+                norm_t = sqrt(tx * tx + ty * ty);
+                nx /= norm_n; ny /= norm_n;
+                tx /= norm_t; ty /= norm_t;
+                getValueConditionsNT(nx, ny, value_n, Ux, Uy, &node1, &node2, &a_n, &b_n);
+                femSolverSystemConstrainNT(theSolver, node1, node2, a_n, b_n);
+                getValueConditionsNT(tx, ty, value_t, Ux, Uy, &node1, &node2, &a_t, &b_t);
+                femSolverSystemConstrainNT(theSolver, node1, node2, a_t, b_t);
             }
-            B[node2] = b_n;
-        }
-        else if (type == DIRICHLET_T)
-        {
-            double value = theConstrainedNode->value1;
-            double nx = theConstrainedNode->nx;
-            double ny = theConstrainedNode->ny;
-            double tx = ny;
-            double ty = -nx;
-
-            double norm_t = sqrt(tx * tx + ty * ty);
-            tx /= norm_t; ty /= norm_t;
-
-            int Ux = 2 * node;
-            int Uy = 2 * node + 1;
-
-            double a_t, b_t;
-            int node1, node2;
-
-            // tx * Ux + ty * Uy = value_t
-            // <=> Uy = (value_t/ty) - (tx/ty) * Ux    (if fabs(ty) >= fabs(tx)
-            // <=> Ux = (value_t/tx) - (ty/tx) * Uy    (if fabs(tx) >= fabs(ty)
-            if (fabs(tx) >= fabs(ty))
-            {
-                a_t = - ty / tx;
-                b_t = value / tx;
-                node1 = Ux;
-                node2 = Uy;
-            }
-            else
-            {
-                a_t = - tx / ty;
-                b_t = value / ty;
-                node1 = Uy;
-                node2 = Ux;
-            }
-
-            for (int i = 0; i < size; i++)
-            {
-                if (i == node2) { A[node2][i] = 1.0; }
-                else if (i == node1) { A[node2][i] = - a_t; }
-                else { A[node2][i] = 0.0; }
-            }
-            B[node2] = b_t;
-        }
-        else if (type == DIRICHLET_NT)
-        {
-            double value_n = theConstrainedNode->value1;
-            double value_t = theConstrainedNode->value2;
-            double nx = theConstrainedNode->nx;
-            double ny = theConstrainedNode->ny;
-            double tx = ny;
-            double ty = -nx;
-            
-            double norm_n = sqrt(nx * nx + ny * ny);
-            double norm_t = sqrt(tx * tx + ty * ty);
-
-            nx /= norm_n; ny /= norm_n;
-            tx /= norm_t; ty /= norm_t;
-
-            int Ux = 2 * node;
-            int Uy = 2 * node + 1;
-
-            // nx * Ux + ny * Uy = value_n
-            // <=> Uy = (value_n/ny) - (nx/ny) * Ux    (if fabs(ny) >= fabs(nx)
-            // <=> Ux = (value_n/nx) - (ny/nx) * Uy    (if fabs(nx) >= fabs(ny)
-            double a_n, b_n;
-            int node1, node2;
-            if (fabs(nx) >= fabs(ny))
-            {
-                a_n = - ny / nx;
-                b_n = value_n / nx;
-                node1 = Ux;
-                node2 = Uy;
-            }
-            else
-            {
-                a_n = - nx / ny;
-                b_n = value_n / ny;
-                node1 = Uy;
-                node2 = Ux;
-            }
-
-            for (int i = 0; i < size; i++)
-            {
-                if (i == node2) { A[node2][i] = 1.0; }
-                else if (i == node1) { A[node2][i] = - a_n; }
-                else { A[node2][i] = 0.0; }
-            }
-            B[node2] = b_n;
-
-
-            // tx * Ux + ty * Uy = value_t
-            // <=> Uy = (value_t/ty) - (tx/ty) * Ux    (if fabs(ty) >= fabs(tx)
-            // <=> Ux = (value_t/tx) - (ty/tx) * Uy    (if fabs(tx) >= fabs(ty)
-            double a_t, b_t;
-            if (fabs(tx) >= fabs(ty))
-            {
-                a_t = - ty / tx;
-                b_t = value_t / tx;
-                node1 = Ux;
-                node2 = Uy;
-            }
-            else
-            {
-                a_t = - tx / ty;
-                b_t = value_t / ty;
-                node1 = Uy;
-                node2 = Ux;
-            }
-
-            for (int i = 0; i < size; i++)
-            {
-                if (i == node2) { A[node2][i] = 1.0; }
-                else if (i == node1) { A[node2][i] = - a_t; }
-                else { A[node2][i] = 0.0; }
-            }
-            B[node2] = b_t;
         }
     }
 }
