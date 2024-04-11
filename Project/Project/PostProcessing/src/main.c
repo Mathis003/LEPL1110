@@ -27,7 +27,7 @@ double *femElasticityForces(femProblem *theProblem)
     int size;
     
     // Read the system from the file
-    femSystemRead(&A_copy, &B_copy, &size, "../../Processing/data/system.txt");
+    femSystemRead(&A_copy, &B_copy, &size, "../../Processing/data/dirichletUnconstrainedSystem.txt");
 
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
 
