@@ -4,13 +4,14 @@
 TODO :
     - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
     - Faire la visualisation des résidus dans le post-processing
+    - Faire la visualisation de la matrice dans le post-processing
+    - Verifier la validite de l'axisymetrique
 
 DONE :
     - Ajouter l'axisymetrique.
     - Ajouter les conditions de Dirichlet (x, y, xy, n, t, nt).
     - Ajouter les conditions de Neumann (x, y, n, t).
     - Faire les résidus pour les forces.
-    - Faire la visualisation de la matrice dans le post-processing.
 */
 
 void femElasticityAssembleElements(femProblem *theProblem)
@@ -314,8 +315,11 @@ double *femElasticitySolve(femProblem *theProblem)
     double *B  = getVectorB(theSolver);
     int size   = getSizeMatrix(theSolver);
     
-    // Copy  the copy system
-    femSystemWrite(A, B, size, "../data/system.txt");
+    // Copy the Dirichlet unconstrained system
+    femSystemWrite(A, B, size, "../data/dirichletUnconstrainedSystem.txt");
+
+    // Copy the final system
+    femSystemWrite(A, B, size, "../data/finalSystem.txt");
 
     femElasticityApplyDirichlet(theProblem);
 

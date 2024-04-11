@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     printf("    V : Mesh and displacement norm \n");
     printf("    D : Domains \n");
     printf("    N : Next domain highlighted\n");
-    printf("    M : Display the matrix \n");
+    printf("    S : Display the matrix \n");
     printf("    X : Display the horizontal forces \n");
     printf("    Y : Display the vertical forces \n");
     printf("\n\n");
@@ -83,13 +83,15 @@ int main(int argc, char *argv[])
 
     femGeometry *theGeometry = geoGetGeometry();
 
+    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
+
     int n;
     double *theSoluce;
     femProblem *theProblem;
+
     if (exampleUsage == TRUE)
     {
         geoMeshRead("../../Processing/data/mesh_example.txt");
-        femSolverType typeSolver = FEM_FULL;
         theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem_example.txt");
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
@@ -99,7 +101,6 @@ int main(int argc, char *argv[])
     else
     {
         geoMeshRead("../../Processing/data/mesh.txt");
-        femSolverType typeSolver = FEM_FULL;
         theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem.txt");
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
@@ -190,7 +191,7 @@ int main(int argc, char *argv[])
         t = glfwGetTime();
         if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
         if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
-        if (glfwGetKey(window, 'M') == GLFW_PRESS) { mode = 2; }
+        if (glfwGetKey(window, 'S') == GLFW_PRESS) { mode = 2; }
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -216,7 +217,7 @@ int main(int argc, char *argv[])
             glfemMessage(theMessage);
         } else if (mode == 2)
         {
-            glColor3f(1.0,0.0,0.0);
+            glColor3f(1.0, 0.0, 0.0);
             glfemPlotSolver(theProblem->solver, theProblem->solver->size, w, h);
         }
 
