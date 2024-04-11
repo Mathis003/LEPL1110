@@ -11,3 +11,11 @@ Project/Project/Processing/Makefile
 Project/.vscode/settings.json
 **/myFem
 Project/data/mesh.txt
+Project/.vscode/launch.json
+Project/Project/Processing/data/mesh_example.txt
+Project/Project/Processing/data/mesh_example.txt
+Project/Project/Processing/data/mesh.txt
+Project/Project/Processing/data/problem_example.txt
+Project/Project/Processing/data/problem.txt
+Project/Project/Processing/data/UV_example.txt
+Project/Project/Processing/data/UV.txt

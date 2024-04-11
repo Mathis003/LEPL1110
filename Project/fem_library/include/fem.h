@@ -118,19 +118,18 @@ typedef struct {
 typedef struct {
     double *B;
     double **A;
-    int size;
 } femFullSystem;
 
 typedef struct {
     double *B;
     double **A;        
-    int size;
     int band;        
 } femBandSystem;
 
 typedef struct {
     femSolverType type;
     void *solver;
+    int size;
 } femSolver;
 
 typedef struct {
@@ -165,29 +164,29 @@ extern femGeometry theGeometry;
 femFullSystem *femFullSystemCreate(int size);
 void femFullSystemFree(femFullSystem *mySystem);
 void femFullSystemAlloc(femFullSystem *mySystem, int size);
-void femFullSystemInit(femFullSystem *mySystem);
+void femFullSystemInit(femFullSystem *mySystem, int size);
 void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc);
-void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double value);
-void femFullSystemConstrainNT(femFullSystem *system, int node1, int node2, double a, double b);
+void femFullSystemConstrainXY(femFullSystem *mySystem, int size, int myNode, double value);
+void femFullSystemConstrainNT(femFullSystem *system, int size, int node1, int node2, double a, double b);
 double femFullSystemGet(femFullSystem* myFullSystem, int myRow, int myCol);
-double *femFullSystemEliminate(femFullSystem *mySystem);
-void femFullSystemPrint(femFullSystem *mySystem);
-void femFullSystemPrintInfos(femFullSystem *mySystem);
+double *femFullSystemEliminate(femFullSystem *mySystem, int size);
+void femFullSystemPrint(femFullSystem *mySystem, int size);
+void femFullSystemPrintInfos(femFullSystem *mySystem, int size);
 
 femBandSystem *femBandSystemCreate(int size, int band);
 void femBandSystemFree(femBandSystem *myBandSystem);
-void femBandSystemInit(femBandSystem *myBandSystem);
+void femBandSystemInit(femBandSystem *myBandSystem, int size);
 void femBandSystemAlloc(femBandSystem *system, int size, int band);
 int comparPosNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, int xLoc, int nLoc);
 double femBandSystemGet(femBandSystem* myBandSystem, int myRow, int myCol);
-void femBandSystemConstrainXY(femBandSystem *system, int node, double value);
-void femBandSystemConstrainNT(femBandSystem *system, int node1, int node2, double a, double b);
-double *femBandSystemEliminate(femBandSystem *myBand);
-void femBandSystemPrint(femBandSystem *myBand);
-void femBandSystemPrintInfos(femBandSystem *myBand);
+void femBandSystemConstrainXY(femBandSystem *system, int size, int node, double value); 
+void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b);
+double *femBandSystemEliminate(femBandSystem *myBand, int size);
+void femBandSystemPrint(femBandSystem *myBand, int size);
+void femBandSystemPrintInfos(femBandSystem *myBand, int size);
 int comparPositionNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);

@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
     int domain = 0;
     int freezingButton = FALSE;
     double t, told = 0;
-    char theMessage[MAXNAME];
+    char theMessage[MAXNAME+5];
 
     GLFWwindow *window = glfemInit("EPL1110 : Project 2022-23 ");
     glfwMakeContextCurrent(window);
@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
         t = glfwGetTime();
         if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
         if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
+        if (glfwGetKey(window, 'M') == GLFW_PRESS) { mode = 2; }
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -206,6 +207,10 @@ int main(int argc, char *argv[])
             sprintf(theMessage, "%s : %d ", theGeometry->theDomains[domain]->name, domain);
             glColor3f(1.0, 0.0, 0.0);
             glfemMessage(theMessage);
+        } else if (mode == 2)
+        {
+            glColor3f(1.0,0.0,0.0);
+            glfemPlotSolver(theProblem->solver,theProblem->solver->size,w,h);
         }
 
         glfwSwapBuffers(window);

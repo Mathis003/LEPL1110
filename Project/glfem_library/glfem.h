@@ -23,6 +23,8 @@ void glfemDrawElement(float *x, float *y, int n);
 void glfemDrawNodes(double *x, double *y, int n);
 int glfemGetAction(void);
 
+void glfemMatrix(double **A, int n, int w, int h);
+void glfemPlotSolver(femSolver *mySolver, int n, int w, int h);
 void glfemReshapeWindows(GLFWwindow *window, femNodes *theNodes, int width, int height);
 void glfemPlotField(femMesh *theMesh, double *u);
 void glfemPlotMesh(femMesh *theMesh);

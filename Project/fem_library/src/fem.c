@@ -16,7 +16,7 @@ femFullSystem *femFullSystemCreate(int size)
     femFullSystem *system = malloc(sizeof(femFullSystem));
     if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     femFullSystemAlloc(system, size);
-    femFullSystemInit(system);
+    femFullSystemInit(system, size);
     return system;
 }
 
@@ -38,13 +38,11 @@ void femFullSystemAlloc(femFullSystem *system, int size)
     if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->B = elem;
     system->A[0] = elem + size;
-    system->size = size;
     for (int i = 1; i < size; i++) { system->A[i] = system->A[i - 1] + size; }
 }
 
-void femFullSystemInit(femFullSystem *system)
+void femFullSystemInit(femFullSystem *system, int size)
 {
-    int size = system->size;
     for (int i = 0; i < size * (size + 1); i++) { system->B[i] = 0; }
 }
 
@@ -92,14 +90,13 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
     else { Error("Unexpected problem type"); }
 }
 
-void femFullSystemConstrainXY(femFullSystem *system, int node, double value)
+void femFullSystemConstrainXY(femFullSystem *system, int size, int node, double value)
 {
     double **A, *B;
-    int i, size;
+    int i;
 
     A = system->A;
     B = system->B;
-    size = system->size;
 
     for (i = 0; i < size; i++) { B[i] -= value * A[i][node]; A[i][node] = 0; }
     for (i = 0; i < size; i++) { A[node][i] = 0; }
@@ -108,14 +105,13 @@ void femFullSystemConstrainXY(femFullSystem *system, int node, double value)
     B[node] = value;
 }
 
-void femFullSystemConstrainNT(femFullSystem *system, int node1, int node2, double a, double b)
+void femFullSystemConstrainNT(femFullSystem *system, int size, int node1, int node2, double a, double b)
 {
     double **A, *B;
-    int i, size;
+    int i;
 
     A = system->A;
     B = system->B;
-    size = system->size;
 
     // Force this constraint to be applied : node2 = b + a * node1
     for (int i = 0; i < size; i++)
@@ -129,14 +125,13 @@ void femFullSystemConstrainNT(femFullSystem *system, int node1, int node2, doubl
 
 double femFullSystemGet(femFullSystem *system, int row, int col) { return system->A[row][col]; }
 
-double *femFullSystemEliminate(femFullSystem *system)
+double *femFullSystemEliminate(femFullSystem *system, int size)
 {
     double **A, *B, factor;
-    int i, j, k, size;
+    int i, j, k;
 
     A = system->A;
     B = system->B;
-    size = system->size;
 
     /* Gauss elimination */
     for (k = 0; k < size; k++)
@@ -161,14 +156,13 @@ double *femFullSystemEliminate(femFullSystem *system)
     return system->B;
 }
 
-void femFullSystemPrint(femFullSystem *system)
+void femFullSystemPrint(femFullSystem *system, int size)
 {
     double **A, *B;
-    int i, j, size;
+    int i, j;
 
     A = system->A;
     B = system->B;
-    size = system->size;
 
     for (i = 0; i < size; i++)
     {
@@ -181,9 +175,8 @@ void femFullSystemPrint(femFullSystem *system)
     }
 }
 
-void femFullSystemPrintInfos(femFullSystem *system)
+void femFullSystemPrintInfos(femFullSystem *system, int size)
 {
-    int size = system->size;
     printf(" \n");
     printf("    Full Gaussian elimination \n");
     printf("    Storage informations \n");
@@ -198,7 +191,7 @@ femBandSystem *femBandSystemCreate(int size, int band)
     femBandSystem *system = malloc(sizeof(femBandSystem));
     if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     femBandSystemAlloc(system, size, band);
-    femBandSystemInit(system);
+    femBandSystemInit(system, size);
     return system;
 }
 
@@ -208,15 +201,13 @@ void femBandSystemAlloc(femBandSystem *system, int size, int band)
     if (system->B == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->A = malloc(sizeof(double *) * size);
     if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }     
-    system->size = size;
     system->band = band;
     system->A[0] = system->B + size;
     for (int i = 1 ; i < size ; i++) { system->A[i] = system->A[i-1] + band - 1; }
 }
 
-void femBandSystemInit(femBandSystem *system)
+void femBandSystemInit(femBandSystem *system, int size)
 {
-    int size = system->size;
     int band = system->band;
     for (int i = 0 ; i < size * (band + 1) ; i++) { system->B[i] = 0; }
 }
@@ -228,13 +219,12 @@ void femBandSystemFree(femBandSystem *system)
     free(system);
 }
 
-void femBandSystemPrint(femBandSystem *system)
+void femBandSystemPrint(femBandSystem *system, int size)
 {
     double  **A, *B;
-    int    band, size;
+    int band;
     A    = system->A;
     B    = system->B;
-    size = system->size;
     band = system->band;
 
     for (int i = 0; i < size; i++)
@@ -248,9 +238,8 @@ void femBandSystemPrint(femBandSystem *system)
     }
 }
   
-void femBandSystemPrintInfos(femBandSystem *system)
+void femBandSystemPrintInfos(femBandSystem *system, int size)
 {
-    int size = system->size;
     int band = system->band;
     printf(" \n");
     printf("    Banded Gaussian elimination \n");
@@ -309,14 +298,13 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
     return (myCol >= myRow && myCol < myRow + system->band) ? system->A[myRow][myCol] : 0.0;
 }
 
-void femBandSystemConstrainXY(femBandSystem *system, int node, double value)
+void femBandSystemConstrainXY(femBandSystem *system, int size, int node, double value)
 {
     double **A, *B;
-    int i, size, band;
+    int i, band;
 
     A = system->A;
     B = system->B;
-    size = system->size;
     band = system->band;
 
     for (i = 0; i < size; i++)
@@ -329,14 +317,13 @@ void femBandSystemConstrainXY(femBandSystem *system, int node, double value)
 }
 
 // TODO : Check if the condition on the band is correct
-void femBandSystemConstrainNT(femBandSystem *system, int node1, int node2, double a, double b)
+void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b)
 {
     double **A, *B;
-    int i, size, band;
+    int i, band;
 
     A = system->A;
     B = system->B;
-    size = system->size;
     band = system->band;
 
     // Force this constraint to be applied : node2 = b + a * node1
@@ -350,13 +337,12 @@ void femBandSystemConstrainNT(femBandSystem *system, int node1, int node2, doubl
     B[node2] = b;
 }
 
-double *femBandSystemEliminate(femBandSystem *system)
+double *femBandSystemEliminate(femBandSystem *system, int size)
 {
     double  **A, *B, factor;
-    int     i, j, k, jend, size, band;
+    int     i, j, k, jend, band;
     A    = system->A;
     B    = system->B;
-    size = system->size;
     band = system->band;
 
     /* Gauss elimination */
@@ -454,6 +440,7 @@ int femMeshComputeBand(femMesh *theMesh)
 
 void femSystemCopyFree(femSystemCopy *theCopy)
 {
+    if(theCopy == NULL) { return; }
     if (theCopy->A != NULL)
     {
         for (int i = 0; i < theCopy->size; i++)
@@ -470,6 +457,8 @@ void femSystemCopyFree(femSystemCopy *theCopy)
 femSolver *femSolverCreate(int sizeLoc)
 {
     femSolver *solver = malloc(sizeof(femSolver));
+    solver->size=sizeLoc;
+    solver->type=FEM_FULL; //by default
     if (solver == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     return solver;
 }
@@ -492,6 +481,7 @@ femSolver *femSolverBandCreate(int size, int sizeLoc, int band)
 
 void femSolverFree(femSolver *mySolver)
 {
+    if(mySolver == NULL) { return; }
     switch (mySolver->type)
     {
         case FEM_FULL : femFullSystemFree((femFullSystem *)mySolver->solver); break;
@@ -505,8 +495,8 @@ void femSolverInit(femSolver *mySolver)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemInit((femFullSystem *) mySolver->solver); break;
-        case FEM_BAND : femBandSystemInit((femBandSystem *) mySolver->solver); break;
+        case FEM_FULL : femFullSystemInit((femFullSystem *) mySolver->solver, mySolver->size); break;
+        case FEM_BAND : femBandSystemInit((femBandSystem *) mySolver->solver, mySolver->size); break;
         default :       Error("Unexpected solver type");
     }
 }
@@ -527,8 +517,8 @@ void femSolverPrint(femSolver *mySolver)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemPrint((femFullSystem *) mySolver->solver); break;
-        case FEM_BAND : femBandSystemPrint((femBandSystem *) mySolver->solver); break;
+        case FEM_FULL : femFullSystemPrint((femFullSystem *) mySolver->solver, mySolver->size); break;
+        case FEM_BAND : femBandSystemPrint((femBandSystem *) mySolver->solver, mySolver->size); break;
         default :       Error("Unexpected solver type");
     }
 }
@@ -537,8 +527,8 @@ void femSolverPrintInfos(femSolver *mySolver)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemPrintInfos((femFullSystem *) mySolver->solver); break;
-        case FEM_BAND : femBandSystemPrintInfos((femBandSystem *) mySolver->solver); break;
+        case FEM_FULL : femFullSystemPrintInfos((femFullSystem *) mySolver->solver, mySolver->size); break;
+        case FEM_BAND : femBandSystemPrintInfos((femBandSystem *) mySolver->solver, mySolver->size); break;
         default :       Error("Unexpected solver type");
     }
 }
@@ -557,8 +547,8 @@ void femSolverSystemConstrainXY(femSolver *mySolver, int node, double value)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemConstrainXY((femFullSystem *) mySolver->solver, node, value); break;
-        case FEM_BAND : femBandSystemConstrainXY((femBandSystem *) mySolver->solver, node, value); break;
+        case FEM_FULL : femFullSystemConstrainXY((femFullSystem *) mySolver->solver, node, value, mySolver->size); break;
+        case FEM_BAND : femBandSystemConstrainXY((femBandSystem *) mySolver->solver, node, value, mySolver->size); break;
         default :       Error("Unexpected solver type");
     }
 }
@@ -567,8 +557,8 @@ void femSolverSystemConstrainNT(femSolver *mySolver, int node1, int node2, doubl
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemConstrainNT((femFullSystem *) mySolver->solver, node1, node2, a, b); break;
-        case FEM_BAND : femBandSystemConstrainNT((femBandSystem *) mySolver->solver, node1, node2, a, b); break;
+        case FEM_FULL : femFullSystemConstrainNT((femFullSystem *) mySolver->solver, mySolver->size, node1 ,node2, a, b); break;
+        case FEM_BAND : femBandSystemConstrainNT((femBandSystem *) mySolver->solver, mySolver->size, node1, node2, a, b); break;
         default :       Error("Unexpected solver type");
     }
 }
@@ -577,8 +567,8 @@ double *femSolverEliminate(femSolver *mySolver)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : return femFullSystemEliminate((femFullSystem *) mySolver->solver); break;
-        case FEM_BAND : return femBandSystemEliminate((femBandSystem *) mySolver->solver); break;
+        case FEM_FULL : return femFullSystemEliminate((femFullSystem *) mySolver->solver, mySolver->size); break;
+        case FEM_BAND : return femBandSystemEliminate((femBandSystem *) mySolver->solver, mySolver->size); break;
         default :       Error("Unexpected solver type");
     }
 }
@@ -617,12 +607,7 @@ double *getVectorB(femSolver *mySolver)
 
 double getSizeMatrix(femSolver *mySolver)
 {
-    switch(mySolver->type)
-    {
-        case FEM_FULL : return ((femFullSystem *) mySolver->solver)->size;
-        case FEM_BAND : return ((femBandSystem *) mySolver->solver)->size;
-        default :       Error("Unexpected solver type");
-    }
+    return mySolver->size;
 }
 
 

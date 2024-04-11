@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     int domain = 0;
     int freezingButton = FALSE;
     double t, told = 0;
-    char theMessage[MAXNAME];
+    char theMessage[MAXNAME+5];
 
     GLFWwindow *window = glfemInit("EPL1110 : Project 2023-24 ");
     glfwMakeContextCurrent(window);
