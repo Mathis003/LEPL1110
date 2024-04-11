@@ -4,6 +4,6 @@ Poisson ratio      :  3.0000000e-01
 Mass density       :  7.8500000e+03  
 Gravity-X          :  0.0000000e+00  
 Gravity-Y          :  0.0000000e+00  
-Boundary condition :  Dirichlet-NT       =  1.0000000e-06,  1.0000000e-06 : Symmetry
-Boundary condition :  Dirichlet-NT       =  0.0000000e+00,  0.0000000e+00 : Bottom
-Boundary condition :  Dirichlet-NT       =  0.0000000e+00,  0.0000000e+00 : Top
+Boundary condition :  Neumann-N          =  1.0000000e+03,            nan : Symmetry
+Boundary condition :  Neumann-N          =  1.0000000e+04,            nan : Top
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : Bottom
