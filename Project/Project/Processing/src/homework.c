@@ -3,16 +3,15 @@
 /*
 TODO :
     - Faire un solveur bande avec renumerotation RCMK ET solveur frontal creux
-    - Ajouter les conditions de Dirichlets (N, T, NT)
+    - Faire les résidus pour les forces
+    - Faire la visualisation des résidus dans le post-processing
+    - Faire la visualisation de la matrice dans le post-processing
 
 DONE :
     - Ajouter l'axisymetrique
-    - Ajouter les conditions de Dirichlet (x, y, xy)
+    - Ajouter les conditions de Dirichlet (x, y, xy, n, t, nt)
     - Ajouter les conditions de Neumann (x, y, n, t)
 */
-
-double **A_copy = NULL;
-double *B_copy  = NULL;
 
 void femElasticityAssembleElements(femProblem *theProblem)
 {
@@ -307,6 +306,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
 double *femElasticitySolve(femProblem *theProblem)
 {
     femSolver *theSolver = theProblem->solver;
+    femSystemCopy *theCopy = theProblem->copySystem;
     femSolverInit(theSolver);
     femElasticityAssembleElements(theProblem);
     femElasticityAssembleNeumann(theProblem);
@@ -315,18 +315,21 @@ double *femElasticitySolve(femProblem *theProblem)
     double *B  = getVectorB(theSolver);
     int size   = getSizeMatrix(theSolver);
 
-    if (A_copy == NULL)
-    {
-        A_copy = (double **) malloc(sizeof(double *) * size);
-        for (int i = 0; i < size; i++) { A_copy[i] = (double *) malloc(sizeof(double) * size); }
-    }
-    if (B_copy == NULL) { B_copy = (double *) malloc(sizeof(double) * size); }
-
+    // Initialize the copy system
+    theCopy->size = size;
+    theCopy->A = (double **) malloc(sizeof(double *) * size);
+    if (theCopy->A == NULL) { Error("Memory allocation error !"); return NULL; }
+    theCopy->B = (double *) malloc(sizeof(double) * size);
+    if (theCopy->B == NULL) { Error("Memory allocation error !"); return NULL; }
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { A_copy[i][j] = A[i][j]; }
-        B_copy[i] = B[i];
+        theCopy->A[i] = (double *) malloc(sizeof(double) * size);
+        if (theCopy->A[i] == NULL) { Error("Memory allocation error !"); return NULL; }
     }
+
+    // Copy the system into the copy system
+    memcpy(theCopy->B, B, size * sizeof(double));
+    for (int i = 0; i < size; i++) { memcpy(theCopy->A[i], A[i], size * sizeof(double)); }
 
     femElasticityApplyDirichlet(theProblem);
 
@@ -337,26 +340,20 @@ double *femElasticitySolve(femProblem *theProblem)
 
 double *femElasticityForces(femProblem *theProblem)
 {
+    femSystemCopy *theCopy = theProblem->copySystem;
     double *residuals = theProblem->residuals;
     double *soluce    = theProblem->soluce;
-    int size          = getSizeMatrix(theProblem->solver);
 
-    if (residuals == NULL) { residuals = (double *) malloc(sizeof(double) * size); }
+    double **A_copy = theCopy->A;
+    double *B_copy = theCopy->B;
+    int size = theCopy->size;
+
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
 
-    /*
-    Compute residuals: R = A * U - B where A and B are the system matrix
-    and load vector before applying Dirichlet boundary conditions.
-    */
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
         residuals[i] -= B_copy[i];
     }
-
-    for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL;}
-    free(A_copy); free(B_copy);
-    A_copy = NULL; B_copy = NULL;
-
     return residuals;
 }

@@ -451,6 +451,22 @@ int femMeshComputeBand(femMesh *theMesh)
 
 
 /* Solver Abstraction */
+
+void femSystemCopyFree(femSystemCopy *theCopy)
+{
+    if (theCopy->A != NULL)
+    {
+        for (int i = 0; i < theCopy->size; i++)
+        {
+            free(theCopy->A[i]);
+            theCopy->A[i] = NULL;
+        }
+    }
+    free(theCopy->A);
+    theCopy->A = NULL;
+    if (theCopy->B != NULL) { free(theCopy->B); theCopy->B = NULL; }
+}
+
 femSolver *femSolverCreate(int sizeLoc)
 {
     femSolver *solver = malloc(sizeof(femSolver));
@@ -840,6 +856,7 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
 
 void femElasticityFree(femProblem *theProblem)
 {
+    if (theProblem->copySystem != NULL) { femSystemCopyFree(theProblem->copySystem); }
     femSolverFree(theProblem->solver);
     femIntegrationFree(theProblem->rule);
     femDiscreteFree(theProblem->space);
@@ -1047,20 +1064,22 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
     femProblem *theProblem = malloc(sizeof(femProblem));
-    if (theProblem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->nBoundaryConditions = 0;
     theProblem->conditions = NULL;
 
     int nNodes = theGeometry->theNodes->nNodes;
     int size = 2 * nNodes;
     theProblem->soluce = malloc(size * sizeof(double));
-    if (theProblem->soluce == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (theProblem->soluce == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->residuals = malloc(size * sizeof(double));
-    if (theProblem->residuals == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (theProblem->residuals == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     for (int i = 0; i < size; i++) { theProblem->soluce[i] = 0.0; theProblem->residuals[i] = 0.0; }
+    theProblem->copySystem = malloc(sizeof(femSystemCopy));
+    if (theProblem->copySystem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
 
     theProblem->constrainedNodes = malloc(nNodes * sizeof(femConstrainedNode));
-    if (theProblem->constrainedNodes == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (theProblem->constrainedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     for (int i = 0; i < nNodes; i++)
     {
         theProblem->constrainedNodes[i].type   = UNDEFINED;
@@ -1421,6 +1440,56 @@ int geoGetDomain(char *name)
 /*********************************/
 /******* General functions *******/
 /*********************************/
+
+
+double femElasticityIntegrate(femProblem *theProblem, double (*f)(double x, double y))
+{
+    femIntegration *theRule     = theProblem->rule;
+    femGeometry    *theGeometry = theProblem->geometry;
+    femNodes       *theNodes    = theGeometry->theNodes;
+    femMesh        *theMesh     = theGeometry->theElements;
+    femDiscrete    *theSpace    = theProblem->space;
+
+    double x[4] ,y[4], phi[4], dphidxsi[4], dphideta[4], dphidx[4], dphidy[4];
+    int iElem, iInteg, i, map[4];
+    int nLocal = theMesh->nLocalNode;
+    double value = 0.0;
+
+    for (iElem = 0; iElem < theMesh->nElem; iElem++)
+    {
+        for (i = 0; i < nLocal; i++)
+        {
+            map[i] = theMesh->elem[iElem * nLocal + i];
+            x[i]   = theNodes->X[map[i]];
+            y[i]   = theNodes->Y[map[i]];
+        }
+        for (iInteg = 0; iInteg < theRule->n; iInteg++)
+        { 
+            double xsi    = theRule->xsi[iInteg];
+            double eta    = theRule->eta[iInteg];
+            double weight = theRule->weight[iInteg];
+
+            femDiscretePhi2(theProblem->space,xsi,eta,phi);
+            femDiscreteDphi2(theSpace,xsi,eta,dphidxsi,dphideta);
+
+            double dxdxsi = 0.0; double dxdeta = 0.0;
+            double dydxsi = 0.0; double dydeta = 0.0;
+            for (i = 0; i < theSpace->n; i++)
+            {  
+                dxdxsi += x[i] * dphidxsi[i];       
+                dxdeta += x[i] * dphideta[i];   
+                dydxsi += y[i] * dphidxsi[i];   
+                dydeta += y[i] * dphideta[i];
+            }
+
+            double jac = fabs(dxdxsi * dydeta - dxdeta * dydxsi);
+            double weightedJac = jac * weight;
+
+            for (i = 0; i < theProblem->space->n; i++) { value += phi[i] * f(x[i], y[i]) * weightedJac; }
+        }
+    }
+    return value;
+}
 
 double femMin(double *x, int n)
 {

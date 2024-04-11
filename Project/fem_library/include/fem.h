@@ -113,6 +113,12 @@ typedef struct {
     double *B;
     double **A;
     int size;
+} femSystemCopy;
+
+typedef struct {
+    double *B;
+    double **A;
+    int size;
 } femFullSystem;
 
 typedef struct {
@@ -141,6 +147,7 @@ typedef struct {
     femDiscrete *spaceEdge;
     femIntegration *ruleEdge;
     femSolver *solver;
+    femSystemCopy *copySystem;
     femConstrainedNode *constrainedNodes;
 } femProblem;
 
@@ -263,6 +270,7 @@ int femSolutiondRead(int allocated_size, double *value, const char *filename);
 /* General */
 /***********/
 
+double femElasticityIntegrate(femProblem *theProblem, double (*f)(double x, double y));
 double femMin(double *x, int n);
 double femMax(double *x, int n);
 void femError(char *text, int line, char *file);

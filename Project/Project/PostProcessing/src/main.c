@@ -12,8 +12,10 @@
 
 #include <getopt.h>
 
-#include "../../fem_library/include/fem.h"
-#include "../../glfem_library/glfem.h"
+#include "../../../fem_library/include/fem.h"
+#include "../../../glfem_library/glfem.h"
+
+double constFunct(double x, double y) { return 1.0; }
 
 int main(int argc, char *argv[])
 {
@@ -78,23 +80,41 @@ int main(int argc, char *argv[])
         femElasticityPrint(theProblem);
     }
 
+    double rho = theProblem->rho;
+    double gy = theProblem->gy;
+
+    /*************************/
+    /* 2 : Calcul des forces */
+    /*************************/
+
+    double *theForces = femElasticityForces(theProblem);
+    double area       = femElasticityIntegrate(theProblem, constFunct);
+
     /****************************************************/
-    /* 2 : Deformation du maillage pour le plot final   */ 
+    /* 3 : Deformation du maillage pour le plot final   */ 
     /*     Creation du champ de la norme du deplacement */
     /****************************************************/
 
     femNodes *theNodes = theGeometry->theNodes;
+
     double deformationFactor;
     if (exampleUsage == TRUE) { deformationFactor = 1e5; }
     else                      { deformationFactor = 1e4; }
+
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
-    if (normDisplacement == NULL) { printf("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    if (normDisplacement == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    double *forcesX = malloc(theNodes->nNodes * sizeof(double));
+    if (forcesX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    double *forcesY = malloc(theNodes->nNodes * sizeof(double));
+    if (forcesY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
 
     for (int i = 0; i < n; i++)
     {
         theNodes->X[i] += theSoluce[2 * i + 0] * deformationFactor;
         theNodes->Y[i] += theSoluce[2 * i + 1] * deformationFactor;
         normDisplacement[i] = sqrt(theSoluce[2 * i + 0] * theSoluce[2 * i + 0] + theSoluce[2 * i + 1] * theSoluce[2 * i + 1]);
+        forcesX[i] = theForces[2 * i + 0];
+        forcesY[i] = theForces[2 * i + 1];
     }
 
     double hMin = femMin(normDisplacement, n);
@@ -103,8 +123,23 @@ int main(int argc, char *argv[])
     printf(" ==== Minimum displacement          : %14.7e \n", hMin);
     printf(" ==== Maximum displacement          : %14.7e \n", hMax);
 
+    /*********************************************/
+    /* 4 : Calcul de la force globale resultante */ 
+    /*********************************************/
+
+    double theGlobalForce[2] = {0, 0};
+    for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
+    {
+        theGlobalForce[0] += theForces[2*i+0];
+        theGlobalForce[1] += theForces[2*i+1];
+    }
+
+    printf(" ==== Global horizontal force       : %14.7e [N] \n",theGlobalForce[0]);
+    printf(" ==== Global vertical force         : %14.7e [N] \n",theGlobalForce[1]);
+    printf(" ==== Weight                        : %14.7e [N] \n", area * rho * gy);
+
     /*********************/
-    /* 3 : Visualisation */ 
+    /* 5 : Visualisation */ 
     /*********************/
 
     if (!resultVisualizer) { return EXIT_SUCCESS; }
