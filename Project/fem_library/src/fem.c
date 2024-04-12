@@ -32,9 +32,9 @@ void femFullSystemFree(femFullSystem *system)
 void femFullSystemAlloc(femFullSystem *system, int size)
 {
     double *elem = (double *) malloc(sizeof(double) * size * (size + 1));
-    if (elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->A = (double **) malloc(sizeof(double *) * size);
-    if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (system->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->B = elem;
     system->A[0] = elem + size;
     for (int i = 1; i < size; i++) { system->A[i] = system->A[i - 1] + size; }
@@ -1078,10 +1078,11 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
 
+    femMeshRenumber(theGeometry->theElements, renumType);
+
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
     else if (typeSolver == FEM_BAND)
     {
-        femMeshRenumber(theGeometry->theElements, renumType);
         int band = femMeshComputeBand(theGeometry->theElements);
         printf("Band = %d, size = %d\n, rapport = %d", band, size, size / band);
         theProblem->solver = femSolverBandCreate(size, band);
@@ -1197,9 +1198,9 @@ void femSolutionWrite(int nNodes, int nfields, double *data, const char *filenam
     for (int i = 0; i < nNodes; i++)
     {
         for (int j = 0; j < nfields-1; j++) { fprintf(file, "%.18le,", data[i * nfields + j]); }
-        fprintf(file, "%.18le", data[i * nfields + nfields-1]);
         fprintf(file, "\n");
     }
+    for (int i = 0; i < nNodes; i++) { fprintf(file, "%.18le", data[i * nfields + nfields-1]); }
     fclose(file);
 }
 

@@ -57,11 +57,11 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
         for (j = 0; j < nLocal; j++)
         {
             map[j] = theMesh->elem[iElem * nLocal + j];
-            mapX[j] = 2 * map[j];
-            mapY[j] = 2 * map[j] + 1;
             x[j] = theNodes->X[map[j]];
             y[j] = theNodes->Y[map[j]];
-            map[j] = number[map[j]];
+            map[j] = number[map[j]]; // Ou le mettre ?
+            mapX[j] = 2 * map[j];
+            mapY[j] = 2 * map[j] + 1;
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)

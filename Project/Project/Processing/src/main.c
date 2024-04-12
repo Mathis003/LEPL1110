@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     }
 
     femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
-    femRenumType renumType   = FEM_RCMK; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
+    femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
 
     femGeometry *theGeometry = geoGetGeometry();
     

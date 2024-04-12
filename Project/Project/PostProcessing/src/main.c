@@ -36,6 +36,11 @@ double *femElasticityForces(femProblem *theProblem)
         for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
         residuals[i] -= B_copy[i];
     }
+    
+    for (int i = 0; i < size; i++) { free(A_copy[i]); A_copy[i] = NULL; }
+    free(A_copy); A_copy = NULL;
+    free(B_copy); B_copy = NULL;
+
     return residuals;
 }
 
@@ -92,7 +97,7 @@ int main(int argc, char *argv[])
     femGeometry *theGeometry = geoGetGeometry();
 
     femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
-    femRenumType renumType   = FEM_RCMK; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
+    femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
     int n;
     double *theSoluce;
     femProblem *theProblem;
@@ -119,9 +124,9 @@ int main(int argc, char *argv[])
 
     // Create the solver with the final system to visualize the matrix by pressing 'S'
     femSolver *theSolver = theProblem->solver;
-    double **A = getMatrixA(theSolver);
-    double *B  = getVectorB(theSolver);
-    int size   = theSolver->size;
+    double **A;
+    double *B;
+    int size;
     femSystemRead(&A, &B, &size, "../../Processing/data/finalSystem.txt");
 
     femSolverSetSystem(theSolver, A, B);
