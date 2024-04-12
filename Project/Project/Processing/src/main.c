@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
+    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
+    femRenumType renumType = FEM_XNUM;   // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
 
     femGeometry *theGeometry = geoGetGeometry();
     
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
 
     if (!animaion)
     {
-        double *theSoluce = femElasticitySolve(theProblem, 1.0);
+        double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0);
 
         int nNodes = theGeometry->theNodes->nNodes;
         if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV_example.txt"); }
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
 
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
-            theSoluce = femElasticitySolve(theProblem, FACTOR * i);
+            theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i);
             nNodes = theGeometry->theNodes->nNodes;
             if (exampleUsage == TRUE) { sprintf(filename, "../data/animations/UV_example_%d.txt", i); }
             else                      { sprintf(filename, "../data/animations/UV_%d.txt", i); }

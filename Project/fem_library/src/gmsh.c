@@ -33,7 +33,7 @@ void geoFinalize(void)
     ErrorGmsh(ierr);
 }
 
-void geoMeshImport(femRenumType renumType)
+void geoMeshImport()
 {
     int ierr;
 
@@ -265,8 +265,6 @@ void geoMeshImport(femRenumType renumType)
         else { free(theGeometry.theDomains[i]->elem); free(theGeometry.theDomains[i]); theGeometry.theDomains[i] = NULL; }
     }
     theGeometry.nDomains = countDomains;
-
-    femMeshRenumber(theElements, renumType);
 
     return;
 }

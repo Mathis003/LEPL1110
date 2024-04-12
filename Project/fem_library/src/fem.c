@@ -214,8 +214,10 @@ void femBandSystemAlloc(femBandSystem *system, int size, int band)
 
 void femBandSystemInit(femBandSystem *system, int size)
 {
-    int band = system->band;
-    for (int i = 0 ; i < size * (band + 1) ; i++) { system->B[i] = 0; }
+    double **A = system->A;
+    double *B  = system->B;
+    int band   = system->band;
+    for (int i = 0 ; i < size * (band + 1) ; i++) { B[i] = 0; }
 }
 
 void femBandSystemFree(femBandSystem *system)
@@ -231,7 +233,7 @@ void femBandSystemSetSystem(femBandSystem *system, double **A, double *B)
     system->B = B;
 }
 
-int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myRow > myCol - band; }
+int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myCol < myRow + band; }
 
 void femBandSystemPrint(femBandSystem *system, int size)
 {
@@ -314,7 +316,7 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 {
     double **A = system->A;
     int band   = system->band;
-    // return system->A[myRow][myCol];
+    // return A[myRow][myCol];
     return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
 }
 
@@ -328,29 +330,36 @@ void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int
     B = system->B;
     band = system->band;
 
-    // for (i = 0; i < size; i++) { if (isInBand(band, i, node)) { B[i] -= value * A[i][node]; A[i][node] = 0; }}
-    // for (i = 0; i < size; i++) { if (isInBand(band, i, node)) { A[node][i] = 0; }}
-
-    // A[node][node] = 1.0;
-    // B[node] = value;
-
-
-    int lowerBound = (node >= band) ? node - band + 1 : 0;
-    for (i = lowerBound ; i < node; i++)
+    for (i = 0; i < size; i++)
     {
-        B[i] -= value * A[i][node];
-        A[i][node] = 0;
+        if (isInBand(band, i, node))
+        {
+            B[i] -= value * A[i][node];
+            A[i][node] = 0;
+        }
     }
+    for (i = 0; i < size; i++) { if (isInBand(band, i, node)) { A[node][i] = 0; }}
 
-    int upperBound = (node + band >= size) ? size : node + band;
-    for (i = node + 1; i < upperBound ; i++)
-    {
-        B[i] -= value * A[node][i];
-        A[node][i] = 0;
-    }
-
-    A[node][node] = 1;
+    A[node][node] = 1.0;
     B[node] = value;
+
+
+    // int lowerBound = (node >= band) ? node - band + 1 : 0;
+    // for (i = lowerBound ; i < node; i++)
+    // {
+    //     B[i] -= value * A[i][node];
+    //     A[i][node] = 0;
+    // }
+
+    // int upperBound = (node + band >= size) ? size : node + band;
+    // for (i = node + 1; i < upperBound ; i++)
+    // {
+    //     B[i] -= value * A[node][i];
+    //     A[node][i] = 0;
+    // }
+
+    // A[node][node] = 1;
+    // B[node] = value;
 }
 
 // TODO : Implement this function (Not good for now) 
@@ -366,7 +375,8 @@ void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int no
     // Force this constraint to be applied : node2 = b + a * node1
     for (int i = 0; i < size; i++)
     {
-        // if (!(i >= node2 && i < node2 + band)) { continue; } // Skip the non-band
+        if (!(isInBand(band, node2, i))) { continue; }
+
         if      (i == node2) { A[node2][i] = 1.0; }
         else if (i == node1) { A[node2][i] = - a; }
         else                 { A[node2][i] = 0.0; }
@@ -808,7 +818,7 @@ void femDiscretePrint(femDiscrete *mySpace)
 /******* Elasticity functions *******/
 /************************************/
 
-femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femRenumType renumType)
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
 {
     femProblem *theProblem = malloc(sizeof(femProblem));
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
@@ -862,8 +872,6 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
     theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
     theProblem->solver    = femSolverCreate(size);
-
-    femMeshRenumber(theGeometry->theElements, renumType);
 
     return theProblem;
 }

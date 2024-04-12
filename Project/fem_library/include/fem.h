@@ -252,10 +252,10 @@ int geoGetDomain(char *name);
 /* Elasticity functions */
 /************************/
 
-femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femRenumType renumType);
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase);
 void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
-double *femElasticitySolve(femProblem *theProblem, double FACTOR);
+double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR);
 double *femElasticityForces(femProblem *theProblem);
 
 void femElasticityPrint(femProblem *theProblem);
