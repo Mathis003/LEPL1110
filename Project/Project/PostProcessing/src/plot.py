@@ -3,6 +3,9 @@ import numpy as np
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 
+import argparse
+from matplotlib.animation import FuncAnimation
+
 class Mesh:
     nlocal : int
     nnodes : int
@@ -70,19 +73,71 @@ class Mesh:
                 f = field[self.elem[i, [[0, 1], [3,2]]]]
                 a = plt.pcolormesh(x, y, f, shading="gouraud", linewidth=1, edgecolors="k",  *args, vmin=vmin, vmax=vmax, **kwargs)
         return a
+    
+def generate_frame(i):
+    if exampleUse:
+        nameSolution = "../../Processing/data/animations/UV_example_{}.txt".format(i+1)
+    else:
+        nameSolution = "../../Processing/data/animations/UV_{}.txt".format(i+1)
+
+    uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
+    uv_norm = np.linalg.norm(uv, axis=1)
+    factor = 5e4
+
+    plt.clf()
+    cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
+    plt.colorbar(cb)
+    mesh.plot(uv*factor, lw=0.2, c="k")
+    plt.gca().set_aspect("equal")
+    plt.grid(alpha=0.2)
+
+    return cb
+
+    
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-e', '--option_e', help="Display the example solution's plot", action='store_true')
+    parser.add_argument('-a', '--option_a', help='Display an animation plot', action='store_true')
+
+    args = parser.parse_args()
+
+    exampleUse = False
+    if args.option_e: exampleUse = True
+
+    animation = False
+    if args.option_a: animation = True
+
+    nameMesh = ""
+    if exampleUse: nameMesh = "../../Processing/data/mesh_example.txt"
+    else : nameMesh = "../../Processing/data/mesh.txt"
+
+    mesh = Mesh(nameMesh)
+    print(mesh)
+
+    nameSolution = ""
+    if not animation:
+        if exampleUse: nameSolution = "../../Processing/data/UV_example.txt"
+        else : nameSolution = "../../Processing/data/UV.txt"
+
+        uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
+        uv_norm = np.linalg.norm(uv, axis=1)
+        factor = 5e4
+
+        cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
+        plt.colorbar(cb)
+        mesh.plot(uv*factor, lw=0.2, c="k")
+        plt.gca().set_aspect("equal")
+        plt.grid(alpha=0.2)
+        plt.show()
+        # plt.savefig("data/plot.png")
+
+    else:
+        NB_IMAGES = 50
+        fig, ax = plt.subplots()
+        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
+        plt.show()
 
 
-mesh = Mesh("../../Processing/data/mesh.txt")
-print(mesh)
-uv = np.loadtxt("../../Processing/data/UV.txt", skiprows=1, delimiter=",")
-uv_norm = np.linalg.norm(uv, axis=1)
-factor = 5e4
-
-cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
-plt.colorbar(cb)
-mesh.plot(uv*factor, lw=0.2, c="k")
-plt.gca().set_aspect("equal")
-plt.grid(alpha=0.2)
-plt.show()
-# plt.savefig("data/plot.png")
 # %%

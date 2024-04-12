@@ -45,10 +45,13 @@ int main(int argc, char *argv[])
     int opt;
     int resultVisualizer = TRUE;
     int exampleUsage     = FALSE;
-    while ((opt = getopt(argc, argv, "reh")) != -1)
+    int animation        = FALSE;
+    while ((opt = getopt(argc, argv, "areh")) != -1)
     {
         switch (opt)
         {
+            case 'a':
+                animation = TRUE;
             case 'r':
                 resultVisualizer = FALSE;
                 break;
@@ -83,7 +86,7 @@ int main(int argc, char *argv[])
 
     femGeometry *theGeometry = geoGetGeometry();
 
-    femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
+    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
 
     int n;
     double *theSoluce;
@@ -176,8 +179,17 @@ int main(int argc, char *argv[])
     printf(" ==== Global vertical force         : %14.7e [N] \n",theGlobalForce[1]);
     printf(" ==== Weight                        : %14.7e [N] \n", area * rho * gy);
 
+    /******************************/
+    /* 5 : Lance le script python */ 
+    /******************************/
+
+    char command[100] = "python3 ../src/plot.py";
+    if (exampleUsage == TRUE) { strcat(command, " -e"); }
+    if (animation == TRUE)    { strcat(command, " -a"); }
+    system(command);
+
     /*********************/
-    /* 5 : Visualisation */ 
+    /* 6 : Visualisation */ 
     /*********************/
 
     if (!resultVisualizer) { return EXIT_SUCCESS; }

@@ -10,13 +10,16 @@ int main(int argc, char *argv[])
     bool meshVisualizer = true;
     bool resultVisualizer = true;
     bool exampleUsage = false;
-
-    // Deal with the options arguments
+    bool animation = false;
+    
     int opt;
-    while ((opt = getopt(argc, argv, "emrah")) != -1)
+    while ((opt = getopt(argc, argv, "aemrvh")) != -1)
     {
         switch (opt)
         {
+            case 'a':
+                animation = true;
+                break;
             case 'e':
                 exampleUsage = true;
                 break;
@@ -26,7 +29,7 @@ int main(int argc, char *argv[])
             case 'r':
                 resultVisualizer = false;
                 break;
-            case 'a':
+            case 'v':
                 meshVisualizer = false;
                 resultVisualizer = false;
                 break;
@@ -36,7 +39,7 @@ int main(int argc, char *argv[])
                 printf("  -e : Start the program with the example mesh\n");
                 printf("  -m : Disable the mesh visualizer\n");
                 printf("  -r : Disable the result visualizer\n");
-                printf("  -a : Disable both visualizers\n");
+                printf("  -v : Disable both visualizers\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
@@ -79,11 +82,15 @@ int main(int argc, char *argv[])
         }
 
         // Define the command to execute
-        char command[100] = "./myFem";
-        if      (i == 0 && !meshVisualizer)   { sprintf(command, "./myFem -m"); }
-        else if (i == 2 && !resultVisualizer) { sprintf(command, "./myFem -r"); }
-        if (exampleUsage) { strcat(command, " -e"); }
+        char command[40] = "./myFem";
+        if (i == 0 && !meshVisualizer)   { strcat(command, " -m"); }
+        if (i == 2 && !resultVisualizer) { strcat(command, " -r"); }
+        if (i != 0 && animation)         { strcat(command, " -a"); }
+        if (exampleUsage)                { strcat(command, " -e"); }
         strcat(command, " 2>&1");
+
+        printf("\n\nStep %d : %s\n", i + 1, stages[i]);
+        printf("Commande : %s\n\n", command);
 
         int ret_myFem = system(command);
         if (ret_myFem != 0)
