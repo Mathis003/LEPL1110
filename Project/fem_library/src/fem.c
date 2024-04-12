@@ -12,7 +12,7 @@ femGeometry theGeometry;
 /* Full System */
 femFullSystem *femFullSystemCreate(int size)
 {
-    femFullSystem *system = malloc(sizeof(femFullSystem));
+    femFullSystem *system = (femFullSystem *) malloc(sizeof(femFullSystem));
     if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     femFullSystemAlloc(system, size);
     femFullSystemInit(system, size);
@@ -31,9 +31,9 @@ void femFullSystemFree(femFullSystem *system)
 
 void femFullSystemAlloc(femFullSystem *system, int size)
 {
-    double *elem = malloc(sizeof(double) * size * (size + 1));
+    double *elem = (double *) malloc(sizeof(double) * size * (size + 1));
     if (elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    system->A = malloc(sizeof(double *) * size);
+    system->A = (double **) malloc(sizeof(double *) * size);
     if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->B = elem;
     system->A[0] = elem + size;
@@ -221,9 +221,9 @@ void femBandSystemInit(femBandSystem *system, int size)
 
 void femBandSystemFree(femBandSystem *system)
 {
-    free(system->B);
-    free(system->A); 
-    free(system);
+    free(system->B); system->B = NULL;
+    free(system->A); system->A = NULL;
+    free(system); system = NULL;
 }
 
 void femBandSystemSetSystem(femBandSystem *system, double **A, double *B)
@@ -443,7 +443,7 @@ int femMeshComputeBand(femMesh *theMesh)
 
 femSolver *femSolverCreate(int size)
 {
-    femSolver *solver = malloc(sizeof(femSolver));
+    femSolver *solver = (femSolver *) malloc(sizeof(femSolver));
     if (solver == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     solver->size = size;
     if (solver == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
@@ -468,7 +468,7 @@ femSolver *femSolverBandCreate(int size, int band)
 
 void femSolverFree(femSolver *mySolver)
 {
-    if(mySolver == NULL) { return; }
+    if (mySolver == NULL) { return; }
     switch (mySolver->type)
     {
         case FEM_FULL : femFullSystemFree((femFullSystem *)mySolver->solver); break;
@@ -476,6 +476,7 @@ void femSolverFree(femSolver *mySolver)
         default :       Error("Unexpected solver type");
     }
     free(mySolver);
+    mySolver = NULL;
 }
 
 void femSolverSetSystem(femSolver *mySolver, double **A, double *B)
@@ -602,19 +603,13 @@ double *getVectorB(femSolver *mySolver)
     }
 }
 
-double getSizeMatrix(femSolver *mySolver)
-{
-    return mySolver->size;
-}
-
-
 /**********************************************************/
 /******* Discrete space + Integrate space functions *******/
 /**********************************************************/
 
 femIntegration *femIntegrationCreate(int n, femElementType type)
 {
-    femIntegration *theRule = malloc(sizeof(femIntegration));
+    femIntegration *theRule = (femIntegration *) malloc(sizeof(femIntegration));
     if (theRule == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     if (type == FEM_QUAD && n == 4)
     {
@@ -710,7 +705,7 @@ void _e1c0_dphidx(double xsi, double *dphidxsi)
 
 femDiscrete *femDiscreteCreate(int n, femElementType type)
 {
-    femDiscrete *theSpace = malloc(sizeof(femDiscrete));
+    femDiscrete *theSpace = (femDiscrete *) malloc(sizeof(femDiscrete));
     if (theSpace == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     if (type == FEM_QUAD && n == 4)
     {
@@ -779,7 +774,7 @@ void femDiscretePrint(femDiscrete *mySpace)
 
 femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
 {
-    femProblem *theProblem = malloc(sizeof(femProblem));
+    femProblem *theProblem = (femProblem *) malloc(sizeof(femProblem));
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->E = E;
     theProblem->nu = nu;
@@ -861,7 +856,7 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
     // This variable is only used for 'DIRICHLET_XY' and 'DIRICHLET_NT' boundary conditions. Otherwise it is ignored (set to NAN).
     value2 = ((type != DIRICHLET_XY) && (type != DIRICHLET_NT)) ? NAN : value2;
 
-    femBoundaryCondition *theBoundary = malloc(sizeof(femBoundaryCondition));
+    femBoundaryCondition *theBoundary = (femBoundaryCondition *) malloc(sizeof(femBoundaryCondition));
     if (theBoundary == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theBoundary->domain = theProblem->geometry->theDomains[iDomain];
     theBoundary->value1 = value1;
@@ -956,7 +951,9 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
                 }
             }
             free(NX);
+            NX = NULL;
             free(NY);
+            NY = NULL;
         }
     }
 
@@ -1086,7 +1083,7 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     {
         femMeshRenumber(theGeometry->theElements, renumType);
         int band = femMeshComputeBand(theGeometry->theElements);
-        printf("Band = %d, size = %d\n", band, size);
+        printf("Band = %d, size = %d\n, rapport = %d", band, size, size / band);
         theProblem->solver = femSolverBandCreate(size, band);
     }
     else { Error("Unknown solver type"); }
@@ -1593,7 +1590,7 @@ Queue *createQueue(int max_elements)
 {
 	Queue *Q = (Queue *) malloc(sizeof(Queue));
     if (Q == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-	Q->elements = malloc(max_elements * sizeof(int));
+	Q->elements = (int *) malloc(max_elements * sizeof(int));
     if (Q->elements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
 	if (Q->elements == NULL)
 	{
@@ -1635,21 +1632,9 @@ int peek(Queue *Q)
 	return Q->elements[Q->front];
 }
 
-int isEmpty(Queue *Q)
-{
-	if (Q->size == 0)
-		return 1;
-	else
-		return 0;
-}
+int isEmpty(Queue *Q) { return (Q->size == 0) ? 1 : 0; }
 
-int isFull(Queue *Q)
-{
-	if (Q->size == Q->capacity)
-		return 1;
-	else
-		return 0;
-}
+int isFull(Queue *Q) { return (Q->size == Q->capacity) ? 1 : 0; }
 
 /*
 **********************************
@@ -1719,7 +1704,7 @@ int *createAdjacencyMatrix(femMesh *mesh)
 void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue *Q, int element_idx)
 {
 	int num_of_neigh = degrees[element_idx];
-	int *neighbors = malloc(num_of_neigh * sizeof(int));
+	int *neighbors = (int *) malloc(num_of_neigh * sizeof(int));
 	if (neighbors == NULL)
 	{
 		printf("Error: Memory allocation for 'neighbors' failed\n\n");
@@ -1732,8 +1717,7 @@ void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue 
 		if ((adj[n * element_idx + j] == 1) && (j != element_idx))
 		{
 			neighbors[count++] = j;
-			if (count == num_of_neigh)
-				break;
+			if (count == num_of_neigh) { break; }
 		}
 	}
 
@@ -1747,14 +1731,16 @@ void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue 
 		}
 
 	free(neighbors);
+    neighbors = NULL;
 }
 
-int *rcm(int *X, int n)
+Queue *rcm(femMesh *theMesh, int nNodes)
 {
-	Queue *Q = createQueue(n);
-	Queue *R = createQueue(n);
-	int *degrees  = malloc(n * sizeof(int));
-	int *inserted = malloc(n * sizeof(int));
+	Queue *Q = createQueue(nNodes);
+	Queue *R = createQueue(nNodes);
+	int *degrees  = (int *) malloc(nNodes * sizeof(int));
+	int *inserted = (int *) malloc(nNodes * sizeof(int));
+    int *adj = createAdjacencyMatrix(theMesh);
 
 	if (degrees == NULL)
 	{
@@ -1767,23 +1753,23 @@ int *rcm(int *X, int n)
 		exit(1);
 	}
 
-	for (int i = 0; i < n; i++) { inserted[i] = 0; R->elements[i] = -1; }
+	for (int i = 0; i < nNodes; i++) { inserted[i] = 0; R->elements[i] = -1; }
 
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < nNodes; i++)
 	{
 		int degree = 0;
-		for (int j = 0; j < n; j++)
+		for (int j = 0; j < nNodes; j++)
         {
-            if (X[n * i + j] && (j != i)) { degree++; }
+            if (adj[nNodes * i + j] && (j != i)) { degree++; }
         }
 		degrees[i] = degree;
 	}
 
 	while (!isFull(R))
 	{
-		int min_degree = n + 1;
+		int min_degree = nNodes + 1;
 		int min_degree_idx = -1;
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < nNodes; i++)
 		{
 			if ((degrees[i] < min_degree) && (inserted[i] == 0))
 			{
@@ -1796,7 +1782,7 @@ int *rcm(int *X, int n)
 		inserted[min_degree_idx] = 1;
 		if (degrees[min_degree_idx])
 		{
-			add_neighbors_to_queue(X, n, degrees, inserted, Q, min_degree_idx);
+			add_neighbors_to_queue(adj, nNodes, degrees, inserted, Q, min_degree_idx);
 
 			while (!isEmpty(Q))
 			{
@@ -1804,17 +1790,23 @@ int *rcm(int *X, int n)
 				dequeue(Q);
 				enqueue(R, removed_item);
 
-				if (degrees[removed_item]) { add_neighbors_to_queue(X, n, degrees, inserted, Q, removed_item); }
+				if (degrees[removed_item]) { add_neighbors_to_queue(adj, nNodes, degrees, inserted, Q, removed_item); }
 			}
 		}
 	}
-	reverse_array(R->elements, n);
+	reverse_array(R->elements, nNodes);
 
     free(Q->elements);
+    Q->elements = NULL;
 	free(Q);
+    Q = NULL;
 	free(degrees);
+    degrees = NULL;
 	free(inserted);
-	return R->elements;
+    inserted = NULL;
+    free(adj);
+    adj = NULL;
+	return R;
 }
 
 /*
@@ -1830,28 +1822,21 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
     if (mapper == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
 
-    switch (renumType)
-    {        
-        case FEM_NO :
-            break;
-
-        case FEM_XNUM :
-            positionMeshNodes = theMesh->nodes->X;
-            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
-            break;
-
-        case FEM_YNUM :
-            positionMeshNodes = theMesh->nodes->Y;
-            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
-            break;    
-
-        case FEM_RCMK :
-            mapper = rcm(createAdjacencyMatrix(theMesh), nNodes);
-            break;
-
-        default : Error("Unexpected renumbering option");
+    if (renumType == FEM_NO) { return; }
+    else if (renumType == FEM_RCMK)
+    {
+        Queue *rcm_queue = rcm(theMesh, nNodes);
+        memcpy(mapper, rcm_queue->elements, nNodes * sizeof(int));
+        free(rcm_queue->elements);
+        rcm_queue->elements = NULL;
+        free(rcm_queue);
+        rcm_queue = NULL;
     }
+    else if (renumType == FEM_XNUM) { positionMeshNodes = theMesh->nodes->X; qsort(mapper, nNodes, sizeof(int), comparPositionNode); }
+    else if (renumType == FEM_YNUM) { positionMeshNodes = theMesh->nodes->Y; qsort(mapper, nNodes, sizeof(int), comparPositionNode); }
+    else { Error("Unknown renumbering type\n"); exit(EXIT_FAILURE); return; }
 
     for (int i = 0; i < nNodes; i++) { theMesh->nodes->number[mapper[i]] = i; }
-    free(mapper); 
+    free(mapper);
+    mapper = NULL;
 }

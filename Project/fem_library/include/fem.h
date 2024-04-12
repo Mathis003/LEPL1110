@@ -147,7 +147,7 @@ typedef struct {
 
 /* Variables */
 
-extern double *positionMeshNodes; // To renumber the mesh nodes
+double *positionMeshNodes;
 extern femGeometry theGeometry;
 
 /* Functions declaration */
@@ -201,7 +201,6 @@ double *femSolverEliminate(femSolver *mySolver);
 int femSolverConverged(femSolver *mySolver);
 double **getMatrixA(femSolver *mySolver);
 double *getVectorB(femSolver *mySolver);
-double getSizeMatrix(femSolver *mySolver);
 
 /**************************************/
 /* Discrete space + Integration space */
@@ -277,8 +276,6 @@ void femWarning(char *text, int line, char *file);
 /* Renumerotation */
 /******************/
 
-double *positionMeshNodes;
-
 typedef struct Queue
 {
 	int capacity;
@@ -288,10 +285,6 @@ typedef struct Queue
 	int *elements;
 } Queue;
 
-void swap(int *a, int *b);
-void reverse_array(int *X, int n);
-int comparPositionNode(const void *a, const void *b);
-
 Queue *createQueue(int max_elements);
 void enqueue(Queue *Q, int element);
 void dequeue(Queue *Q);
@@ -299,12 +292,16 @@ int peek(Queue *Q);
 int isEmpty(Queue *Q);
 int isFull(Queue *Q);
 
+void swap(int *a, int *b);
+void reverse_array(int *X, int n);
+int comparPositionNode(const void *a, const void *b);
+
 int partition(int arr1[], int arr2[], int low, int high);
 void quickSort(int arr1[], int arr2[], int low, int high);
 
 int *createAdjacencyMatrix(femMesh *mesh);
 void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue *Q, int element_idx);
-int *rcm(int *X, int n);
+Queue *rcm(femMesh *theMesh, int nNodes);
 
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 
