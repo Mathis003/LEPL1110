@@ -339,7 +339,10 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
     femSystemWrite(A, B, size, "../data/finalSystem.txt");
 
     double *soluce = femSolverEliminate(theSolver);
-    for (int i = 0; i < size; i++) { theProblem->soluce[i] += soluce[theProblem->geometry->theNodes->number[i]]; }
+    for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
+    {
+        theProblem->soluce[i] += soluce[theProblem->geometry->theNodes->number[i / 2 + i % 2]];
+    }
     memcpy(theProblem->soluce, soluce, size * sizeof(double));
     return theProblem->soluce;
 }

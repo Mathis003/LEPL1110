@@ -315,8 +315,8 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 {
     double **A = system->A;
     int band   = system->band;
-    // return A[myRow][myCol];
-    return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
+    return A[myRow][myCol];
+    // return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
 }
 
 // TODO : Is this good ?
