@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     femGeometry *theGeometry = geoGetGeometry();
 
-    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
+    femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
 
     int n;
     double *theSoluce;

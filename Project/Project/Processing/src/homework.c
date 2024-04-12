@@ -11,7 +11,6 @@ TODO :
     - Elements billineaire (fonction de forme du deuxieme degre)
     - Finir les conditions sur la geometrie du pont
     - Calcul des tensions aux noeuds (PAS COMPRIS => + FORCES ?)
-    - Ecrire un script permettant de faire une animation des résultats
 
 DONE :
     - Axisymetrique / tension plane / deformation plane
@@ -20,6 +19,7 @@ DONE :
     - Résidus pour les forces (par noeud + globale)
     - Visualisation des résidus (Post-Processing avec 'X' et 'Y')
     - Visualisation de la matrice (Post-Processing avec 'S')
+    - Script d'animation
 */
 
 void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
@@ -38,6 +38,7 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
     void *theSystem;
     double **A, *B;
 
+    int *number = theMesh->nodes->number;
     int nLocal = theMesh->nLocalNode;
     double a   = theProblem->A;
     double b   = theProblem->B;
@@ -59,6 +60,7 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
             mapY[j] = 2 * map[j] + 1;
             x[j] = theNodes->X[map[j]];
             y[j] = theNodes->Y[map[j]];
+            map[j] = number[map[j]];
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -336,6 +338,7 @@ double *femElasticitySolve(femProblem *theProblem, double FACTOR)
     femSystemWrite(A, B, size, "../data/finalSystem.txt");
 
     double *soluce = femSolverEliminate(theSolver);
+    for (int i = 0; i < size; i++) { theProblem->soluce[i] += soluce[theProblem->geometry->theNodes->number[i]]; }
     memcpy(theProblem->soluce, soluce, size * sizeof(double));
     return theProblem->soluce;
 }

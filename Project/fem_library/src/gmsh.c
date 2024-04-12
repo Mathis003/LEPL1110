@@ -33,7 +33,7 @@ void geoFinalize(void)
     ErrorGmsh(ierr);
 }
 
-void geoMeshImport(void)
+void geoMeshImport(femRenumType renumType)
 {
     int ierr;
 
@@ -56,6 +56,10 @@ void geoMeshImport(void)
         theNodes->X[i] = xyz[3 * node[i] - 3];
         theNodes->Y[i] = xyz[3 * node[i] - 2];
     }
+    theNodes->number = malloc(sizeof(int) * (theNodes->nNodes));
+    if (theNodes->number == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    for (int i = 0; i < theNodes->nNodes; i++) { theNodes->number[i] = i; }
+
     theGeometry.theNodes = theNodes;
     
     gmshFree(node);
@@ -261,6 +265,8 @@ void geoMeshImport(void)
         else { free(theGeometry.theDomains[i]->elem); free(theGeometry.theDomains[i]); theGeometry.theDomains[i] = NULL; }
     }
     theGeometry.nDomains = countDomains;
+
+    femMeshRenumber(theElements, renumType);
 
     return;
 }

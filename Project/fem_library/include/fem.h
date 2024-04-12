@@ -32,6 +32,7 @@ typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM} femRenumType;
 
 typedef struct {
     int nNodes;
+    int *number;
     double *X;
     double *Y;
 } femNodes;
@@ -250,7 +251,7 @@ int geoGetDomain(char *name);
 /* Elasticity functions */
 /************************/
 
-femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase);
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femRenumType renumType);
 void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 double *femElasticitySolve(femProblem *theProblem, double FACTOR);

@@ -404,7 +404,6 @@ int comparPositionNode(const void *a, const void *b)
     return (diff < 0) - (diff > 0);
 }
 
- // TODO
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
 {
     int nNodes = theMesh->nodes->nNodes;
@@ -430,11 +429,10 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
         default : Error("Unexpected renumbering option");
     }
 
-    for (int i = 0; i < nNodes; i++) { theMesh->elem[mapper[i]] = i; } // TODO : Is this line correct ? (The rest is Ok (Homework 6))
+    for (int i = 0; i < nNodes; i++) { theMesh->nodes->number[mapper[i]] = i; }
     free(mapper); 
 }
 
- // TODO
 int femMeshComputeBand(femMesh *theMesh)
 {
     int maxNum, minNum, nodeNum, elemNum;
@@ -448,7 +446,7 @@ int femMeshComputeBand(femMesh *theMesh)
         for (int j = 0; j < theMesh->nLocalNode; j++)
         {
             elemNum = theMesh->elem[iElem * theMesh->nLocalNode + j];
-            nodeNum = theMesh->elem[elemNum]; // TODO : Is this line correct ? (The rest is Ok (Homework 6))
+            nodeNum = theMesh->nodes->number[elemNum];
 
             maxNum = (nodeNum > maxNum) ? nodeNum : maxNum;
             minNum = (nodeNum < minNum) ? nodeNum : minNum;
@@ -797,10 +795,9 @@ void femDiscretePrint(femDiscrete *mySpace)
 /******* Elasticity functions *******/
 /************************************/
 
-femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femRenumType renumType)
 {
     femProblem *theProblem = malloc(sizeof(femProblem));
-
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->E = E;
     theProblem->nu = nu;
@@ -852,6 +849,8 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
     theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
     theProblem->solver    = femSolverCreate(size);
+
+    femMeshRenumber(theGeometry->theElements, renumType);
 
     return theProblem;
 }
@@ -1105,10 +1104,8 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
     else if (typeSolver == FEM_BAND)
     {
-        // TODO
-        // femMeshRenumber(theGeometry->theElements, FEM_XNUM); // Create Bug + mesh oriented in reverse
         int band = femMeshComputeBand(theGeometry->theElements);
-        // printf("Band = %d, size = %d\n", band, size);
+        printf("Band = %d, size = %d\n", band, size);
         theProblem->solver = femSolverBandCreate(size, band);
     }
     else { Error("Unknown solver type"); }
@@ -1264,6 +1261,7 @@ void geoFree(void)
     {
         free(theGeometry.theNodes->X);
         free(theGeometry.theNodes->Y);
+        free(theGeometry.theNodes->number);
         free(theGeometry.theNodes);
     }
     if (theGeometry.theElements)
@@ -1290,7 +1288,7 @@ void geoMeshPrint(void)
     if (theNodes != NULL)
     {
         printf("Number of nodes %d \n", theNodes->nNodes);
-        for (int i = 0; i < theNodes->nNodes; i++) { printf("%6d : %14.7e %14.7e \n", i, theNodes->X[i], theNodes->Y[i]); }
+        for (int i = 0; i < theNodes->nNodes; i++) { printf("%6d : %6d : %14.7e %14.7e \n", i, theNodes->number[i], theNodes->X[i], theNodes->Y[i]); }
     }
     femMesh *theEdges = theGeometry.theEdges;
     if (theEdges != NULL)
@@ -1339,7 +1337,7 @@ void geoMeshWrite(const char *filename)
 
     femNodes *theNodes = theGeometry.theNodes;
     fprintf(file, "Number of nodes %d \n", theNodes->nNodes);
-    for (int i = 0; i < theNodes->nNodes; i++) { fprintf(file, "%6d : %14.7e %14.7e \n", i, theNodes->X[i], theNodes->Y[i]); }
+    for (int i = 0; i < theNodes->nNodes; i++) { fprintf(file, "%6d : %6d %14.7e %14.7e \n", i, theNodes->number[i], theNodes->X[i], theNodes->Y[i]); }
 
     femMesh *theEdges = theGeometry.theEdges;
     fprintf(file, "Number of edges %d \n", theEdges->nElem);
@@ -1393,7 +1391,9 @@ void geoMeshRead(const char *filename)
     if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->Y = malloc(sizeof(double) * (theNodes->nNodes));
     if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    for (int i = 0; i < theNodes->nNodes; i++) { ErrorScan(fscanf(file, "%d : %le %le \n", &trash, &theNodes->X[i], &theNodes->Y[i])); }
+    theNodes->number = malloc(sizeof(int) * theNodes->nNodes);
+    if (theNodes->number == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    for (int i = 0; i < theNodes->nNodes; i++) { ErrorScan(fscanf(file, "%d : %d %le %le \n", &trash, &theNodes->number[i], &theNodes->X[i], &theNodes->Y[i])); }
 
     femMesh *theEdges = malloc(sizeof(femMesh));
     if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
