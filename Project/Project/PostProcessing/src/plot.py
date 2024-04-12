@@ -75,6 +75,7 @@ class Mesh:
         return a
     
 def generate_frame(i):
+
     if exampleUse:
         nameSolution = "../../Processing/data/animations/UV_example_{}.txt".format(i+1)
     else:
@@ -86,6 +87,7 @@ def generate_frame(i):
 
     plt.clf()
     cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
+    plt.xlim(right=1.15)
     plt.colorbar(cb)
     mesh.plot(uv*factor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
