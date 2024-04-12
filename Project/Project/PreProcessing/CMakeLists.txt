@@ -11,9 +11,9 @@ set(GLFEM_LIBRARY_PATH ../../glfem_library)
 set(EXEC_NAME myFem)
 
 set_source_files_properties(
+    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem.c
     src/homework.c
     src/main.c
-    ${CMAKE_SOURCE_DIR}/${FEM_LIBRARY_PATH}/src/fem.c
     PROPERTIES COMPILE_FLAGS "-Werror"
 )
 

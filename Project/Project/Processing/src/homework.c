@@ -320,7 +320,8 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
     femSolverInit(theSolver);
 
     femElasticityAssembleElements(theProblem, FACTOR);
-    femElasticityAssembleNeumann(theProblem, FACTOR);
+    // femSolverPrint(theSolver);
+    // femElasticityAssembleNeumann(theProblem, FACTOR);
 
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
@@ -329,7 +330,7 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
     // Copy the Dirichlet unconstrained system
     femSystemWrite(A, B, size, "../data/dirichletUnconstrainedSystem.txt");
 
-    femElasticityApplyDirichlet(theProblem, FACTOR);
+    // femElasticityApplyDirichlet(theProblem, FACTOR);
 
     A = getMatrixA(theSolver);
     B = getVectorB(theSolver);
