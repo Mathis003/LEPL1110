@@ -231,6 +231,7 @@ void femBandSystemSetSystem(femBandSystem *system, double **A, double *B)
     system->B = B;
 }
 
+int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myRow > myCol - band; }
 
 void femBandSystemPrint(femBandSystem *system, int size)
 {
@@ -250,7 +251,7 @@ void femBandSystemPrint(femBandSystem *system, int size)
         printf(" :  %+.1e \n",B[i]);
     }
 }
-  
+
 void femBandSystemPrintInfos(femBandSystem *system, int size)
 {
     int band = system->band;
@@ -262,11 +263,12 @@ void femBandSystemPrintInfos(femBandSystem *system, int size)
     printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (band + 1));
 }
 
-// TODO : Check if it's correct
+// TODO
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR)
 {
     double **A = system->A;
     double *B  = system->B;
+    int band   = system->band;
     double a   = theProblem->A;
     double b   = theProblem->B;
     double c   = theProblem->C;
@@ -280,10 +282,10 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
         {
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += (mapX[j] >= mapX[i]) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
-                A[mapX[i]][mapY[j]] += (mapY[j] >= mapX[i]) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapX[j]] += (mapX[j] >= mapY[i]) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapY[j]] += (mapY[j] >= mapY[i]) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
+                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
+                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
             }
             B[mapX[i]] += phi[i] * gx * rho * weightedJac * FACTOR;
             B[mapY[i]] += phi[i] * gy * rho * weightedJac * FACTOR;
@@ -295,10 +297,10 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
         {
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += (mapX[j] >= mapX[i]) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac : 0.0;
-                A[mapX[i]][mapY[j]] += (mapY[j] >= mapX[i]) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapX[j]] += (mapX[j] >= mapY[i]) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapY[j]] += (mapY[j] >= mapY[i]) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac : 0.0;
+                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac : 0.0;
+                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac : 0.0;
             }
             B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
             B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
@@ -307,9 +309,13 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
     else { Error("Unexpected problem type"); }
 }
 
+// TODO
 double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 {
-    return (myCol >= myRow && myCol < myRow + system->band) ? system->A[myRow][myCol] : 0.0;
+    double **A = system->A;
+    int band   = system->band;
+    // return system->A[myRow][myCol];
+    return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
 }
 
 // TODO : Is this good ?
@@ -321,6 +327,13 @@ void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int
     A = system->A;
     B = system->B;
     band = system->band;
+
+    // for (i = 0; i < size; i++) { if (isInBand(band, i, node)) { B[i] -= value * A[i][node]; A[i][node] = 0; }}
+    // for (i = 0; i < size; i++) { if (isInBand(band, i, node)) { A[node][i] = 0; }}
+
+    // A[node][node] = 1.0;
+    // B[node] = value;
+
 
     int lowerBound = (node >= band) ? node - band + 1 : 0;
     for (i = lowerBound ; i < node; i++)

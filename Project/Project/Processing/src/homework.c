@@ -3,12 +3,11 @@
 /*
 TODO :
     - Faire un solveur bande                  (IN PROGRESS)
-    - Renumerotation des noeuds X/Y           (IN PROGRESS)
     - Verifier la validite de l'axisymetrique (IN PROGRESS)
+    - Elements billineaire (fonction de forme du deuxieme degre)   (IN PROGRESS)
     - Renumerotation des noeuds RCMK
     - Solveur frontal creux
     - Renumerotation des elements (pour solveur frontal)
-    - Elements billineaire (fonction de forme du deuxieme degre)
     - Finir les conditions sur la geometrie du pont
     - Calcul des tensions aux noeuds (PAS COMPRIS => + FORCES ?)
 
@@ -20,6 +19,7 @@ DONE :
     - Visualisation des résidus (Post-Processing avec 'X' et 'Y')
     - Visualisation de la matrice (Post-Processing avec 'S')
     - Script d'animation
+    - Renumerotation des noeuds X/Y
 */
 
 void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)

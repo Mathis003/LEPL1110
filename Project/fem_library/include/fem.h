@@ -173,6 +173,7 @@ femBandSystem *femBandSystemCreate(int size, int band);
 void femBandSystemFree(femBandSystem *myBandSystem);
 void femBandSystemInit(femBandSystem *myBandSystem, int size);
 void femBandSystemAlloc(femBandSystem *system, int size, int band);
+int isInBand(int band, int myRow, int myCol);
 int comparPosNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
