@@ -53,23 +53,24 @@ int main(int argc, char *argv[])
     femGeometry *theGeometry = geoGetGeometry();
 
     theGeometry->elementType = FEM_TRIANGLE;   // FEM_QUAD or FEM_TRIANGLE
+    femDiscreteType discretType = FEM_DISCRETE_TYPE_QUADRATIC; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
     femElasticCase theCase   = PLANAR_STRESS;  // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
 
     if (exampleUsage == TRUE)
     {
-        geoMeshGenerateExample();
-        geoMeshImport();
+        geoMeshGenerateExample(discretType);
+        geoMeshImport(discretType);
         geoSetDomainName(0, "Symmetry");
         geoSetDomainName(7, "Bottom");
         geoSetDomainName(1, "Top");
-        geoMeshWrite("../../Processing/data/mesh_example.txt");
+        geoMeshWrite("../../Processing/data/mesh_example.txt", discretType);
     }
     else
     {
-        geoMeshGenerate();
-        geoMeshImport();
+        geoMeshGenerate(discretType);
+        geoMeshImport(discretType);
         setDomainsName();
-        geoMeshWrite("../../Processing/data/mesh.txt");
+        geoMeshWrite("../../Processing/data/mesh.txt", discretType);
     }
 
     /******************************/
@@ -85,7 +86,7 @@ int main(int argc, char *argv[])
         double E_example = 211.e9;
         double nu_example = 0.3;
         double rho_example = 7.85e3;
-        theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase);
+        theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase, discretType);
         // femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_N, 1e3, NAN);
         // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_NT, 0.0, 0.0);
         // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e4, NAN);
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
         double nu_reinforced_concrete = 0.2;
         double rho_steel = 7.85e3;
         double rho_reinforced_concrete = 2.5e3;
-        theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, theCase);
+        theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, theCase, discretType);
         createBoundaryConditions(theProblem);
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem.txt");

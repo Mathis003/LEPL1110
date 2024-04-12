@@ -27,6 +27,7 @@ typedef enum { FEM_TRIANGLE, FEM_QUAD, FEM_EDGE } femElementType;
 typedef enum { PLANAR_STRESS, PLANAR_STRAIN, AXISYM } femElasticCase;
 typedef enum {FEM_FULL,FEM_BAND} femSolverType;
 typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM} femRenumType;
+typedef enum {FEM_DISCRETE_TYPE_LINEAR, FEM_DISCRETE_TYPE_QUADRATIC} femDiscreteType;
 
 /* Structures */
 
@@ -224,7 +225,7 @@ static const double _gaussEdge2Weight[2] = { 1.000000000000000, 1.00000000000000
 femIntegration *femIntegrationCreate(int n, femElementType type);
 void femIntegrationFree(femIntegration *theRule);
 
-femDiscrete *femDiscreteCreate(int n, femElementType type);
+femDiscrete *femDiscreteCreate(femElementType type, femDiscreteType dType);
 void femDiscreteFree(femDiscrete *mySpace);
 void femDiscretePrint(femDiscrete *mySpace);
 void femDiscreteXsi2(femDiscrete *mySpace, double *xsi, double *eta);
@@ -243,8 +244,8 @@ double geoSize(double x, double y);
 void geoFree(void);
 void geoSetSizeCallback(double (*geoSize)(double x, double y));
 void geoMeshPrint(void);
-void geoMeshWrite(const char *filename);
-void geoMeshRead(const char *filename);
+void geoMeshWrite(const char *filename, femDiscreteType dType);
+void geoMeshRead(const char *filename, femDiscreteType dType);
 void geoSetDomainName(int iDomain, char *name);
 int geoGetDomain(char *name);
 
@@ -252,14 +253,14 @@ int geoGetDomain(char *name);
 /* Elasticity functions */
 /************************/
 
-femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase);
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femDiscreteType dType);
 void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR);
 double *femElasticityForces(femProblem *theProblem);
 
 void femElasticityPrint(femProblem *theProblem);
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType);
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
 void femSystemWrite(double **A, double *b, int size, const char *path);
 int femSystemRead(double ***A, double **B, int *size, const char *filename);

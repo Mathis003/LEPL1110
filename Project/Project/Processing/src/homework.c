@@ -31,10 +31,10 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theMesh         = theGeometry->theElements;
 
-    if (theSpace->n > 4) Error("Unexpected discrete space size !");
+    //if (theSpace->n > 4) Error("Unexpected discrete space size !");
 
-    double x[4], y[4], phi[4], dphidxsi[4], dphideta[4], dphidx[4], dphidy[4];
-    int size, iElem, iInteg, iEdge, i, j, d, map[4], mapX[4], mapY[4];
+    double x[6], y[6], phi[6], dphidxsi[6], dphideta[6], dphidx[6], dphidy[6];
+    int size, iElem, iInteg, iEdge, i, j, d, map[6], mapX[6], mapY[6];
     void *theSystem;
     double **A, *B;
 
@@ -53,7 +53,7 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {
-        for (j = 0; j < nLocal; j++)
+        for (j = 0; j < theSpace->n; j++)
         {
             map[j] = theMesh->elem[iElem * nLocal + j];
             mapX[j] = 2 * map[j];
@@ -110,12 +110,12 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theEdges        = theGeometry->theEdges;
 
-    double x[2], y[2], phi[2], tx, ty, nx, ny, norm_n, norm_t, a, b;
-    int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
+    double x[3], y[3], phi[3], tx, ty, nx, ny, norm_n, norm_t, a, b;
+    int iBnd, iElem, iInteg, iEdge, i, j, d, map[3], mapU[3];
     double oldValue, oldType;
     int changeType;
 
-    int nLocal = 2;
+    int nLocal = theSpace->n;
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
 
@@ -138,7 +138,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
             for (j = 0; j < nLocal; j++)
             {
                 map[j] = theEdges->elem[iElem * nLocal + j];
-                mapU[j] = 2 * map[j] + shift;
+                mapU[j] = nLocal * map[j] + shift;
                 x[j] = theNodes->X[map[j]];
                 y[j] = theNodes->Y[map[j]];
                 xLoc += phi[j] * x[j];

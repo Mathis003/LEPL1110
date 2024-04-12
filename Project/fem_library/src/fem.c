@@ -730,6 +730,46 @@ void _p1c0_dphidx(double xsi, double eta, double *dphidxsi, double *dphideta)
     dphideta[2] =  1.0;
 }
 
+//Node of the form function
+void _p1c0_x_quad(double *xsi, double *eta)
+{
+    xsi[0] = 0.0; eta[0] = 0.0;
+    xsi[1] = 1.0; eta[1] = 0.0;
+    xsi[2] = 0.0; eta[2] = 1.0;
+    xsi[3] = 0.5; eta[3] = 0.0;
+    xsi[4] = 0.5; eta[4] = 0.5;
+    xsi[5] = 0.0; eta[5] = 0.5;
+}
+
+//forms functions
+void _p1c0_phi_quad(double xsi, double eta, double *phi)
+{
+    phi[0] = 1 - 3*(xsi + eta) + 2*(xsi + eta)*(xsi + eta);
+    phi[1] = xsi*(2*xsi - 1);
+    phi[2] = eta*(2*eta - 1);
+    phi[3] = 4*xsi*(1 - xsi - eta);
+    phi[4] = 4*xsi*eta;
+    phi[5] = 4*eta*(1 - xsi - eta);
+}
+
+//derivatives of the forms functions
+void _p1c0_dphidx_quad(double xsi, double eta, double *dphidxsi, double *dphideta)
+{
+    dphidxsi[0] = -3 + 4*(xsi + eta);
+    dphidxsi[1] =  4*xsi - 1;
+    dphidxsi[2] =  0.0;
+    dphidxsi[3] =  4 - 8*xsi - 4*eta;
+    dphidxsi[4] =  4*eta;
+    dphidxsi[5] = -4*eta;
+
+    dphideta[0] = -3 + 4*(xsi + eta);
+    dphideta[1] =  0.0;
+    dphideta[2] =  4*eta - 1;
+    dphideta[3] = -4*xsi;
+    dphideta[4] =  4*xsi;
+    dphideta[5] =  4 - 4*xsi - 8*eta;
+}
+
 void _e1c0_x(double *xsi) 
 {
     xsi[0] = -1.0;  
@@ -748,32 +788,72 @@ void _e1c0_dphidx(double xsi, double *dphidxsi)
     dphidxsi[1] =  0.5;
 }
 
-femDiscrete *femDiscreteCreate(int n, femElementType type)
+void _e1c0_x_quad(double *xsi) 
+{
+    xsi[0] = -1.0;  
+    xsi[1] =  1.0;
+    xsi[2] =  0.0;
+}
+
+void _e1c0_phi_quad(double xsi,  double *phi)
+{
+    phi[0] = -xsi*(1-xsi) / 2.0;
+    phi[1] = xsi*(1+xsi) / 2.0;
+    phi[2] = 1 - xsi*xsi;
+}
+
+void _e1c0_dphidx_quad(double xsi, double *dphidxsi)
+{
+    dphidxsi[0] = xsi -0.5;
+    dphidxsi[1] =  xsi + 0.5;
+    dphidxsi[2] = -2.0*xsi;
+}
+
+femDiscrete *femDiscreteCreate(femElementType type, femDiscreteType dType)
 {
     femDiscrete *theSpace = malloc(sizeof(femDiscrete));
     if (theSpace == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    if (type == FEM_QUAD && n == 4)
+    if (type == FEM_QUAD && dType == FEM_DISCRETE_TYPE_LINEAR)
     {
         theSpace->n       = 4;
         theSpace->x2      = _q1c0_x;
         theSpace->phi2    = _q1c0_phi;
         theSpace->dphi2dx = _q1c0_dphidx;
     }
-    else if (type == FEM_TRIANGLE && n == 3)
+    else if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_LINEAR)
     {
         theSpace->n       = 3;
         theSpace->x2      = _p1c0_x;
         theSpace->phi2    = _p1c0_phi;
         theSpace->dphi2dx = _p1c0_dphidx;
     }
-    else if (type == FEM_EDGE && n == 2)
+    else if (type == FEM_EDGE && dType == FEM_DISCRETE_TYPE_LINEAR)
     {
         theSpace->n       = 2;
         theSpace->x       = _e1c0_x;
         theSpace->phi     = _e1c0_phi;
         theSpace->dphidx  = _e1c0_dphidx;
-        }
-    else { Error("Cannot create such a discrete space !"); }
+    }
+    else if (type == FEM_QUAD && dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
+        Error("Quadratic quadrilateral not implemented yet");
+    }
+    else if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
+        printf("Quadratic triangle\n");
+        theSpace->n       = 6;
+        theSpace->x2      = _p1c0_x_quad;
+        theSpace->phi2    = _p1c0_phi_quad;
+        theSpace->dphi2dx = _p1c0_dphidx_quad;
+    }
+    else if (type == FEM_EDGE && dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
+        theSpace->n       = 3;
+        theSpace->x       = _e1c0_x_quad;
+        theSpace->phi     = _e1c0_phi_quad;
+        theSpace->dphidx  = _e1c0_dphidx_quad;
+    }
+    else { Error("Cannot create such a discrete space ! type :"); }
     return theSpace;
 }
 
@@ -817,7 +897,7 @@ void femDiscretePrint(femDiscrete *mySpace)
 /******* Elasticity functions *******/
 /************************************/
 
-femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase)
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femDiscreteType dType)
 {
     femProblem *theProblem = malloc(sizeof(femProblem));
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
@@ -860,15 +940,15 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
     theProblem->geometry = theGeometry;
     if (theGeometry->theElements->nLocalNode == 3)
     {
-        theProblem->space = femDiscreteCreate(3, FEM_TRIANGLE);
+        theProblem->space = femDiscreteCreate(FEM_TRIANGLE, dType);
         theProblem->rule  = femIntegrationCreate(3, FEM_TRIANGLE);
     }
     else if (theGeometry->theElements->nLocalNode == 4)
     {
-        theProblem->space = femDiscreteCreate(4, FEM_QUAD);
+        theProblem->space = femDiscreteCreate(FEM_QUAD, dType);
         theProblem->rule  = femIntegrationCreate(4, FEM_QUAD);
     }
-    theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
+    theProblem->spaceEdge = femDiscreteCreate(FEM_EDGE, dType);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
     theProblem->solver    = femSolverCreate(size);
 
@@ -1079,7 +1159,7 @@ void femElasticityWrite(femProblem *theProblem, const char *filename)
     fclose(file);
 }
 
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType)
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -1108,17 +1188,17 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     }
 
     theProblem->geometry = theGeometry;
-    if (theGeometry->theElements->nLocalNode == 3)
+    if ((theGeometry->theElements->nLocalNode == 3) || (theGeometry->theElements->nLocalNode == 6))
     {
-        theProblem->space = femDiscreteCreate(3, FEM_TRIANGLE);
+        theProblem->space = femDiscreteCreate(FEM_TRIANGLE, dType);
         theProblem->rule = femIntegrationCreate(3, FEM_TRIANGLE);
     }
-    else if (theGeometry->theElements->nLocalNode == 4)
+    else if (theGeometry->theElements->nLocalNode == 4 || theGeometry->theElements->nLocalNode == 9)
     {
-        theProblem->space = femDiscreteCreate(4, FEM_QUAD);
+        theProblem->space = femDiscreteCreate(FEM_QUAD, dType);
         theProblem->rule = femIntegrationCreate(4, FEM_QUAD);
     }
-    theProblem->spaceEdge = femDiscreteCreate(2, FEM_EDGE);
+    theProblem->spaceEdge = femDiscreteCreate(FEM_EDGE, dType);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
 
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
@@ -1351,7 +1431,7 @@ void geoMeshPrint(void)
     }
 }
 
-void geoMeshWrite(const char *filename)
+void geoMeshWrite(const char *filename, femDiscreteType dType)
 {
     FILE *file = fopen(filename, "w");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -1366,13 +1446,21 @@ void geoMeshWrite(const char *filename)
     for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %6d %6d \n", i, elem[2 * i], elem[2 * i + 1]); }
 
     femMesh *theElements = theGeometry.theElements;
-    if (theElements->nLocalNode == 3)
+    int nLocalNodeTrig = 3;
+    if(dType==FEM_DISCRETE_TYPE_QUADRATIC) nLocalNodeTrig = 6;
+    int nLocalNodeQuad = 4;
+    if(dType==FEM_DISCRETE_TYPE_QUADRATIC) nLocalNodeQuad = 9;
+    if (theElements->nLocalNode == nLocalNodeTrig)
     {
         fprintf(file, "Number of triangles %d \n", theElements->nElem);
         elem = theElements->elem;
-        for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d\n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
+        if(dType==FEM_DISCRETE_TYPE_LINEAR){
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d\n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
+        } else if(dType==FEM_DISCRETE_TYPE_QUADRATIC){
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d %6d %6d\n", i, elem[6 * i], elem[6 * i + 1], elem[6 * i + 2], elem[6 * i + 3], elem[6 * i + 4], elem[6 * i + 5]); }
+        }
     }
-    else if (theElements->nLocalNode == 4)
+    else if (theElements->nLocalNode == nLocalNodeQuad)
     {
         fprintf(file, "Number of quads %d \n", theElements->nElem);
         elem = theElements->elem;
@@ -1397,7 +1485,7 @@ void geoMeshWrite(const char *filename)
     fclose(file);
 }
 
-void geoMeshRead(const char *filename)
+void geoMeshRead(const char *filename, femDiscreteType dType)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -1420,6 +1508,7 @@ void geoMeshRead(const char *filename)
     if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     theEdges->nLocalNode = 2;
+    if(dType==FEM_DISCRETE_TYPE_QUADRATIC) theEdges->nLocalNode = 3;
     theEdges->nodes = theNodes;
     ErrorScan(fscanf(file, "Number of edges %d \n", &theEdges->nElem));
     theEdges->elem = malloc(sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
@@ -1440,17 +1529,23 @@ void geoMeshRead(const char *filename)
     if (strncasecmp(elementType, "triangles", MAXNAME) == 0)
     {
         theElements->nLocalNode = 3;
+        if(dType==FEM_DISCRETE_TYPE_QUADRATIC) theElements->nLocalNode = 6;
         theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
             elem = theElements->elem;
-            ErrorScan(fscanf(file, "%6d : %6d %6d %6d \n", &trash, &elem[3 * i], &elem[3 * i + 1], &elem[3 * i + 2]));
+            if(dType==FEM_DISCRETE_TYPE_LINEAR){
+                ErrorScan(fscanf(file, "%6d : %6d %6d %6d \n", &trash, &elem[3 * i], &elem[3 * i + 1], &elem[3 * i + 2]));
+            } else if (dType==FEM_DISCRETE_TYPE_QUADRATIC){
+                ErrorScan(fscanf(file, "%6d : %6d %6d %6d %6d %6d %6d \n", &trash, &elem[6 * i], &elem[6 * i + 1], &elem[6 * i + 2], &elem[6 * i + 3], &elem[6 * i + 4], &elem[6 * i + 5]));
+            }
         }
     }
     if (strncasecmp(elementType, "quads", MAXNAME) == 0)
     {
         theElements->nLocalNode = 4;
+        if(dType==FEM_DISCRETE_TYPE_QUADRATIC) theElements->nLocalNode = 9;
         theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
@@ -1515,8 +1610,9 @@ double femElasticityIntegrate(femProblem *theProblem, double (*f)(double x, doub
     femMesh        *theMesh     = theGeometry->theElements;
     femDiscrete    *theSpace    = theProblem->space;
 
-    double x[4] ,y[4], phi[4], dphidxsi[4], dphideta[4], dphidx[4], dphidy[4];
-    int iElem, iInteg, i, map[4];
+    int nLocalNode = theSpace->n;
+    double x[nLocalNode] ,y[nLocalNode], phi[nLocalNode], dphidxsi[nLocalNode], dphideta[nLocalNode], dphidx[nLocalNode], dphidy[nLocalNode];
+    int iElem, iInteg, i, map[nLocalNode];
     int nLocal = theMesh->nLocalNode;
     double value = 0.0;
 
@@ -1573,7 +1669,7 @@ double femMax(double *x, int n)
 void femError(char *text, int line, char *file)
 {
     printf("\n-------------------------------------------------------------------------------- ");
-    printf("\n  Error in %s:%d at line %d : \n  %s\n", file, line, line, text);
+    printf("\n  Error in | %s:%d | at line %d : \n  %s\n", file, line, line, text);
     printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
     exit(69);
 }

@@ -20,6 +20,7 @@
 #include "../../../fem_library/include/fem.h"
 
 #include <getopt.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
@@ -50,21 +51,22 @@ int main(int argc, char *argv[])
         }
     }
 
-    femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
+    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
     femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
+    femDiscreteType discretType = FEM_DISCRETE_TYPE_QUADRATIC; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
 
     femGeometry *theGeometry = geoGetGeometry();
     
     femProblem *theProblem;
     if (exampleUsage == TRUE)
     {
-        geoMeshRead("../data/mesh_example.txt");
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt", renumType);
+        geoMeshRead("../data/mesh_example.txt", discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt", renumType, discretType);
     }
     else
     {
-        geoMeshRead("../data/mesh.txt");
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType);
+        geoMeshRead("../data/mesh.txt", discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType);
     }
     
     femElasticityPrint(theProblem);

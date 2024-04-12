@@ -478,9 +478,9 @@ void glfemPlotField(femMesh *theMesh, double *u)
 {
     femNodes *theNodes = theMesh->nodes;
     int i, j, *nodes;
-    float xLoc[4];
-    float yLoc[4];
-    double uLoc[4];
+    float xLoc[6];
+    float yLoc[6];
+    double uLoc[6];
     double uMax = femMax(u, theNodes->nNodes);
     double uMin = femMin(u, theNodes->nNodes);
     int nLocalNode = theMesh->nLocalNode;
@@ -507,16 +507,22 @@ void glfemPlotMesh(femMesh *theMesh)
     float xLoc[4];
     float yLoc[4];
     int nLocalNode = theMesh->nLocalNode;
-
+    int loadNNode = nLocalNode;
+    if(nLocalNode==6){
+        loadNNode = 3;
+    }
+    if(nLocalNode==9){
+        loadNNode = 4;
+    }
     for (i = 0; i < theMesh->nElem; ++i)
     {
         nodes = &(theMesh->elem[i * nLocalNode]);
-        for (j = 0; j < nLocalNode; ++j)
+        for (j = 0; j < loadNNode; ++j)
         {
             xLoc[j] = theNodes->X[nodes[j]];
             yLoc[j] = theNodes->Y[nodes[j]];
         }
-        glfemDrawElement(xLoc, yLoc, nLocalNode);
+        glfemDrawElement(xLoc, yLoc, loadNNode);
     }
 }
 

@@ -400,7 +400,7 @@ void cutHalfGeometryBySymmetry(femGeometry *theGeometry, int *bridge)
 /********* Create Bridge (Generate Mesh) *********/
 /*************************************************/
 
-void geoMeshGenerate()
+void geoMeshGenerate(femDiscreteType discreteType)
 {
     femGeometry *theGeometry = geoGetGeometry();
 
@@ -511,6 +511,9 @@ void geoMeshGenerate()
     // Generate quads meshing
     if (theGeometry->elementType == FEM_QUAD)
     {
+        if(discreteType == FEM_DISCRETE_TYPE_QUADRATIC){
+            gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); //generate quadratic elements
+        }
         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
@@ -521,6 +524,9 @@ void geoMeshGenerate()
     // Generate triangles meshing
     else if (theGeometry->elementType == FEM_TRIANGLE)
     {
+        if(discreteType == FEM_DISCRETE_TYPE_QUADRATIC){
+            gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); //generate quadratic elements
+        }
         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshModelMeshGenerate(2, &ierr);
     }
@@ -855,7 +861,7 @@ double geoSizeExample(double x, double y)
   return theGeometry->defaultSize * (1.0 - 0.5 * x);
 }
 
-void geoMeshGenerateExample(void)
+void geoMeshGenerateExample(femDiscreteType discreteType)
 {
     /*
     4 ------------------ 3
@@ -902,6 +908,9 @@ void geoMeshGenerateExample(void)
 
     if (theGeometry->elementType == FEM_QUAD)
     {
+        if(discreteType == FEM_DISCRETE_TYPE_QUADRATIC){
+            gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); //generate quadratic elements
+        }
         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
@@ -912,6 +921,9 @@ void geoMeshGenerateExample(void)
 
     if (theGeometry->elementType == FEM_TRIANGLE)
     {
+        if(discreteType == FEM_DISCRETE_TYPE_QUADRATIC){
+            gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); //generate quadratic elements
+        }
         gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshModelMeshGenerate(2, &ierr);
     }
