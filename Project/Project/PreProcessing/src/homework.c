@@ -1,11 +1,6 @@
 #include "../../../fem_library/include/fem.h"
 #include "../../../fem_library/include/gmsh.h"
 
-/*
-* TODO
-* - Ajouter les conditions aux limites (finir)
-* - Vérifier le sens des contours (convention pour la normale)
-*/
 
 /**********************************/
 /********* Gmsh functions *********/
@@ -391,8 +386,7 @@ void cutHalfGeometryBySymmetry(femGeometry *theGeometry, int *bridge)
 
     cutElement(bridge, filterLeftRect);
     
-    free(filterLeftRect);
-    filterLeftRect = NULL;
+    free(filterLeftRect); filterLeftRect = NULL;
 }
 
 
@@ -528,25 +522,15 @@ void geoMeshGenerate()
     gmshFltkInitialize(&ierr);
 
     // Free the memory
-    free(idWindows);
-    free(idPiles);
-    free(idPillars);
-    free(idArcs);
-    free(idPylons);
-    free(idTopBall);
-    free(idStayCables);
-    free(positionStayCablesX);
-    free(positionStayCablesY);
-
-    idWindows = NULL;
-    idPiles   = NULL;
-    idPillars = NULL;
-    idArcs    = NULL;
-    idPylons  = NULL;
-    idTopBall = NULL;
-    idStayCables = NULL;
-    positionStayCablesX = NULL;
-    positionStayCablesY = NULL;
+    free(idWindows); idWindows = NULL;
+    free(idPiles); idPiles = NULL;
+    free(idPillars); idPillars = NULL;
+    free(idArcs); idArcs = NULL;
+    free(idPylons); idPylons = NULL;
+    free(idTopBall); idTopBall = NULL;
+    free(idStayCables); idStayCables = NULL;
+    free(positionStayCablesX); positionStayCablesX = NULL;
+    free(positionStayCablesY); positionStayCablesY = NULL;
 }
 
 
@@ -578,14 +562,54 @@ void setDomainsName(void)
 
     // geoSetDomainName(13, "ROADWAY U 1"); // NUMERO
     // geoSetDomainName(24, "ROADWAY U 2"); // NUMERO
-    domain_Mapping_t domain_mapping[] = {{5, "PILAR R 1"}, {6, "PILAR D 1"}, {7, "PILAR L 1"}, {1, "PILAR R 2"},
-        {2, "PILAR D 2"}, {3, "PILAR L 2"}, {10, "SUB ROADWAY U 1"}, {33, "SUB ROADWAY U 2"}, {38, "SUB ROADWAY U 3"},
-        {42, "SUB ROADWAY U 4"}, {51, "SUB ROADWAY U 5"}, {49, "SUB ROADWAY U 6"}, {56, "SUB ROADWAY U 7"},
-        {27, "SUB ROADWAY U 8"}, {8, "SUB ROADWAY D 1"}, {4, "SUB ROADWAY D 2"}, {0, "SUB ROADWAY D 3"}, {9, "SUB ROADWAY L"},
-        {28, "SUB ROADWAY R"}, {13, "ROADWAY L"}, {24, "ROADWAY R"}, {29, "WINDOW D 1"}, {30, "WINDOW L 1"}, {31, "WINDOW R 1"},
-        {32, "WINDOW U 1"}, {43, "WINDOW D 2"}, {44, "WINDOW L 2"}, {45, "WINDOW R 2"}, {46, "WINDOW U 2"}, {11, "PILE L 1"},
-        {35, "PILE R 1"}, {37, "PILE L 2"}, {41, "PILE R 2"}, {40, "PILE L 3"}, {52, "PILE R 3"}, {48, "PILE L 4"}, {55, "PILE R 4"}, {54, "PILE L 5"},
-        {26, "PILE R 5"}, {12, "ARC 1"}, {34, "ARC 2"}, {36, "ARC 3"}, {39, "ARC 4"}, {50, "ARC 5"}, {47, "ARC 6"}, {53, "ARC 7"}, {25, "ARC 8"}
+    domain_Mapping_t domain_mapping[] = {
+        {5, "PILAR R 1"},
+        {6, "PILAR D 1"},
+        {7, "PILAR L 1"},
+        {1, "PILAR R 2"},
+        {2, "PILAR D 2"},
+        {3, "PILAR L 2"},
+        {10, "SUB ROADWAY U 1"},
+        {33, "SUB ROADWAY U 2"},
+        {38, "SUB ROADWAY U 3"},
+        {42, "SUB ROADWAY U 4"},
+        {51, "SUB ROADWAY U 5"},
+        {49, "SUB ROADWAY U 6"},
+        {56, "SUB ROADWAY U 7"},
+        {27, "SUB ROADWAY U 8"},
+        {8, "SUB ROADWAY D 1"},
+        {4, "SUB ROADWAY D 2"},
+        {0, "SUB ROADWAY D 3"},
+        {9, "SUB ROADWAY L"},
+        {28, "SUB ROADWAY R"},
+        {13, "ROADWAY L"},
+        {24, "ROADWAY R"},
+        {29, "WINDOW D 1"},
+        {30, "WINDOW L 1"},
+        {31, "WINDOW R 1"},
+        {32, "WINDOW U 1"},
+        {43, "WINDOW D 2"},
+        {44, "WINDOW L 2"},
+        {45, "WINDOW R 2"},
+        {46, "WINDOW U 2"},
+        {11, "PILE L 1"},
+        {35, "PILE R 1"},
+        {37, "PILE L 2"},
+        {41, "PILE R 2"},
+        {40, "PILE L 3"},
+        {52, "PILE R 3"},
+        {48, "PILE L 4"},
+        {55, "PILE R 4"},
+        {54, "PILE L 5"},
+        {26, "PILE R 5"},
+        {12, "ARC 1"},
+        {34, "ARC 2"},
+        {36, "ARC 3"},
+        {39, "ARC 4"},
+        {50, "ARC 5"},
+        {47, "ARC 6"},
+        {53, "ARC 7"},
+        {25, "ARC 8"}
     };
 
     const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);
@@ -606,22 +630,55 @@ void createBoundaryConditions(femProblem *theProblem)
         double value2;
     } domainBoundaryMapping_t;
 
-    domainBoundaryMapping_t mapping[] = {{"PILAR R 1", DIRICHLET_XY, 0.0, 0.0}, {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0}, {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0}, {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0}, {"SUB ROADWAY U 1", NEUMANN_Y, 800.0, NAN}, {"SUB ROADWAY U 2", NEUMANN_Y, 1000.0, NAN},
-        {"SUB ROADWAY U 3", NEUMANN_Y, 1200.0, NAN}, {"SUB ROADWAY U 4", NEUMANN_Y, 700.0, NAN}, {"SUB ROADWAY U 5", NEUMANN_Y, 20.0, NAN},
-        {"SUB ROADWAY U 6", NEUMANN_Y, 1000.0, NAN}, {"SUB ROADWAY U 7", NEUMANN_Y, 1300.0, NAN}, {"SUB ROADWAY U 8", NEUMANN_Y, 800.0, NAN},
-        {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN}, {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN}, {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
-        {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0}, {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0}, {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
-        {"ROADWAY R", DIRICHLET_XY, 0.0, 0.0}, {"WINDOW D 1", NEUMANN_X, 0.0, NAN}, {"WINDOW L 1", NEUMANN_Y, 0.0, NAN},
-        {"WINDOW R 1", NEUMANN_Y, 0.0, NAN}, {"WINDOW U 1", NEUMANN_X, 0.0, NAN}, {"WINDOW D 2", NEUMANN_X, 0.0, NAN},
-        {"WINDOW L 2", NEUMANN_Y, 0.0, NAN}, {"WINDOW R 2", NEUMANN_Y, 0.0, NAN}, {"WINDOW U 2", NEUMANN_X, 0.0, NAN},
-        {"PILE L 1", NEUMANN_X, 0.0, NAN}, {"PILE R 1", NEUMANN_X, 0.0, NAN}, {"PILE L 2", NEUMANN_X, 0.0, NAN},
-        {"PILE R 2", NEUMANN_X, 0.0, NAN}, {"PILE L 3", NEUMANN_X, 0.0, NAN}, {"PILE R 3", NEUMANN_X, 0.0, NAN},
-        {"PILE L 4", NEUMANN_X, 0.0, NAN}, {"PILE R 4", NEUMANN_X, 0.0, NAN}, {"PILE L 5", NEUMANN_X, 0.0, NAN},
-        {"PILE R 5", NEUMANN_X, 0.0, NAN}, {"ARC 1", NEUMANN_X, 0.0, NAN}, {"ARC 2", NEUMANN_X, 0.0, NAN},
-        {"ARC 3", NEUMANN_X, 0.0, NAN}, {"ARC 4", NEUMANN_X, 0.0, NAN}, {"ARC 5", NEUMANN_X, 0.0, NAN},
-        {"ARC 6", NEUMANN_X, 0.0, NAN}, {"ARC 7", NEUMANN_X, 0.0, NAN}, {"ARC 8", NEUMANN_X, 0.0, NAN}};
+    domainBoundaryMapping_t mapping[] = {
+        {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
+        {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
+        {"SUB ROADWAY U 1", NEUMANN_Y, 800.0, NAN},
+        {"SUB ROADWAY U 2", NEUMANN_Y, 1000.0, NAN},
+        {"SUB ROADWAY U 3", NEUMANN_Y, 1200.0, NAN},
+        {"SUB ROADWAY U 4", NEUMANN_Y, 700.0, NAN},
+        {"SUB ROADWAY U 5", NEUMANN_Y, 20.0, NAN},
+        {"SUB ROADWAY U 6", NEUMANN_Y, 1000.0, NAN},
+        {"SUB ROADWAY U 7", NEUMANN_Y, 1300.0, NAN},
+        {"SUB ROADWAY U 8", NEUMANN_Y, 800.0, NAN},
+        {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
+        {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
+        {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
+        {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+        {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
+        {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+        {"ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
+        {"WINDOW D 1", NEUMANN_X, 0.0, NAN},
+        {"WINDOW L 1", NEUMANN_Y, 0.0, NAN},
+        {"WINDOW R 1", NEUMANN_Y, 0.0, NAN},
+        {"WINDOW U 1", NEUMANN_X, 0.0, NAN},
+        {"WINDOW D 2", NEUMANN_X, 0.0, NAN},
+        {"WINDOW L 2", NEUMANN_Y, 0.0, NAN},
+        {"WINDOW R 2", NEUMANN_Y, 0.0, NAN},
+        {"WINDOW U 2", NEUMANN_X, 0.0, NAN},
+        {"PILE L 1", NEUMANN_X, 0.0, NAN},
+        {"PILE R 1", NEUMANN_X, 0.0, NAN},
+        {"PILE L 2", NEUMANN_X, 0.0, NAN},
+        {"PILE R 2", NEUMANN_X, 0.0, NAN},
+        {"PILE L 3", NEUMANN_X, 0.0, NAN},
+        {"PILE R 3", NEUMANN_X, 0.0, NAN},
+        {"PILE L 4", NEUMANN_X, 0.0, NAN},
+        {"PILE R 4", NEUMANN_X, 0.0, NAN},
+        {"PILE L 5", NEUMANN_X, 0.0, NAN},
+        {"PILE R 5", NEUMANN_X, 0.0, NAN},
+        {"ARC 1", NEUMANN_X, 0.0, NAN},
+        {"ARC 2", NEUMANN_X, 0.0, NAN},
+        {"ARC 3", NEUMANN_X, 0.0, NAN},
+        {"ARC 4", NEUMANN_X, 0.0, NAN},
+        {"ARC 5", NEUMANN_X, 0.0, NAN},
+        {"ARC 6", NEUMANN_X, 0.0, NAN},
+        {"ARC 7", NEUMANN_X, 0.0, NAN},
+        {"ARC 8", NEUMANN_X, 0.0, NAN}
+    };
 
     const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
 
@@ -832,8 +889,6 @@ double geoSize(double x, double y)
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
-
-    // return h_max; // TODO : To remove
 
     double factor_size = 3.0;
     if (x > 0) { return factor_size * h_max; }

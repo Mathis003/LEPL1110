@@ -2,14 +2,15 @@
 
 /*
 TODO :
-    - Faire un solveur bande                  (IN PROGRESS)
-    - Verifier la validite de l'axisymetrique (IN PROGRESS)
-    - Elements billineaire (fonction de forme du deuxieme degre)   (IN PROGRESS)
-    - Renumerotation des noeuds RCMK
+    - Faire un solveur bande   (IN PROGRESS)
+    - Verifier la validite de l'axisymetrique   (IN PROGRESS)
+    - Elements billineaire (fonction de forme du deuxieme degre)  (IN PROGRESS)
+    - Renumerotation des noeuds RCMK  (IN PROGRESS)
     - Solveur frontal creux
     - Renumerotation des elements (pour solveur frontal)
     - Finir les conditions sur la geometrie du pont
-    - Calcul des tensions aux noeuds (PAS COMPRIS => + FORCES ?)
+    - Verifier le sens des contours (convention pour la normale)
+    - Calcul des tensions aux noeuds
 
 DONE :
     - Axisymetrique / tension plane / deformation plane
