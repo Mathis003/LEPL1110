@@ -73,23 +73,24 @@ class Mesh:
                 f = field[self.elem[i, [[0, 1], [3,2]]]]
                 a = plt.pcolormesh(x, y, f, shading="gouraud", linewidth=1, edgecolors="k",  *args, vmin=vmin, vmax=vmax, **kwargs)
         return a
-    
+
 def generate_frame(i):
 
     if exampleUse:
-        nameSolution = "../../Processing/data/animations/UV_example_{}.txt".format(i+1)
+        nameSolution = "../../Processing/data/animations/UV_example_{}.txt".format(i + 1)
     else:
-        nameSolution = "../../Processing/data/animations/UV_{}.txt".format(i+1)
+        nameSolution = "../../Processing/data/animations/UV_{}.txt".format(i + 1)
 
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
     factor = 5e4
 
     plt.clf()
-    cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
-    plt.xlim(right=1.15)
+    cb = mesh.plotfield(uv_norm, uv * factor, cmap="turbo")
+
+    # plt.xlim(right=1.15) # To change for the final plot
     plt.colorbar(cb)
-    mesh.plot(uv*factor, lw=0.2, c="k")
+    mesh.plot(uv * factor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
     plt.grid(alpha=0.2)
 
@@ -133,13 +134,14 @@ if __name__ == "__main__":
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
         plt.show()
-        # plt.savefig("data/plot.png")
+        plt.savefig("data/plot.png")
 
     else:
         NB_IMAGES = 50
         fig, ax = plt.subplots()
         animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
         plt.show()
+        animation.save("data/animation.mp4")
 
 
 # %%

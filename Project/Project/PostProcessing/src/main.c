@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
     int resultVisualizer = TRUE;
     int exampleUsage     = FALSE;
     int animation        = FALSE;
-    while ((opt = getopt(argc, argv, "areh")) != -1)
+    int plot             = TRUE;
+    while ((opt = getopt(argc, argv, "areph")) != -1)
     {
         switch (opt)
         {
@@ -58,11 +59,15 @@ int main(int argc, char *argv[])
             case 'e':
                 exampleUsage = TRUE;
                 break;
+            case 'p':
+                plot = FALSE;
+                break;
             case 'h':
                 printf("Usage: %s [-r] [-e] [-h]\n", argv[0]);
                 printf("Options:\n");
                 printf("  -r : Disable the result visualizer\n");
                 printf("  -e : Start the program with the example mesh\n");
+                printf("  -p : Disable the plot\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
@@ -139,8 +144,8 @@ int main(int argc, char *argv[])
     femNodes *theNodes = theGeometry->theNodes;
 
     double deformationFactor;
-    if (exampleUsage == TRUE) { deformationFactor = 1e5; }
-    else                      { deformationFactor = 1e4; }
+    if (exampleUsage == TRUE) { deformationFactor = 5e4; } // To change the deformation factor
+    else                      { deformationFactor = 5e4; } // To change the deformation factor
 
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
     if (normDisplacement == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
@@ -183,10 +188,13 @@ int main(int argc, char *argv[])
     /* 5 : Lance le script python */ 
     /******************************/
 
-    char command[100] = "python3 ../src/plot.py";
-    if (exampleUsage == TRUE) { strcat(command, " -e"); }
-    if (animation == TRUE)    { strcat(command, " -a"); }
-    system(command);
+    if (plot == TRUE)
+    {
+        char command[100] = "python3 ../src/plot.py";
+        if (exampleUsage == TRUE) { strcat(command, " -e"); }
+        if (animation == TRUE)    { strcat(command, " -a"); }
+        system(command);
+    }
 
     /*********************/
     /* 6 : Visualisation */ 
@@ -198,7 +206,7 @@ int main(int argc, char *argv[])
     int domain = 0;
     int freezingButton = FALSE;
     double t, told = 0;
-    char theMessage[MAXNAME+5];
+    char theMessage[MAXNAME + 5];
 
     GLFWwindow *window = glfemInit("EPL1110 : Project 2022-23 ");
     glfwMakeContextCurrent(window);
@@ -214,8 +222,8 @@ int main(int argc, char *argv[])
         if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
         if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
         if (glfwGetKey(window, 'S') == GLFW_PRESS) { mode = 2; }
-        if (glfwGetKey(window,'X') == GLFW_PRESS) { mode = 3;}
-        if (glfwGetKey(window,'Y') == GLFW_PRESS) { mode = 4;}
+        if (glfwGetKey(window,'X')  == GLFW_PRESS) { mode = 3;}
+        if (glfwGetKey(window,'Y')  == GLFW_PRESS) { mode = 4;}
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;

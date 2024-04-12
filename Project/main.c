@@ -7,13 +7,14 @@
 
 int main(int argc, char *argv[])
 {
-    bool meshVisualizer = true;
+    bool meshVisualizer   = true;
     bool resultVisualizer = true;
-    bool exampleUsage = false;
-    bool animation = false;
+    bool exampleUsage     = false;
+    bool animation        = false;
+    bool plot             = true;
     
     int opt;
-    while ((opt = getopt(argc, argv, "aemrvh")) != -1)
+    while ((opt = getopt(argc, argv, "aemrvph")) != -1)
     {
         switch (opt)
         {
@@ -32,6 +33,9 @@ int main(int argc, char *argv[])
             case 'v':
                 meshVisualizer = false;
                 resultVisualizer = false;
+                break;
+            case 'p':
+                plot = false;
                 break;
             case 'h':
                 printf("Usage: %s [-e] [-v] [-r] [-a]\n", argv[0]);
@@ -85,6 +89,7 @@ int main(int argc, char *argv[])
         char command[40] = "./myFem";
         if (i == 0 && !meshVisualizer)   { strcat(command, " -m"); }
         if (i == 2 && !resultVisualizer) { strcat(command, " -r"); }
+        if (i == 2 && !plot)             { strcat(command, " -p"); }
         if (i != 0 && animation)         { strcat(command, " -a"); }
         if (exampleUsage)                { strcat(command, " -e"); }
         strcat(command, " 2>&1");

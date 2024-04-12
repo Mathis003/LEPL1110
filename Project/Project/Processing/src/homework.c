@@ -160,7 +160,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                 {
                     if (type == NEUMANN_X || type == NEUMANN_Y)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * weightedJac * FACTOR; }
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * FACTOR * weightedJac; }
                     }
                     else if (type == NEUMANN_N)
                     {
@@ -170,8 +170,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         nx /= norm_n; ny /= norm_n;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value1 * nx * weightedJac * FACTOR;
-                            B[mapU[i] + 1] += phi[i] * value1 * ny * weightedJac * FACTOR;
+                            B[mapU[i]] += phi[i] * value1 * FACTOR * nx * weightedJac;
+                            B[mapU[i] + 1] += phi[i] * value1 * FACTOR * ny * weightedJac;
                         }
                     }
                     else if (type == NEUMANN_T)
@@ -181,8 +181,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         tx /= norm_t; ty /= norm_t;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value1 * tx * weightedJac * FACTOR;
-                            B[mapU[i] + 1] += phi[i] * value1 * ty * weightedJac * FACTOR;
+                            B[mapU[i]] += phi[i] * value1 * FACTOR * tx * weightedJac;
+                            B[mapU[i] + 1] += phi[i] * value1 * FACTOR * ty * weightedJac;
                         }
                     }
                 }
@@ -190,7 +190,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                 {
                     if (type == NEUMANN_X || type == NEUMANN_Y)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * weightedJac * xLoc * FACTOR; }
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value1 * FACTOR * weightedJac * xLoc; }
                     }
                     else if (type == NEUMANN_N)
                     {
@@ -200,8 +200,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         nx /= norm_n; ny /= norm_n;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value1 * nx * weightedJac * xLoc * FACTOR;
-                            B[mapU[i] + 1] += phi[i] * value1 * ny * weightedJac * xLoc * FACTOR;
+                            B[mapU[i]] += phi[i] * value1 * FACTOR * nx * weightedJac * xLoc;
+                            B[mapU[i] + 1] += phi[i] * value1 * FACTOR * ny * weightedJac * xLoc;
                         }
                     }
                     else if (type == NEUMANN_T)
@@ -211,8 +211,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         tx /= norm_t; ty /= norm_t;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value1 * tx * weightedJac * xLoc * FACTOR;
-                            B[mapU[i] + 1] += phi[i] * value1 * ty * weightedJac * xLoc * FACTOR;
+                            B[mapU[i]] += phi[i] * value1 * FACTOR * tx * weightedJac * xLoc;
+                            B[mapU[i] + 1] += phi[i] * value1 * FACTOR * ty * weightedJac * xLoc;
                         }
                     }
                 }
@@ -238,7 +238,7 @@ void getValueConditionsNT(double vect_x, double vect_y, double value, int Ux, in
     }
 }
 
-void femElasticityApplyDirichlet(femProblem *theProblem)
+void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
 {
     femSolver *theSolver     = theProblem->solver;
     femGeometry *theGeometry = theProblem->geometry;
@@ -256,20 +256,20 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
         if (type == DIRICHLET_X)
         {
             double value = theConstrainedNode->value1;
-            femSolverSystemConstrainXY(theSolver, Ux, value);
+            femSolverSystemConstrainXY(theSolver, Ux, value * FACTOR);
         }
         else if (type == DIRICHLET_Y)
         {
             double value = theConstrainedNode->value1;
-            femSolverSystemConstrainXY(theSolver, Uy, value);
+            femSolverSystemConstrainXY(theSolver, Uy, value * FACTOR);
         }
         else if (type == DIRICHLET_XY)
         {
             double value_x = theConstrainedNode->value1;
             double value_y = theConstrainedNode->value2;
             
-            femSolverSystemConstrainXY(theSolver, Ux, value_x);
-            femSolverSystemConstrainXY(theSolver, Uy, value_y);
+            femSolverSystemConstrainXY(theSolver, Ux, value_x * FACTOR);
+            femSolverSystemConstrainXY(theSolver, Uy, value_y * FACTOR);
         }
         else
         {
@@ -285,7 +285,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
             {
                 norm_n = sqrt(nx * nx + ny * ny);
                 nx /= norm_n; ny /= norm_n;
-                getValueConditionsNT(nx, ny, value_n, Ux, Uy, &node1, &node2, &a_n, &b_n);
+                getValueConditionsNT(nx, ny, value_n * FACTOR, Ux, Uy, &node1, &node2, &a_n, &b_n);
                 femSolverSystemConstrainNT(theSolver, node1, node2, a_n, b_n);
             }
             else if (type == DIRICHLET_T)
@@ -293,7 +293,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
                 tx = ny; ty = -nx;
                 norm_t = sqrt(tx * tx + ty * ty);
                 tx /= norm_t; ty /= norm_t;
-                getValueConditionsNT(tx, ty, value_t, Ux, Uy, &node1, &node2, &a_t, &b_t);
+                getValueConditionsNT(tx, ty, value_t * FACTOR, Ux, Uy, &node1, &node2, &a_t, &b_t);
                 femSolverSystemConstrainNT(theSolver, node1, node2, a_t, b_t);
             }
             else if (type == DIRICHLET_NT)
@@ -303,9 +303,9 @@ void femElasticityApplyDirichlet(femProblem *theProblem)
                 norm_t = sqrt(tx * tx + ty * ty);
                 nx /= norm_n; ny /= norm_n;
                 tx /= norm_t; ty /= norm_t;
-                getValueConditionsNT(nx, ny, value_n, Ux, Uy, &node1, &node2, &a_n, &b_n);
+                getValueConditionsNT(nx, ny, value_n * FACTOR, Ux, Uy, &node1, &node2, &a_n, &b_n);
                 femSolverSystemConstrainNT(theSolver, node1, node2, a_n, b_n);
-                getValueConditionsNT(tx, ty, value_t, Ux, Uy, &node1, &node2, &a_t, &b_t);
+                getValueConditionsNT(tx, ty, value_t * FACTOR, Ux, Uy, &node1, &node2, &a_t, &b_t);
                 femSolverSystemConstrainNT(theSolver, node1, node2, a_t, b_t);
             }
         }
@@ -326,7 +326,7 @@ double *femElasticitySolve(femProblem *theProblem, double FACTOR)
     // Copy the Dirichlet unconstrained system
     femSystemWrite(A, B, size, "../data/dirichletUnconstrainedSystem.txt");
 
-    femElasticityApplyDirichlet(theProblem);
+    femElasticityApplyDirichlet(theProblem, FACTOR);
 
     A = getMatrixA(theSolver);
     B = getVectorB(theSolver);
