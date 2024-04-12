@@ -1079,7 +1079,7 @@ void femElasticityWrite(femProblem *theProblem, const char *filename)
     fclose(file);
 }
 
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename)
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -1124,6 +1124,7 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
     else if (typeSolver == FEM_BAND)
     {
+        femMeshRenumber(theGeometry->theElements, renumType);
         int band = femMeshComputeBand(theGeometry->theElements);
         printf("Band = %d, size = %d\n", band, size);
         theProblem->solver = femSolverBandCreate(size, band);

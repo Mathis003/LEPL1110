@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
+    femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
     femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
 
     femGeometry *theGeometry = geoGetGeometry();
@@ -59,14 +59,12 @@ int main(int argc, char *argv[])
     if (exampleUsage == TRUE)
     {
         geoMeshRead("../data/mesh_example.txt");
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt", renumType);
     }
     else
     {
         geoMeshRead("../data/mesh.txt");
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType);
     }
     
     femElasticityPrint(theProblem);

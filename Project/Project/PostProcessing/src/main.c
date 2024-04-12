@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
 
     femGeometry *theGeometry = geoGetGeometry();
 
-    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
-
+    femSolverType typeSolver = FEM_BAND; // FEM_FULL or FEM_BAND
+    femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
     int n;
     double *theSoluce;
     femProblem *theProblem;
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     if (exampleUsage == TRUE)
     {
         geoMeshRead("../../Processing/data/mesh_example.txt");
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem_example.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem_example.txt", renumType);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV_example.txt");
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     else
     {
         geoMeshRead("../../Processing/data/mesh.txt");
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem.txt");
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem.txt", renumType);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV.txt");
