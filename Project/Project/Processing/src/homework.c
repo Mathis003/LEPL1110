@@ -48,7 +48,7 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
             mapY[i] = 2 * map[i] + 1;
             x[i] = theNodes->X[map[i]];
             y[i] = theNodes->Y[map[i]];
-            // map[i] = number[map[i]];
+            map[i] = number[map[i]];
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -243,8 +243,6 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
         if (theConstrainedNode->type == UNDEFINED) { continue; }
         femBoundaryType type = theConstrainedNode->type;
 
-
-
         int Ux = 2 * node;
         int Uy = 2 * node + 1;
 
@@ -315,30 +313,22 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
     femElasticityAssembleElements(theProblem, FACTOR);
     // femElasticityAssembleNeumann(theProblem, FACTOR);
 
-    double **A = getMatrixA(theSolver);
-    double *B  = getVectorB(theSolver);
-    int size   = theSolver->size;
-    
     // Copy the Dirichlet unconstrained system
-    femSystemWrite(A, B, size, "../data/dirichletUnconstrainedSystem.txt");
+    femSystemWrite(theSolver, "../data/dirichletUnconstrainedSystem.txt");
 
     femElasticityApplyDirichlet(theProblem, FACTOR);
 
-    A = getMatrixA(theSolver);
-    B = getVectorB(theSolver);
-    size = theSolver->size;
-
     // Copy the final system
-    femSystemWrite(A, B, size, "../data/finalSystem.txt");
+    femSystemWrite(theSolver, "../data/finalSystem.txt");
 
     double *soluce = femSolverEliminate(theSolver);
 
-    for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
-    {
-        theProblem->soluce[2 * i] += soluce[2 * theProblem->geometry->theNodes->number[i]];
-        theProblem->soluce[2 * i + 1] += soluce[2 * theProblem->geometry->theNodes->number[i] + 1];
-    }
+    // for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
+    // {
+    //     theProblem->soluce[2 * i] = soluce[2 * theProblem->geometry->theNodes->number[i]];
+    //     theProblem->soluce[2 * i + 1] = soluce[2 * theProblem->geometry->theNodes->number[i] + 1];
+    // }
 
-    memcpy(theProblem->soluce, soluce, size * sizeof(double));
+    memcpy(theProblem->soluce, soluce, theSolver->size * sizeof(double));
     return theProblem->soluce;
 }

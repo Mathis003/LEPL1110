@@ -232,8 +232,6 @@ void femBandSystemSetSystem(femBandSystem *system, double **A, double *B)
     system->B = B;
 }
 
-int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myCol < myRow + band; }
-
 void femBandSystemPrint(femBandSystem *system, int size)
 {
     double  **A, *B;
@@ -263,6 +261,8 @@ void femBandSystemPrintInfos(femBandSystem *system, int size)
     printf("    Matrix band      : %8d\n",band);
     printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (band + 1));
 }
+
+int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myCol < myRow + band; }
 
 // TODO
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR)
@@ -303,30 +303,33 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
     {
         for (int i = 0; i < nLoc; i++)
         {
+            iOffsetX = mapX[i];
+            iOffsetY = mapY[i];
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac : 0.0;
-                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac : 0.0;
+                jOffsetX = mapX[j];
+                jOffsetY = mapY[j];
+
+                A[iOffsetX][jOffsetX] += isInBand(band, iOffsetX, jOffsetX) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac : 0.0;
+                A[iOffsetX][jOffsetY] += isInBand(band, iOffsetX, jOffsetY) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac : 0.0;
+                A[iOffsetY][jOffsetX] += isInBand(band, iOffsetY, jOffsetX) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac : 0.0;
+                A[iOffsetY][jOffsetY] += isInBand(band, iOffsetY, jOffsetY) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac : 0.0;
             }
-            B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
-            B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
+            B[iOffsetX] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
+            B[iOffsetY] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
         }
     }
     else { Error("Unexpected problem type"); }
 }
 
-// TODO
 double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 {
     double **A = system->A;
     int band   = system->band;
-    // return A[myRow][myCol];
     return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
 }
 
-// TODO : Is this good ?
+// TODO
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size)
 {
     double **A, *B;
@@ -368,7 +371,7 @@ void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int
     // B[node] = value;
 }
 
-// TODO : Implement this function (Not good for now) 
+// TODO
 void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b)
 {
     double **A, *B;
@@ -547,14 +550,22 @@ void femSolverInit(femSolver *mySolver)
 
 double femSolverGet(femSolver *mySolver, int i, int j)
 {
-    double value = 0.0;
     switch (mySolver->type)
     {  
-        case FEM_FULL : value = femFullSystemGet((femFullSystem *) mySolver->solver, i, j); break;
-        case FEM_BAND : value = femBandSystemGet((femBandSystem *) mySolver->solver, i, j); break;
+        case FEM_FULL : return femFullSystemGet((femFullSystem *) mySolver->solver, i, j); break;
+        case FEM_BAND : return femBandSystemGet((femBandSystem *) mySolver->solver, i, j); break;
         default :       Error("Unexpected solver type");
     }
-    return value;
+}
+
+double femSolverGetB(femSolver *mySolver, int i)
+{
+    switch (mySolver->type)
+    {
+        case FEM_FULL : return ((femFullSystem *) mySolver->solver)->B[i];
+        case FEM_BAND : return ((femBandSystem *) mySolver->solver)->B[i];
+        default :       Error("Unexpected solver type");
+    }
 }
 
 void femSolverPrint(femSolver *mySolver)
@@ -1331,45 +1342,83 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     return theProblem;
 }
 
-void femSystemWrite(double **A, double *B, int size, const char *filename)
+void femSystemWrite(femSolver *theSolver, const char *filename)
 {
+    int size = theSolver->size;
     FILE *file = fopen(filename, "w");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
     fprintf(file, "Size %d\n", size);
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { fprintf(file, "%.18le\t", A[i][j]); }
+        int start = (theSolver->type == FEM_FULL) ? 0 : i;
+        int end = (theSolver->type == FEM_FULL) ? size : i + ((femBandSystem *)(theSolver->solver))->band);
+        for (int j = start; j < end; j++)
+        {
+            fprintf(file, "%.18le\t", femSolverGet(theSolver, i, j));
+        }
         fprintf(file, "\n");
     }
-    for (int i = 0; i < size; i++) { fprintf(file, "%.18le\t", B[i]); }
+    for (int i = 0; i < size; i++) { fprintf(file, "%.18le\t", femSolverGetB(theSolver, i)); }
 }
 
-int femSystemRead(double ***A, double **B, int *size, const char *filename)
+femSolver *femBandSystemRead(const char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
 
-    ErrorScan(fscanf(file, "Size %d\n", size));
+    int size;
+    ErrorScan(fscanf(file, "Size %d\n", &size));
+    
+    femGeometry *theGeometry = geoGetGeometry();
+    int band = femMeshComputeBand(theGeometry->theElements);
+    femSolver *theSolver = femSolverBandCreate(size, band);
+    femBandSystem *theSystem = theSolver->solver;
+    double **A = theSystem->A;
+    double *B  = theSystem->B;
 
-    *A = (double **) malloc((*size) * sizeof(double *));
-    *B = (double *) malloc((*size) * sizeof(double));
-    if (*A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    if (*B == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    for (int i = 0; i < *size; i++)
+    for (int i = 0; i < size; i++)
     {
-        (*A)[i] = (double *) malloc((*size) * sizeof(double));
-        if ((*A)[i] == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    }
-
-    for (int i = 0; i < *size; i++)
-    {
-        for (int j = 0; j < *size; j++) { fscanf(file, "%le\t", &(*A)[i][j]); }
+        for (int j = i; j < i + band; j++) { fscanf(file, "%le\t", &(A[i][j])); }
         fscanf(file, "\n");
     }
-    for (int i = 0; i < *size; i++) { fscanf(file, "%le\t", &(*B)[i]); }
+    for (int i = 0; i < size; i++) { fscanf(file, "%le\t", &(B[i])); }
 
     fclose(file);
-    return EXIT_SUCCESS;
+    return theSolver;
+}
+
+femSolver *femFullSystemRead(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+
+    int size;
+    ErrorScan(fscanf(file, "Size %d\n", &size));
+    
+    femSolver *theSolver = femSolverFullCreate(size);
+    femFullSystem *theSystem = theSolver->solver;
+    double **A = theSystem->A;
+    double *B  = theSystem->B;
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++) { fscanf(file, "%le\t", &(A[i][j])); }
+        fscanf(file, "\n");
+    }
+    for (int i = 0; i < size; i++) { fscanf(file, "%le\t", &(B[i])); }
+
+    fclose(file);
+    return theSolver;
+}
+
+femSolver *femSolverRead(femSolverType solverType, const char *filename)
+{
+    switch (solverType)
+    {
+        case FEM_FULL: return femFullSystemRead(filename);
+        case FEM_BAND: return femBandSystemRead(filename);
+        default: Error("Unknown solver type"); return NULL;
+    }
 }
 
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename)
@@ -1380,7 +1429,7 @@ void femSolutionWrite(int nNodes, int nfields, double *data, const char *filenam
     for (int i = 0; i < nNodes; i++)
     {
         for (int j = 0; j < nfields-1; j++) { fprintf(file, "%.18le,", data[i * nfields + j]); }
-        fprintf(file, "%.18le", data[i * nfields + nfields-1]);
+        fprintf(file, "%.18le", data[i * nfields + nfields - 1]);
         fprintf(file, "\n");
     }
     fclose(file);
@@ -1390,7 +1439,7 @@ int femSolutiondRead(int allocated_size, double *value, const char *filename)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
-    int nNodes,nFields;
+    int nNodes, nFields;
     ErrorScan(fscanf(file, "Size %d,%d\n", &nNodes, &nFields));
     if (nNodes * nFields > allocated_size)
     {

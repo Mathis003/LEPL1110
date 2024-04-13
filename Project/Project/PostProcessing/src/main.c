@@ -22,20 +22,17 @@ double *femElasticityForces(femProblem *theProblem)
 {
     double *residuals = theProblem->residuals;
     double *soluce    = theProblem->soluce;
-
-    double **A_copy;
-    double *B_copy;
-    int size;
     
     // Read the system from the file
-    femSystemRead(&A_copy, &B_copy, &size, "../../Processing/data/dirichletUnconstrainedSystem.txt");
+    femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/dirichletUnconstrainedSystem.txt");
+    int size = theSolver->size;
 
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
 
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { residuals[i] += A_copy[i][j] * soluce[j]; }
-        residuals[i] -= B_copy[i];
+        for (int j = 0; j < size; j++) { residuals[i] += femSolverGet(theSolver, i, j) * soluce[j]; }
+        residuals[i] -= femSolverGetB(theSolver, i);
     }
     return residuals;
 }
@@ -116,13 +113,9 @@ int main(int argc, char *argv[])
     }
 
     // Create the solver with the final system to visualize the matrix by pressing 'S'
-    femSolver *theSolver = theProblem->solver;
-    double **A = getMatrixA(theSolver);
-    double *B  = getVectorB(theSolver);
-    int size   = theSolver->size;
-    femSystemRead(&A, &B, &size, "../../Processing/data/finalSystem.txt");
-
-    femSolverSetSystem(theSolver, A, B);
+    femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/finalSystem.txt");
+    femSolverPrint(theSolver);
+    femSystemWrite(theSolver, "../../Processing/data/finalSystemWRITED.txt"); // DONT WORK...
 
     double rho = theProblem->rho;
     double gy = theProblem->gy;

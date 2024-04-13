@@ -197,6 +197,7 @@ femSolver *femSolverBandCreate(int size, int band);
 void femSolverFree(femSolver *mySolver);
 void femSolverInit(femSolver *mySolver);
 double femSolverGet(femSolver *mySolver, int i, int j);
+double femSolverGetB(femSolver *mySolver, int i);
 void femSolverPrint(femSolver *mySolver);
 void femSolverPrintInfos(femSolver *mySolver);
 void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR);
@@ -280,8 +281,12 @@ double *femElasticityForces(femProblem *theProblem);
 void femElasticityPrint(femProblem *theProblem);
 femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
-void femSystemWrite(double **A, double *b, int size, const char *path);
-int femSystemRead(double ***A, double **B, int *size, const char *filename);
+void femSystemWrite(femSolver *theSolver, const char *filename);
+
+femSolver *femBandSystemRead(const char *filename);
+femSolver *femFullSystemRead(const char *filename);
+femSolver *femSolverRead(femSolverType solverType, const char *filename);
+
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);
 int femSolutiondRead(int allocated_size, double *value, const char *filename);
 
