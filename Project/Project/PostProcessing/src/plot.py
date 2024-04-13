@@ -15,25 +15,35 @@ class Mesh:
 
     def __init__(self, fname):
         self.fname = fname
+
         with open(fname, "r") as f:
+
+            ######## Nodes ########
             self.nnodes = int(f.readline().split(" ")[3])
             self.nodes = np.zeros((self.nnodes, 2))
             for i in range(self.nnodes):
                 line = f.readline()
                 parts = [s.strip() for s in line.split(':')]
-                self.nodes[i] = [float(val.strip()) for val in parts[1].split()]
+                part_coord = parts[1].split()
+                # renum_number = int(part_coord[0])
+                part_coord.remove(part_coord[0])
+                self.nodes[i] = [float(val.strip()) for val in part_coord]
 
             line = f.readline()
             while("triangles" not in line and "quads" not in line):
                 line = f.readline()
 
-            self.nlocal = 3 if "triangles" in line else 4
+            ######## Elements ########
             self.nelem = int(line.split(" ")[3])
+
+            if "triangles" in line: self.nlocal = 3
+            else:                   self.nlocal = 4
+
             self.elem = np.zeros((self.nelem, self.nlocal), dtype=np.int32)
             for i in range(self.nelem):
                 line = f.readline()
                 parts = [s.strip() for s in line.split(':')]
-                self.elem[i] = [int(val.strip()) for val in parts[1].split()]
+                self.elem[i] = [int(val.strip()) for val in parts[1].split()][:self.nlocal]
 
     def __str__(self):
         return f"Mesh: {self.fname}\n├─nnodes: {self.nnodes}\n├─nelem: {self.nelem}\n├─local: {self.nlocal}\n├─nodes: array(shape=({self.nodes.shape[0]},{self.nodes.shape[1]}), dtype=np.float64)\n└─elem: array(shape=({self.elem.shape[0]},{self.elem.shape[1]}), dtype=np.int32)\n"
@@ -115,7 +125,6 @@ if __name__ == "__main__":
     nameMesh = ""
     if exampleUse: nameMesh = "../../Processing/data/mesh_example.txt"
     else : nameMesh = "../../Processing/data/mesh.txt"
-
     mesh = Mesh(nameMesh)
     print(mesh)
 
