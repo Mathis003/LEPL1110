@@ -1443,7 +1443,13 @@ void geoMeshWrite(const char *filename, femDiscreteType dType)
     femMesh *theEdges = theGeometry.theEdges;
     fprintf(file, "Number of edges %d \n", theEdges->nElem);
     int *elem = theEdges->elem;
-    for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %6d %6d \n", i, elem[2 * i], elem[2 * i + 1]); }
+    if(dType==FEM_DISCRETE_TYPE_LINEAR){
+        theEdges->nLocalNode = 2;
+        for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %6d %6d \n", i, elem[2 * i], elem[2 * i + 1]); }
+    } else if(dType==FEM_DISCRETE_TYPE_QUADRATIC){
+        theEdges->nLocalNode = 3;
+        for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %10d %10d %10d \n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
+    }
 
     femMesh *theElements = theGeometry.theElements;
     int nLocalNodeTrig = 3;
@@ -1516,13 +1522,17 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     for (int i = 0; i < theEdges->nElem; ++i)
     {
         elem = theEdges->elem;
-        ErrorScan(fscanf(file, "%6d : %6d %6d \n", &trash, &elem[2 * i], &elem[2 * i + 1]));
+        if (dType==FEM_DISCRETE_TYPE_LINEAR){
+            ErrorScan(fscanf(file, "%6d : %6d %6d \n", &trash, &elem[2 * i], &elem[2 * i + 1]));
+        } else if (dType==FEM_DISCRETE_TYPE_QUADRATIC){
+            ErrorScan(fscanf(file, "%6d : %10d %10d %10d \n", &trash, &elem[3 * i], &elem[3 * i + 1], &elem[3 * i + 2]));
+            //printf("Vertices values : %d %d %d \n", elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]);
+        }
     }
 
     femMesh *theElements = malloc(sizeof(femMesh));
     if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theElements = theElements;
-    theElements->nLocalNode = 0;
     theElements->nodes = theNodes;
     char elementType[MAXNAME];
     ErrorScan(fscanf(file, "Number of %s %d \n", elementType, &theElements->nElem));
