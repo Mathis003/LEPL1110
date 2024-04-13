@@ -32,14 +32,14 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
     femMesh *theMesh         = theGeometry->theElements;
 
     //if (theSpace->n > 4) Error("Unexpected discrete space size !");
+    int nLocal = theSpace->n;
 
-    double x[6], y[6], phi[6], dphidxsi[6], dphideta[6], dphidx[6], dphidy[6];
-    int size, iElem, iInteg, iEdge, i, j, d, map[6], mapX[6], mapY[6];
+    double x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal];
+    int size, iElem, iInteg, iEdge, i, j, d, map[nLocal], mapX[nLocal], mapY[nLocal];
     void *theSystem;
     double **A, *B;
 
     int *number = theMesh->nodes->number;
-    int nLocal = theMesh->nLocalNode;
     double a   = theProblem->A;
     double b   = theProblem->B;
     double c   = theProblem->C;
@@ -110,12 +110,13 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
     femNodes *theNodes       = theGeometry->theNodes;
     femMesh *theEdges        = theGeometry->theEdges;
 
-    double x[3], y[3], phi[3], tx, ty, nx, ny, norm_n, norm_t, a, b;
-    int iBnd, iElem, iInteg, iEdge, i, j, d, map[3], mapU[3];
+    int nLocal = theSpace->n;
+
+    double x[nLocal], y[nLocal], phi[nLocal], tx, ty, nx, ny, norm_n, norm_t, a, b;
+    int iBnd, iElem, iInteg, iEdge, i, j, d, map[nLocal], mapU[nLocal];
     double oldValue, oldType;
     int changeType;
 
-    int nLocal = theSpace->n;
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
 
