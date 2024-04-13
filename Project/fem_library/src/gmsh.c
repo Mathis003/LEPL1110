@@ -211,7 +211,7 @@ void geoMeshImport(femDiscreteType discreteType)
     }
 
     theEdges->nElem = countEdges;
-    theEdges->elem = realloc(theEdges->elem, sizeof(int) * 2 * theEdges->nElem);
+    theEdges->elem = realloc(theEdges->elem, sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
     if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     int shiftEdges = elem[0];

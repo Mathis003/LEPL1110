@@ -91,9 +91,9 @@ int main(int argc, char *argv[])
         // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_NT, 0.0, 0.0);
         // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e4, NAN);
         // femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_NT, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_X, 1e-5, NAN);
+        //femElasticityAddBoundaryCondition(theProblem, "Symmetry", NEUMANN_X, 1e-5, NAN);
         femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -5e1, NAN);
+        //femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -5e1, NAN);
 
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
