@@ -14,6 +14,7 @@
 
 #include "../../../fem_library/include/fem.h"
 #include "../../../glfem_library/glfem.h"
+#include "../../var.h"
 
 double constFunct(double x, double y) { return 1.0; }
 
@@ -91,9 +92,6 @@ int main(int argc, char *argv[])
 
     femGeometry *theGeometry = geoGetGeometry();
 
-    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
-    femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
-    femDiscreteType discretType = FEM_DISCRETE_TYPE_QUADRATIC; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
     int n;
     double *theSoluce;
     femProblem *theProblem;
@@ -116,7 +114,6 @@ int main(int argc, char *argv[])
         femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV.txt");
         femElasticityPrint(theProblem);
     }
-
 
     // Create the solver with the final system to visualize the matrix by pressing 'S'
     femSolver *theSolver = theProblem->solver;

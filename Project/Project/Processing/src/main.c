@@ -18,6 +18,7 @@
 */
 
 #include "../../../fem_library/include/fem.h"
+#include "../../var.h"
 
 #include <getopt.h>
 #include <unistd.h>
@@ -50,10 +51,6 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
     }
-
-    femSolverType typeSolver = FEM_FULL; // FEM_FULL or FEM_BAND
-    femRenumType renumType   = FEM_XNUM; // FEM_NO or FEM_XNUM or FEM_YNUM (or FEM_RCMK)
-    femDiscreteType discretType = FEM_DISCRETE_TYPE_QUADRATIC; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
 
     femGeometry *theGeometry = geoGetGeometry();
     

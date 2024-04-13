@@ -13,6 +13,7 @@
 #include "../../../fem_library/include/fem.h"
 #include "../../../fem_library/include/gmsh.h"
 #include "../../../glfem_library/glfem.h"
+#include "../../var.h"
 
 #include <getopt.h>
 
@@ -51,10 +52,7 @@ int main(int argc, char *argv[])
 
     geoInitialize();
     femGeometry *theGeometry = geoGetGeometry();
-
-    theGeometry->elementType = FEM_TRIANGLE;   // FEM_QUAD or FEM_TRIANGLE
-    femDiscreteType discretType = FEM_DISCRETE_TYPE_QUADRATIC; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
-    femElasticCase theCase   = PLANAR_STRESS;  // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
+    theGeometry->elementType = elementType;
 
     if (exampleUsage == TRUE)
     {
