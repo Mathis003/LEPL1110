@@ -786,7 +786,6 @@ void _p1c0_dphidx_linear(double xsi, double eta, double *dphidxsi, double *dphid
     dphideta[2] =  1.0;
 }
 
-
 /***** Triangle with 6 nodes *****/
 void _p1c0_x_quadratic(double *xsi, double *eta)
 {
@@ -1503,26 +1502,32 @@ void geoMeshWrite(const char *filename, femDiscreteType dType)
     femMesh *theEdges = theGeometry.theEdges;
     fprintf(file, "Number of edges %d \n", theEdges->nElem);
     int *elem = theEdges->elem;
-    if(dType==FEM_DISCRETE_TYPE_LINEAR){
+    if (dType == FEM_DISCRETE_TYPE_LINEAR)
+    {
         theEdges->nLocalNode = 2;
         for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %6d %6d \n", i, elem[2 * i], elem[2 * i + 1]); }
-    } else if(dType==FEM_DISCRETE_TYPE_QUADRATIC){
+    }
+    else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
         theEdges->nLocalNode = 3;
         for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %10d %10d %10d \n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
     }
 
     femMesh *theElements = theGeometry.theElements;
     int nLocalNodeTrig = 3;
-    if(dType==FEM_DISCRETE_TYPE_QUADRATIC) nLocalNodeTrig = 6;
     int nLocalNodeQuad = 4;
-    if(dType==FEM_DISCRETE_TYPE_QUADRATIC) nLocalNodeQuad = 9;
+    if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { nLocalNodeTrig = 6; nLocalNodeQuad = 9; }
+
     if (theElements->nLocalNode == nLocalNodeTrig)
     {
         fprintf(file, "Number of triangles %d \n", theElements->nElem);
         elem = theElements->elem;
-        if(dType==FEM_DISCRETE_TYPE_LINEAR){
+        if (dType == FEM_DISCRETE_TYPE_LINEAR)
+        {
             for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d\n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
-        } else if(dType==FEM_DISCRETE_TYPE_QUADRATIC){
+        }
+        else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+        {
             for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d %6d %6d\n", i, elem[6 * i], elem[6 * i + 1], elem[6 * i + 2], elem[6 * i + 3], elem[6 * i + 4], elem[6 * i + 5]); }
         }
     }
@@ -1530,7 +1535,14 @@ void geoMeshWrite(const char *filename, femDiscreteType dType)
     {
         fprintf(file, "Number of quads %d \n", theElements->nElem);
         elem = theElements->elem;
-        for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d\n", i, elem[4 * i], elem[4 * i + 1], elem[4 * i + 2], elem[4 * i + 3]); }
+        if (dType == FEM_DISCRETE_TYPE_LINEAR)
+        {
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d\n", i, elem[4 * i], elem[4 * i + 1], elem[4 * i + 2], elem[4 * i + 3]); }
+        }
+        else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+        {
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d %6d %6d %6d %6d %6d\n", i, elem[9 * i], elem[9 * i + 1], elem[9 * i + 2], elem[9 * i + 3], elem[9 * i + 4], elem[9 * i + 5], elem[9 * i + 6], elem[9 * i + 7], elem[9 * i + 8]); }
+        }
     }
 
     int nDomains = theGeometry.nDomains;
@@ -1574,7 +1586,7 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     theEdges->nLocalNode = 2;
-    if(dType==FEM_DISCRETE_TYPE_QUADRATIC) theEdges->nLocalNode = 3;
+    if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { theEdges->nLocalNode = 3; }
     theEdges->nodes = theNodes;
     ErrorScan(fscanf(file, "Number of edges %d \n", &theEdges->nElem));
     theEdges->elem = malloc(sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
@@ -1582,11 +1594,13 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     for (int i = 0; i < theEdges->nElem; ++i)
     {
         elem = theEdges->elem;
-        if (dType==FEM_DISCRETE_TYPE_LINEAR){
+        if (dType == FEM_DISCRETE_TYPE_LINEAR)
+        {
             ErrorScan(fscanf(file, "%6d : %6d %6d \n", &trash, &elem[2 * i], &elem[2 * i + 1]));
-        } else if (dType==FEM_DISCRETE_TYPE_QUADRATIC){
+        }
+        else if (dType==FEM_DISCRETE_TYPE_QUADRATIC)
+        {
             ErrorScan(fscanf(file, "%6d : %10d %10d %10d \n", &trash, &elem[3 * i], &elem[3 * i + 1], &elem[3 * i + 2]));
-            //printf("Vertices values : %d %d %d \n", elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]);
         }
     }
 
@@ -1599,15 +1613,18 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     if (strncasecmp(elementType, "triangles", MAXNAME) == 0)
     {
         theElements->nLocalNode = 3;
-        if(dType==FEM_DISCRETE_TYPE_QUADRATIC) theElements->nLocalNode = 6;
+        if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { theElements->nLocalNode = 6; }
         theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
             elem = theElements->elem;
-            if(dType==FEM_DISCRETE_TYPE_LINEAR){
+            if (dType == FEM_DISCRETE_TYPE_LINEAR)
+            {
                 ErrorScan(fscanf(file, "%6d : %6d %6d %6d \n", &trash, &elem[3 * i], &elem[3 * i + 1], &elem[3 * i + 2]));
-            } else if (dType==FEM_DISCRETE_TYPE_QUADRATIC){
+            }
+            else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+            {
                 ErrorScan(fscanf(file, "%6d : %6d %6d %6d %6d %6d %6d \n", &trash, &elem[6 * i], &elem[6 * i + 1], &elem[6 * i + 2], &elem[6 * i + 3], &elem[6 * i + 4], &elem[6 * i + 5]));
             }
         }
@@ -1615,13 +1632,20 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     if (strncasecmp(elementType, "quads", MAXNAME) == 0)
     {
         theElements->nLocalNode = 4;
-        if(dType==FEM_DISCRETE_TYPE_QUADRATIC) theElements->nLocalNode = 9;
+        if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { theElements->nLocalNode = 9; }
         theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
             elem = theElements->elem;
-            ErrorScan(fscanf(file, "%6d : %6d %6d %6d %6d \n", &trash, &elem[4 * i], &elem[4 * i + 1], &elem[4 * i + 2], &elem[4 * i + 3]));
+            if (dType == FEM_DISCRETE_TYPE_LINEAR)
+            {
+                ErrorScan(fscanf(file, "%6d : %6d %6d %6d %6d \n", &trash, &elem[4 * i], &elem[4 * i + 1], &elem[4 * i + 2], &elem[4 * i + 3]));
+            }
+            else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+            {
+                ErrorScan(fscanf(file, "%6d : %6d %6d %6d %6d %6d %6d %6d %6d %6d \n", &trash, &elem[9 * i], &elem[9 * i + 1], &elem[9 * i + 2], &elem[9 * i + 3], &elem[9 * i + 4], &elem[9 * i + 5], &elem[9 * i + 6], &elem[9 * i + 7], &elem[9 * i + 8]));
+            }
         }
     }
 
