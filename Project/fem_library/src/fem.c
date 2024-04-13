@@ -682,7 +682,8 @@ femIntegration *femIntegrationCreate(int n, femElementType type)
 
 void femIntegrationFree(femIntegration *theRule) { free(theRule); }
 
-void _q1c0_x(double *xsi, double *eta)
+/***** Quad with 4 nodes *****/
+void _q1c0_x_linear(double *xsi, double *eta)
 {
     xsi[0] = 1.0;  eta[0] = 1.0;
     xsi[1] = -1.0; eta[1] = 1.0;
@@ -690,7 +691,7 @@ void _q1c0_x(double *xsi, double *eta)
     xsi[3] = 1.0;  eta[3] = -1.0;
 }
 
-void _q1c0_phi(double xsi, double eta, double *phi)
+void _q1c0_phi_linear(double xsi, double eta, double *phi)
 {
     phi[0] = (1.0 + xsi) * (1.0 + eta) / 4.0;
     phi[1] = (1.0 - xsi) * (1.0 + eta) / 4.0;
@@ -698,29 +699,84 @@ void _q1c0_phi(double xsi, double eta, double *phi)
     phi[3] = (1.0 + xsi) * (1.0 - eta) / 4.0;
 }
 
-void _q1c0_dphidx(double xsi, double eta, double *dphidxsi, double *dphideta)
+void _q1c0_dphidx_linear(double xsi, double eta, double *dphidxsi, double *dphideta)
 {
-    dphidxsi[0] =  (1.0 + eta) / 4.0; dphidxsi[1] = -(1.0 + eta) / 4.0;
-    dphidxsi[2] = -(1.0 - eta) / 4.0; dphidxsi[3] =  (1.0 - eta) / 4.0;
-    dphideta[0] =  (1.0 + xsi) / 4.0; dphideta[1] =  (1.0 - xsi) / 4.0;
-    dphideta[2] = -(1.0 - xsi) / 4.0; dphideta[3] = -(1.0 + xsi) / 4.0;
+    dphidxsi[0] =  (1.0 + eta) / 4.0;
+    dphidxsi[1] = -(1.0 + eta) / 4.0;
+    dphidxsi[2] = -(1.0 - eta) / 4.0;
+    dphidxsi[3] =  (1.0 - eta) / 4.0;
+    dphideta[0] =  (1.0 + xsi) / 4.0;
+    dphideta[1] =  (1.0 - xsi) / 4.0;
+    dphideta[2] = -(1.0 - xsi) / 4.0;
+    dphideta[3] = -(1.0 + xsi) / 4.0;
 }
 
-void _p1c0_x(double *xsi, double *eta)
+/***** Quad with 9 nodes *****/
+void _q1c0_x_quadratic(double *xsi, double *eta)
+{
+    xsi[0] = 1.0;  eta[0] = 1.0;
+    xsi[1] = -1.0; eta[1] = 1.0;
+    xsi[2] = -1.0; eta[2] = -1.0;
+    xsi[3] = 1.0;  eta[3] = -1.0;
+    xsi[4] = 0.0;  eta[4] = 1.0;
+    xsi[5] = -1.0; eta[5] = 0.0;
+    xsi[6] = 0.0;  eta[6] = -1.0;
+    xsi[7] = 1.0;  eta[7] = 0.0;
+    xsi[8] = 0.0;  eta[8] = 0.0;
+}
+
+void _q1c0_phi_quadratic(double xsi, double eta, double *phi)
+{
+    phi[0] = xsi * (1 + xsi) * eta * (1 + eta) / 4.0;
+    phi[1] = - xsi * (1 - xsi) * eta * (1 + eta) / 4.0;
+    phi[2] = xsi * (1 - xsi) * eta * (1 - eta) / 4.0;
+    phi[3] = - xsi * (1 + xsi) * eta * (1 - eta) / 4.0;
+    phi[4] = (1 + xsi) * (1 - xsi) * eta * (1 + eta) / 2.0;
+    phi[5] = - xsi * (1 - xsi) * (1 - eta) * (1 + eta) / 2.0;
+    phi[6] =  - (1 - xsi) * (1 + xsi) * eta * (1 - eta) / 2.0;
+    phi[7] = xsi * (1 + xsi) * (1 - eta) * (1 + eta) / 2.0;
+    phi[8] = (1 - xsi) * (1 + xsi) * (1 - eta) * (1 + eta);
+}
+
+void _q1c0_dphidx_quadratic(double xsi, double eta, double *dphidxsi, double *dphideta)
+{
+    dphidxsi[0] = (2 * xsi + 1) * eta * (1 + eta) / 4.0;
+    dphidxsi[1] = (2 * xsi - 1) * eta * (1 + eta) / 4.0;
+    dphidxsi[2] = (1 - 2 * xsi) * eta * (1 - eta) / 4.0;
+    dphidxsi[3] = - (2 * xsi + 1) * eta * (1 - eta) / 4.0;
+    dphidxsi[4] = - 2 * xsi * eta * (1 + eta) / 2.0;
+    dphidxsi[5] = (2 * xsi - 1) * (1 - eta) * (1 + eta) / 2.0;
+    dphidxsi[6] = 2 * xsi * eta * (1 - eta) / 2.0;
+    dphidxsi[7] = (2 * xsi + 1) * (1 - eta) * (1 + eta) / 2.0;
+    dphidxsi[8] = - 2 * xsi * (1 - eta) * (1 + eta);
+
+    dphideta[0] = (2 * eta + 1) * xsi * (1 + xsi) / 4.0;
+    dphideta[1] = - (2 * eta + 1) * xsi * (1 - xsi) / 4.0;
+    dphideta[2] = (1 - 2 * eta) * xsi * (1 - xsi) / 4.0;
+    dphideta[3] = (2 * eta - 1) * xsi * (1 + xsi) / 4.0;
+    dphideta[4] = (2 * eta + 1) * (1 + xsi) * (1 - xsi) / 2.0;
+    dphideta[5] = 2 * eta * xsi * (1 - xsi) / 2.0;
+    dphideta[6] = (2 * eta - 1) * (1 - xsi) * (1 + xsi) / 2.0;
+    dphideta[7] = - 2 * eta * xsi * (1 + xsi) / 2.0;
+    dphideta[8] = - 2 * eta * (1 - xsi) * (1 + xsi);
+}
+
+/***** Triangle with 6 nodes *****/
+void _p1c0_x_linear(double *xsi, double *eta)
 {
     xsi[0] = 0.0; eta[0] = 0.0;
     xsi[1] = 1.0; eta[1] = 0.0;
     xsi[2] = 0.0; eta[2] = 1.0;
 }
 
-void _p1c0_phi(double xsi, double eta, double *phi)
+void _p1c0_phi_linear(double xsi, double eta, double *phi)
 {
     phi[0] = 1 - xsi - eta;
     phi[1] = xsi;
     phi[2] = eta;
 }
 
-void _p1c0_dphidx(double xsi, double eta, double *dphidxsi, double *dphideta)
+void _p1c0_dphidx_linear(double xsi, double eta, double *dphidxsi, double *dphideta)
 {
     dphidxsi[0] = -1.0;
     dphidxsi[1] =  1.0;
@@ -730,8 +786,9 @@ void _p1c0_dphidx(double xsi, double eta, double *dphidxsi, double *dphideta)
     dphideta[2] =  1.0;
 }
 
-//Node of the form function
-void _p1c0_x_quad(double *xsi, double *eta)
+
+/***** Triangle with 6 nodes *****/
+void _p1c0_x_quadratic(double *xsi, double *eta)
 {
     xsi[0] = 0.0; eta[0] = 0.0;
     xsi[1] = 1.0; eta[1] = 0.0;
@@ -741,117 +798,120 @@ void _p1c0_x_quad(double *xsi, double *eta)
     xsi[5] = 0.0; eta[5] = 0.5;
 }
 
-//forms functions
-void _p1c0_phi_quad(double xsi, double eta, double *phi)
+void _p1c0_phi_quadratic(double xsi, double eta, double *phi)
 {
-    phi[0] = 1 - 3*(xsi + eta) + 2*(xsi + eta)*(xsi + eta);
-    phi[1] = xsi*(2*xsi - 1);
-    phi[2] = eta*(2*eta - 1);
-    phi[3] = 4*xsi*(1 - xsi - eta);
-    phi[4] = 4*xsi*eta;
-    phi[5] = 4*eta*(1 - xsi - eta);
+    phi[0] = 1 - 3 * (xsi + eta) + 2 * (xsi + eta) * (xsi + eta);
+    phi[1] = xsi * (2 * xsi - 1);
+    phi[2] = eta * (2*eta - 1);
+    phi[3] = 4 * xsi * (1 - xsi - eta);
+    phi[4] = 4 * xsi * eta;
+    phi[5] = 4 * eta * (1 - xsi - eta);
 }
 
-//derivatives of the forms functions
-void _p1c0_dphidx_quad(double xsi, double eta, double *dphidxsi, double *dphideta)
+void _p1c0_dphidx_quadratic(double xsi, double eta, double *dphidxsi, double *dphideta)
 {
-    dphidxsi[0] = -3 + 4*(xsi + eta);
-    dphidxsi[1] =  4*xsi - 1;
+    dphidxsi[0] = -3 + 4 * (xsi + eta);
+    dphidxsi[1] =  4 * xsi - 1;
     dphidxsi[2] =  0.0;
-    dphidxsi[3] =  4 - 8*xsi - 4*eta;
-    dphidxsi[4] =  4*eta;
-    dphidxsi[5] = -4*eta;
+    dphidxsi[3] =  4 * (1 - 2 * xsi - eta);
+    dphidxsi[4] =  4 * eta;
+    dphidxsi[5] = -4 * eta;
 
-    dphideta[0] = -3 + 4*(xsi + eta);
+    dphideta[0] = -3 + 4 * (xsi + eta);
     dphideta[1] =  0.0;
-    dphideta[2] =  4*eta - 1;
-    dphideta[3] = -4*xsi;
-    dphideta[4] =  4*xsi;
-    dphideta[5] =  4 - 4*xsi - 8*eta;
+    dphideta[2] =  4 * eta - 1;
+    dphideta[3] = -4 * xsi;
+    dphideta[4] =  4 * xsi;
+    dphideta[5] =  4 * (1 - xsi - 2 * eta);
 }
 
-void _e1c0_x(double *xsi) 
+/***** Edge with 2 nodes *****/
+void _e1c0_x_linear(double *xsi) 
 {
     xsi[0] = -1.0;  
     xsi[1] =  1.0;  
 }
 
-void _e1c0_phi(double xsi,  double *phi)
+void _e1c0_phi_linear(double xsi,  double *phi)
 {
     phi[0] = (1 - xsi) / 2.0;  
     phi[1] = (1 + xsi) / 2.0;
 }
 
-void _e1c0_dphidx(double xsi, double *dphidxsi)
+void _e1c0_dphidx_linear(double xsi, double *dphidxsi)
 {
     dphidxsi[0] = -0.5;  
     dphidxsi[1] =  0.5;
 }
 
-void _e1c0_x_quad(double *xsi) 
+/***** Edge with 3 nodes *****/
+void _e1c0_x_quadratic(double *xsi) 
 {
     xsi[0] = -1.0;  
     xsi[1] =  1.0;
     xsi[2] =  0.0;
 }
 
-void _e1c0_phi_quad(double xsi,  double *phi)
+void _e1c0_phi_quadratic(double xsi,  double *phi)
 {
-    phi[0] = -xsi*(1-xsi) / 2.0;
-    phi[1] = xsi*(1+xsi) / 2.0;
-    phi[2] = 1 - xsi*xsi;
+    phi[0] = -xsi * (1 - xsi) / 2.0;
+    phi[1] = xsi * (1 + xsi) / 2.0;
+    phi[2] = 1 - xsi * xsi;
 }
 
-void _e1c0_dphidx_quad(double xsi, double *dphidxsi)
+void _e1c0_dphidx_quadratic(double xsi, double *dphidxsi)
 {
-    dphidxsi[0] = xsi -0.5;
+    dphidxsi[0] = xsi - 0.5;
     dphidxsi[1] =  xsi + 0.5;
-    dphidxsi[2] = -2.0*xsi;
+    dphidxsi[2] = -2.0 * xsi;
 }
 
 femDiscrete *femDiscreteCreate(femElementType type, femDiscreteType dType)
 {
     femDiscrete *theSpace = malloc(sizeof(femDiscrete));
     if (theSpace == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    if (type == FEM_QUAD && dType == FEM_DISCRETE_TYPE_LINEAR)
-    {
-        theSpace->n       = 4;
-        theSpace->x2      = _q1c0_x;
-        theSpace->phi2    = _q1c0_phi;
-        theSpace->dphi2dx = _q1c0_dphidx;
-    }
-    else if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_LINEAR)
+
+    if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_LINEAR)
     {
         theSpace->n       = 3;
-        theSpace->x2      = _p1c0_x;
-        theSpace->phi2    = _p1c0_phi;
-        theSpace->dphi2dx = _p1c0_dphidx;
+        theSpace->x2      = _p1c0_x_linear;
+        theSpace->phi2    = _p1c0_phi_linear;
+        theSpace->dphi2dx = _p1c0_dphidx_linear;
+    }
+    else if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
+        theSpace->n       = 6;
+        theSpace->x2      = _p1c0_x_quadratic;
+        theSpace->phi2    = _p1c0_phi_quadratic;
+        theSpace->dphi2dx = _p1c0_dphidx_quadratic;
+    }
+    else if (type == FEM_QUAD && dType == FEM_DISCRETE_TYPE_LINEAR)
+    {
+        theSpace->n       = 4;
+        theSpace->x2      = _q1c0_x_linear;
+        theSpace->phi2    = _q1c0_phi_linear;
+        theSpace->dphi2dx = _q1c0_dphidx_linear;
+    }
+    else if (type == FEM_QUAD && dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
+        theSpace->n        = 9;
+        theSpace->x2       = _q1c0_x_quadratic;
+        theSpace->phi2     = _q1c0_phi_quadratic;
+        theSpace->dphi2dx  = _q1c0_dphidx_quadratic;
     }
     else if (type == FEM_EDGE && dType == FEM_DISCRETE_TYPE_LINEAR)
     {
         theSpace->n       = 2;
-        theSpace->x       = _e1c0_x;
-        theSpace->phi     = _e1c0_phi;
-        theSpace->dphidx  = _e1c0_dphidx;
-    }
-    else if (type == FEM_QUAD && dType == FEM_DISCRETE_TYPE_QUADRATIC)
-    {
-        Error("Quadratic quadrilateral not implemented yet");
-    }
-    else if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_QUADRATIC)
-    {
-        printf("Quadratic triangle\n");
-        theSpace->n       = 6;
-        theSpace->x2      = _p1c0_x_quad;
-        theSpace->phi2    = _p1c0_phi_quad;
-        theSpace->dphi2dx = _p1c0_dphidx_quad;
+        theSpace->x       = _e1c0_x_linear;
+        theSpace->phi     = _e1c0_phi_linear;
+        theSpace->dphidx  = _e1c0_dphidx_linear;
     }
     else if (type == FEM_EDGE && dType == FEM_DISCRETE_TYPE_QUADRATIC)
     {
         theSpace->n       = 3;
-        theSpace->x       = _e1c0_x_quad;
-        theSpace->phi     = _e1c0_phi_quad;
-        theSpace->dphidx  = _e1c0_dphidx_quad;
+        theSpace->x       = _e1c0_x_quadratic;
+        theSpace->phi     = _e1c0_phi_quadratic;
+        theSpace->dphidx  = _e1c0_dphidx_quadratic;
     }
     else { Error("Cannot create such a discrete space ! type :"); }
     return theSpace;

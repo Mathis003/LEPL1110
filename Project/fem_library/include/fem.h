@@ -225,6 +225,26 @@ static const double _gaussEdge2Weight[2] = { 1.000000000000000, 1.00000000000000
 femIntegration *femIntegrationCreate(int n, femElementType type);
 void femIntegrationFree(femIntegration *theRule);
 
+void _q1c0_x_linear(double *xsi, double *eta);
+void _q1c0_phi_linear(double xsi, double eta, double *phi);
+void _q1c0_dphidx_linear(double xsi, double eta, double *dphidxsi, double *dphideta);
+void _p1c0_x_linear(double *xsi, double *eta);
+void _p1c0_phi_linear(double xsi, double eta, double *phi);
+void _p1c0_dphidx_linear(double xsi, double eta, double *dphidxsi, double *dphideta);
+void _e1c0_x_linear(double *xsi);
+void _e1c0_phi_linear(double xsi,  double *phi);
+void _e1c0_dphidx_linear(double xsi, double *dphidxsi);
+
+void _q1c0_x_quadratic(double *xsi, double *eta);
+void _q1c0_phi_quadratic(double xsi, double eta, double *phi);
+void _q1c0_dphidx_quadratic(double xsi, double eta, double *dphidxsi, double *dphideta);
+void _p1c0_x_quadratic(double *xsi, double *eta);
+void _p1c0_phi_quadratic(double xsi, double eta, double *phi);
+void _p1c0_dphidx_quadratic(double xsi, double eta, double *dphidxsi, double *dphideta);
+void _e1c0_x_quadratic(double *xsi);
+void _e1c0_phi_quadratic(double xsi,  double *phi);
+void _e1c0_dphidx_quadratic(double xsi, double *dphidxsi);
+
 femDiscrete *femDiscreteCreate(femElementType type, femDiscreteType dType);
 void femDiscreteFree(femDiscrete *mySpace);
 void femDiscretePrint(femDiscrete *mySpace);
