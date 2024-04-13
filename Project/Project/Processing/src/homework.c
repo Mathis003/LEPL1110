@@ -35,32 +35,20 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
     int nLocal = theSpace->n;
 
     double x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal];
-    int size, iElem, iInteg, iEdge, i, j, d, map[nLocal], mapX[nLocal], mapY[nLocal];
-    void *theSystem;
-    double **A, *B;
+    int iElem, iInteg, iEdge, i, map[nLocal], mapX[nLocal], mapY[nLocal];
 
     int *number = theMesh->nodes->number;
-    double a   = theProblem->A;
-    double b   = theProblem->B;
-    double c   = theProblem->C;
-    double rho = theProblem->rho;
-    double gx  = theProblem->gx;
-    double gy  = theProblem->gy;
-
-    A     = getMatrixA(theSolver);
-    B     = getVectorB(theSolver);
-    size = getSizeMatrix(theSolver);
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {
-        for (j = 0; j < theSpace->n; j++)
+        for (i = 0; i < theSpace->n; i++)
         {
-            map[j] = theMesh->elem[iElem * nLocal + j];
-            mapX[j] = 2 * map[j];
-            mapY[j] = 2 * map[j] + 1;
-            x[j] = theNodes->X[map[j]];
-            y[j] = theNodes->Y[map[j]];
-            map[j] = number[map[j]];
+            map[i] = theMesh->elem[iElem * nLocal + i];
+            mapX[i] = 2 * map[i];
+            mapY[i] = 2 * map[i] + 1;
+            x[i] = theNodes->X[map[i]];
+            y[i] = theNodes->Y[map[i]];
+            // map[i] = number[map[i]];
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -247,11 +235,15 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
     femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
 
+    int *number = theNodes->number;
+
     for (int node = 0; node < theNodes->nNodes; node++)
     {
         femConstrainedNode *theConstrainedNode = &theProblem->constrainedNodes[node];
         if (theConstrainedNode->type == UNDEFINED) { continue; }
         femBoundaryType type = theConstrainedNode->type;
+
+
 
         int Ux = 2 * node;
         int Uy = 2 * node + 1;
@@ -321,11 +313,11 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
     femSolverInit(theSolver);
 
     femElasticityAssembleElements(theProblem, FACTOR);
-    femElasticityAssembleNeumann(theProblem, FACTOR);
+    // femElasticityAssembleNeumann(theProblem, FACTOR);
 
     double **A = getMatrixA(theSolver);
     double *B  = getVectorB(theSolver);
-    int size   = getSizeMatrix(theSolver);
+    int size   = theSolver->size;
     
     // Copy the Dirichlet unconstrained system
     femSystemWrite(A, B, size, "../data/dirichletUnconstrainedSystem.txt");
@@ -334,16 +326,19 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
 
     A = getMatrixA(theSolver);
     B = getVectorB(theSolver);
-    size = getSizeMatrix(theSolver);
+    size = theSolver->size;
 
     // Copy the final system
     femSystemWrite(A, B, size, "../data/finalSystem.txt");
 
     double *soluce = femSolverEliminate(theSolver);
+
     for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
     {
-        theProblem->soluce[i] += soluce[theProblem->geometry->theNodes->number[i / 2 + i % 2]];
+        theProblem->soluce[2 * i] += soluce[2 * theProblem->geometry->theNodes->number[i]];
+        theProblem->soluce[2 * i + 1] += soluce[2 * theProblem->geometry->theNodes->number[i] + 1];
     }
+
     memcpy(theProblem->soluce, soluce, size * sizeof(double));
     return theProblem->soluce;
 }

@@ -175,7 +175,7 @@ void femBandSystemFree(femBandSystem *myBandSystem);
 void femBandSystemInit(femBandSystem *myBandSystem, int size);
 void femBandSystemAlloc(femBandSystem *system, int size, int band);
 int isInBand(int band, int myRow, int myCol);
-int comparPosNode(const void *a, const void *b);
+int comparPositionNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR);
@@ -194,7 +194,6 @@ void femSolverSetSystem(femSolver *mySolver, double **A, double *B);
 femSolver *femSolverCreate(int size);
 femSolver *femSolverFullCreate(int size);
 femSolver *femSolverBandCreate(int size, int band);
-femSolver *femSolverIterativeCreate(int size);
 void femSolverFree(femSolver *mySolver);
 void femSolverInit(femSolver *mySolver);
 double femSolverGet(femSolver *mySolver, int i, int j);
@@ -207,7 +206,6 @@ double *femSolverEliminate(femSolver *mySolver);
 int femSolverConverged(femSolver *mySolver);
 double **getMatrixA(femSolver *mySolver);
 double *getVectorB(femSolver *mySolver);
-double getSizeMatrix(femSolver *mySolver);
 
 /**************************************/
 /* Discrete space + Integration space */

@@ -277,19 +277,26 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
     double gx  = theProblem->gx;
     double gy  = theProblem->gy;
 
+    int iOffsetX, iOffsetY, jOffsetX, jOffsetY;
+
     if (theProblem->planarStrainStress == PLANAR_STRAIN || theProblem->planarStrainStress == PLANAR_STRESS)
     {
         for (int i = 0; i < nLoc; i++)
         {
+            iOffsetX = mapX[i];
+            iOffsetY = mapY[i];
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
-                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
-                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
+                jOffsetX = mapX[j];
+                jOffsetY = mapY[j];
+
+                A[iOffsetX][jOffsetX] += isInBand(band, iOffsetX, jOffsetX) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
+                A[iOffsetX][jOffsetY] += isInBand(band, iOffsetX, jOffsetY) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
+                A[iOffsetY][jOffsetX] += isInBand(band, iOffsetY, jOffsetX) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
+                A[iOffsetY][jOffsetY] += isInBand(band, iOffsetY, jOffsetY) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
             }
-            B[mapX[i]] += phi[i] * gx * rho * weightedJac * FACTOR;
-            B[mapY[i]] += phi[i] * gy * rho * weightedJac * FACTOR;
+            B[iOffsetX] += phi[i] * gx * rho * weightedJac * FACTOR;
+            B[iOffsetY] += phi[i] * gy * rho * weightedJac * FACTOR;
         }
     }
     else if (theProblem->planarStrainStress == AXISYM)
@@ -315,8 +322,8 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
 {
     double **A = system->A;
     int band   = system->band;
-    return A[myRow][myCol];
-    // return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
+    // return A[myRow][myCol];
+    return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
 }
 
 // TODO : Is this good ?
@@ -475,7 +482,7 @@ int femMeshComputeBand(femMesh *theMesh)
         }
         if (band < maxNum - minNum) { band = maxNum - minNum; }
     }
-    return ++band;
+    return 2 * (band + 1);
 }
 
 
@@ -641,12 +648,6 @@ double *getVectorB(femSolver *mySolver)
         default :       Error("Unexpected solver type");
     }
 }
-
-double getSizeMatrix(femSolver *mySolver)
-{
-    return mySolver->size;
-}
-
 
 /**********************************************************/
 /******* Discrete space + Integrate space functions *******/
