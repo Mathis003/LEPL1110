@@ -73,10 +73,7 @@ void geoMeshImport(femDiscreteType discreteType)
     size_t nElem, *elem;
     int elementType = 2;
     int localNode = 3;
-    if(discreteType == FEM_DISCRETE_TYPE_QUADRATIC) {
-        elementType = 9;
-        localNode = 6;
-    }
+    if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { elementType = 9; localNode = 6; }
     gmshModelMeshGetElementsByType(elementType, &elem, &nElem, &node, &nNode, -1, 0, 1, &ierr);
     ErrorGmsh(ierr);
     if (nElem != 0)
@@ -86,13 +83,13 @@ void geoMeshImport(femDiscreteType discreteType)
         theElements->nLocalNode = localNode;
         theElements->nodes = theNodes;
         theElements->nElem = nElem;
-        theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
+        theElements->elem = malloc(sizeof(int) * localNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; i++)
         {
-            for (int j = 0; j < theElements->nLocalNode; j++)
+            for (int j = 0; j < localNode; j++)
             {
-                theElements->elem[theElements->nLocalNode * i + j] = node[theElements->nLocalNode * i + j] - 1;
+                theElements->elem[localNode * i + j] = node[localNode * i + j] - 1;
             }
         }
         theGeometry.theElements = theElements;
@@ -103,7 +100,9 @@ void geoMeshImport(femDiscreteType discreteType)
 
     // Quads
     int nElemTriangles = nElem;
-    gmshModelMeshGetElementsByType(3, &elem, &nElem, &node, &nNode, -1, 0, 1, &ierr);
+    elementType = 3;
+    if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { elementType = 3; } // TODO : ElementType = ? (la valeur)
+    gmshModelMeshGetElementsByType(elementType, &elem, &nElem, &node, &nNode, -1, 0, 1, &ierr);
     ErrorGmsh(ierr);
     if (nElem != 0 && nElemTriangles != 0) { Error("Cannot consider hybrid geometry with triangles and quads :-("); }
 
@@ -111,16 +110,18 @@ void geoMeshImport(femDiscreteType discreteType)
     {
         femMesh *theElements = malloc(sizeof(femMesh));
         if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+
         theElements->nLocalNode = 4;
+        if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { theElements->nLocalNode = 9; }
         theElements->nodes = theNodes;
         theElements->nElem = nElem;
-        theElements->elem = malloc(sizeof(int) * 4 * theElements->nElem);
+        theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; i++)
         {
             for (int j = 0; j < theElements->nLocalNode; j++)
             {
-                theElements->elem[4 * i + j] = node[4 * i + j] - 1;
+                theElements->elem[theElements->nLocalNode * i + j] = node[theElements->nLocalNode * i + j] - 1;
             }
         }        
         theGeometry.theElements = theElements;
@@ -138,7 +139,7 @@ void geoMeshImport(femDiscreteType discreteType)
     {
         for (int i = 0; i < theElements->nLocalNode; i++)
         {
-            connectedNodes[theElements->elem[iElem*theElements->nLocalNode+i]] = 1;
+            connectedNodes[theElements->elem[iElem * theElements->nLocalNode + i]] = 1;
         }
     }
 
@@ -176,10 +177,7 @@ void geoMeshImport(femDiscreteType discreteType)
 
     elementType = 1;
     localNode = 2;
-    if(discreteType == FEM_DISCRETE_TYPE_QUADRATIC) {
-        elementType = 8;
-        localNode = 3;
-    }
+    if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { elementType = 8; localNode = 3; }
     gmshModelMeshGetElementsByType(elementType, &elem, &nElem, &node, &nNode, -1, 0, 1, &ierr);
     ErrorGmsh(ierr);
 
@@ -201,7 +199,7 @@ void geoMeshImport(femDiscreteType discreteType)
         int map[3];
         for (int j = 0; j < theEdges->nLocalNode; j++)
         {
-            map[j] = node[localNode*i+j] - 1;
+            map[j] = node[localNode * i + j] - 1;
             if(connectedNodes[map[j]] == 0) { edgeRenumber[j] = -2147483648; continue; }
             theEdges->elem[localNode * countEdges + j] = nodeRenumber[map[j]];
         }

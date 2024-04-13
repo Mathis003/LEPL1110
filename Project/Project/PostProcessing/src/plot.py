@@ -62,7 +62,6 @@ class Mesh:
             x = coord[self.elem[:, [0, 1, 2, 3, 0, 0]], 0]
             x[:,5] = np.nan
             x = x.ravel()
-            print(x.shape)
             a = plt.plot(x, y, *args, **kwargs)
         return a
 
@@ -126,7 +125,7 @@ if __name__ == "__main__":
     if exampleUse: nameMesh = "../../Processing/data/mesh_example.txt"
     else : nameMesh = "../../Processing/data/mesh.txt"
     mesh = Mesh(nameMesh)
-    print(mesh)
+    # print(mesh)
 
     nameSolution = ""
     if not animation:
@@ -143,14 +142,14 @@ if __name__ == "__main__":
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
         plt.show()
-        plt.savefig("data/plot.png")
+        plt.savefig("../../Processing/data/plot.png")
 
     else:
         NB_IMAGES = 50
         fig, ax = plt.subplots()
         animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
         plt.show()
-        animation.save("data/animation.mp4")
+        animation.save("../../Processing/data/animation.mp4")
 
 
 # %%
