@@ -513,7 +513,7 @@ void geoMeshGenerate(femDiscreteType discreteType)
     {
         // Generate quadratic elements
         if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC){ gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); }
-        else                                            { gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr); }
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
         gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
@@ -525,7 +525,7 @@ void geoMeshGenerate(femDiscreteType discreteType)
     {
         // Generate quadratic elements
         if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); }
-        else                                             { gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr); }
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshModelMeshGenerate(2, &ierr);
     }
 
@@ -908,7 +908,7 @@ void geoMeshGenerateExample(femDiscreteType discreteType)
     {
         // Generate quadratic elements
         if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); }
-        else                                             { gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr); }
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
         gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
         gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
@@ -920,7 +920,7 @@ void geoMeshGenerateExample(femDiscreteType discreteType)
     {
         // Generate quadratic elements
         if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); }
-        else                                             { gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr); }
+        gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
         gmshModelMeshGenerate(2, &ierr);
     }
 
