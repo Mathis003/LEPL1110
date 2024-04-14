@@ -113,18 +113,21 @@ void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double v
 
     for (int i = 0; i < size; i++)
     {
-        double c_vect1 = vect1_x * A[Ux][i] + vect1_y * A[Uy][i];
-        B[i] -= myValue * c_vect1;
-
         double lx = femFullSystemGetA_Entry(theSystem, Ux, i);
         double ly = femFullSystemGetA_Entry(theSystem, Uy, i);
         double cx = femFullSystemGetA_Entry(theSystem, i, Ux);
         double cy = femFullSystemGetA_Entry(theSystem, i, Uy);
 
-        A[Ux][i] = vect2_x * (vect2_x * lx + vect2_y * ly);
-        A[Uy][i] = vect2_y * (vect2_x * lx + vect2_y * ly);
-        A[i][Ux] = vect2_x * (vect2_x * cx + vect2_y * cy);
-        A[i][Uy] = vect2_y * (vect2_x * cx + vect2_y * cy);
+        double c_vect1 = vect1_x * cx + vect1_y * cy;
+        B[i] -= myValue * c_vect1;
+
+        double l_vect2 = vect2_x * lx + vect2_y * ly;
+        double c_vect2 = vect2_x * cx + vect2_y * cy;
+
+        A[Ux][i] = vect2_x * l_vect2;
+        A[Uy][i] = vect2_y * l_vect2;
+        A[i][Ux] = vect2_x * c_vect2;
+        A[i][Uy] = vect2_y * c_vect2;
     }
 
     double a_vect2_vect2 = vect2_x * (vect2_x * A[Ux][Ux] + vect2_y * A[Uy][Ux]) + vect2_y * (vect2_x * A[Ux][Uy] + vect2_y * A[Uy][Uy]);
@@ -136,8 +139,8 @@ void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double v
     A[Uy][Ux] = vect1_y * vect1_x + a_vect2_vect2 * vect2_y * vect2_x;
     A[Uy][Uy] = vect1_y * vect1_y + a_vect2_vect2 * vect2_y * vect2_y;
 
-    B[Ux] = vect1_x * myValue + vect2_x * (b_vect2 * myValue * a_vect2_vect1);
-    B[Uy] = vect1_y * myValue + vect2_y * (b_vect2 * myValue * a_vect2_vect1);
+    B[Ux] = vect1_x * myValue + vect2_x * (b_vect2 - myValue * a_vect2_vect1);
+    B[Uy] = vect1_y * myValue + vect2_y * (b_vect2 - myValue * a_vect2_vect1);
 }
 
 // void femFullSystemConstrainNT(femFullSystem *mySystem, int size, int myNode1, int myNode2, double a, double b)
@@ -366,32 +369,6 @@ void femBandSystemConstrainXY(femBandSystem *system, int myNode, double myValue,
     B[myNode] = myValue;
 }
 
-// TODO
-// void femBandSystemConstrainNT(femBandSystem *mySystem, int size, int myNode1, int myNode2, double a, double b)
-// {
-//     double **A, *B;
-//     int i, band;
-
-//     A    = mySystem->A;
-//     B    = mySystem->B;
-//     band = mySystem->band;
-
-//     // Force this constraint to be applied : myNode2 = b + a * myNode1
-//     for (int myCol = 0; myCol < size; myCol++)
-//     {
-//         double A_entry = (myNode2 >= myCol) ? femBandSystemGetA_Entry(mySystem, myCol, myNode2) : femBandSystemGetA_Entry(mySystem, myNode2, myCol);
-//         if (A_entry != 0.0)
-//         {
-//             if      (myCol == myNode2) { A[myNode2][myCol] = 1.0; }
-//             else if (myCol == myNode1) { A[myNode2][myCol] = -a; }
-//             else                       { A[myNode2][myCol] = 0.0; }
-//         }
-//     }
-//     B[myNode2] = b;
-// }
-
-
-// TODO
 void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size)
 {
     double **A, *B, A_entry;
@@ -402,16 +379,13 @@ void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double v
 
     for (int i = 0; i < size; i++)
     {
-        double A_Ux_i = femBandSystemGetA_Entry(theSystem, Ux, i);
-        double A_Uy_i = femBandSystemGetA_Entry(theSystem, Uy, i);
-
-        double c_vect1 = vect1_x * A_Ux_i + vect1_y * A_Uy_i;
-       //  B[i] -= myValue * c_vect1;
-
-        double lx = A_Ux_i;
-        double ly = A_Uy_i;
+        double lx = femBandSystemGetA_Entry(theSystem, Ux, i);
+        double ly = femBandSystemGetA_Entry(theSystem, Uy, i);
         double cx = femBandSystemGetA_Entry(theSystem, i, Ux);
         double cy = femBandSystemGetA_Entry(theSystem, i, Uy);
+
+        double c_vect1 = vect1_x * cx + vect1_y * cy;
+        B[i] -= myValue * c_vect1;
         
         if (isInBand(band, Ux, i)) { A[Ux][i] = vect2_x * (vect2_x * lx + vect2_y * ly); }
         if (isInBand(band, Uy, i)) { A[Uy][i] = vect2_y * (vect2_x * lx + vect2_y * ly); }
@@ -430,8 +404,8 @@ void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double v
     // A[Uy][Ux] = vect1_y * vect1_x + a_vect2_vect2 * vect2_y * vect2_x; // Lower triangular matrix => Does not need to be set for band matrix
     A[Uy][Uy] = vect1_y * vect1_y + a_vect2_vect2 * vect2_y * vect2_y;
 
-    B[Ux] = vect1_x * myValue + vect2_x * (b_vect2 * myValue * a_vect2_vect1);
-    B[Uy] = vect1_y * myValue + vect2_y * (b_vect2 * myValue * a_vect2_vect1);
+    B[Ux] = vect1_x * myValue + vect2_x * (b_vect2 - myValue * a_vect2_vect1);
+    B[Uy] = vect1_y * myValue + vect2_y * (b_vect2 - myValue * a_vect2_vect1);
 }
 
 double *femBandSystemEliminate(femBandSystem *system, int size)
