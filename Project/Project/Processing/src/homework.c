@@ -347,11 +347,7 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
         }
         else
         {
-            double nx, ny, tx, ty, a_n, b_n, myValue_n, a_t, b_t, myValue_t;
-            int myNode1, myNode2;
-
-            myValue_n = theConstrainedNode->value1;
-            myValue_t = theConstrainedNode->value2;
+            double nx, ny, tx, ty, myValue_n, myValue_t;
 
             // Already normalized
             nx = theConstrainedNode->nx;
@@ -359,12 +355,22 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
             tx = ny;
             ty = -nx;
 
-            if (type == DIRICHLET_N)      { femSolverSystemConstrainNT(theSolver, nx, ny, tx, ty, myValue_n, Ux, Uy, FACTOR); }
-            else if (type == DIRICHLET_T) { femSolverSystemConstrainNT(theSolver, tx, ty, nx, ny, myValue_t, Ux, Uy, FACTOR); }
+            if (type == DIRICHLET_N)
+            {
+                myValue_n = theConstrainedNode->value1;
+                femSolverSystemConstrainNT(theSolver, nx, ny, tx, ty, myValue_n * FACTOR, Ux, Uy);
+            }
+            else if (type == DIRICHLET_T)
+            {
+                myValue_t = theConstrainedNode->value1;
+                femSolverSystemConstrainNT(theSolver, tx, ty, nx, ny, myValue_t * FACTOR, Ux, Uy);
+            }
             else if (type == DIRICHLET_NT)
             {
-                femSolverSystemConstrainNT(theSolver, nx, ny, tx, ty, myValue_n, Ux, Uy, FACTOR);
-                femSolverSystemConstrainNT(theSolver, tx, ty, nx, ny, myValue_t, Ux, Uy, FACTOR);
+                myValue_n = theConstrainedNode->value1;
+                myValue_t = theConstrainedNode->value2;
+                femSolverSystemConstrainNT(theSolver, nx, ny, tx, ty, myValue_n * FACTOR, Ux, Uy);
+                femSolverSystemConstrainNT(theSolver, tx, ty, nx, ny, myValue_t * FACTOR, Ux, Uy);
             }
         }
     }
