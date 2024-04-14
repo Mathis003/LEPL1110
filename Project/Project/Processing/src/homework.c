@@ -32,7 +32,7 @@ void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
     femMesh *theMesh         = theGeometry->theElements;
 
     int nLocal = theSpace->n;
-    int *number = theMesh->nodes->number;
+    int *number = theMesh->nodes->number;    
 
     double xLoc, x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal];
     int iElem, iInteg, iEdge, i, map[nLocal], mapX[nLocal], mapY[nLocal];
@@ -244,10 +244,8 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
         if (theConstrainedNode->type == UNDEFINED) { continue; }
         femBoundaryType type = theConstrainedNode->type;
 
-        iNode = number[iNode];
-
-        int Ux = 2 * iNode;
-        int Uy = 2 * iNode + 1;
+        int Ux = 2 * number[iNode];
+        int Uy = 2 * number[iNode] + 1;
 
         if (type == DIRICHLET_X)
         {
@@ -312,25 +310,13 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
 {
     femSolver *theSolver = theProblem->solver;
     femSolverInit(theSolver);
-
     femElasticityAssembleElements(theProblem, FACTOR);
-
     femElasticityAssembleNeumann(theProblem, FACTOR);
 
     // Copy the Dirichlet unconstrained system
     // femSystemWrite(theSolver, "../data/dirichletUnconstrainedSystem.txt");
 
     femElasticityApplyDirichlet(theProblem, FACTOR);
-
-    for (int i = 0; i < 10; i++)
-    {
-        int start = i;
-        int end = i + 10;
-        for (int j = start; j < end; j++)
-        {
-            printf("elem (%d, %d) : %f\n", i, j, femSolverGet(theSolver, i, j));
-        }
-    }
 
     // Copy the final system
     // femSystemWrite(theSolver, "../data/finalSystem.txt");

@@ -21,28 +21,57 @@ double constFunct(double x, double y) { return 1.0; }
 
 double *femElasticityForces(femProblem *theProblem)
 {
-    double *residuals = theProblem->residuals;
-    double *soluce    = theProblem->soluce;
-
     femSolver *theSolver = theProblem->solver;
-    femSolverInit(theSolver);
-
-    femElasticityAssembleElements(theProblem, 1.0);
-    femElasticityAssembleNeumann(theProblem, 1.0);
-    
-    // Read the system from the file
-    // femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/dirichletUnconstrainedSystem.txt");
-    // femSystemWrite(theSolver, "../../Processing/data/dirichletUnconstrainedSystemWRITED.txt"); // DONT WORK...
+    femNodes *theNodes   = theProblem->geometry->theNodes;
+    double *theSoluce    = theProblem->soluce;
     int size = theSolver->size;
+
+    double *soluce = (double *) malloc(size * sizeof(double));
+    double *residuals = (double *) malloc(size * sizeof(double));
+    int *inverted_number = (int *) malloc(theNodes->nNodes * sizeof(int));
+    if (soluce == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (residuals == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (inverted_number == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
 
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
 
+    // Numerote the nodes of the solution
+    for (int i = 0; i < theNodes->nNodes; i++)
+    {
+        soluce[2 * i]     = theSoluce[2 * theNodes->number[i]];
+        soluce[2 * i + 1] = theSoluce[2 * theNodes->number[i] + 1];
+    }
+
+    femSolverInit(theSolver);
+    femElasticityAssembleElements(theProblem, 1.0);
+    femElasticityAssembleNeumann(theProblem, 1.0);
+
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++) { residuals[i] += femSolverGet(theSolver, i, j) * soluce[j]; }
+        int start = (theSolver->type == FEM_BAND) ? i : 0;
+        int end;
+        if (theSolver->type == FEM_BAND)
+        {
+            end = i + ((femBandSystem *)(theSolver->solver))->band;
+            if (end > size) { end = size; }
+        } else { end = size; }
+        
+        for (int j = start; j < end; j++) { residuals[i] += femSolverGet(theSolver, i, j) * soluce[j]; }
         residuals[i] -= femSolverGetB(theSolver, i);
     }
-    return residuals;
+
+    // Remove the numerotation of the nodes of the residuals
+    for (int i = 0; i < theNodes->nNodes; i++) { inverted_number[theNodes->number[i]] = i; }
+
+    for (int i = 0; i < theNodes->nNodes; i++)
+    {
+        theProblem->residuals[2 * i]     = residuals[2 * inverted_number[i]];
+        theProblem->residuals[2 * i + 1] = residuals[2 * inverted_number[i] + 1];
+    }
+
+    free(residuals); residuals = NULL;
+    free(soluce); soluce = NULL;
+    return theProblem->residuals;
 }
 
 int main(int argc, char *argv[])
@@ -126,11 +155,12 @@ int main(int argc, char *argv[])
 
     // printf("band = %d\n", ((femBandSystem *)(theProblem->solver->solver))->band);
     // printf("size = %d\n", theProblem->solver->size);
-    // femSolver *theSolver = femSolverBandCreate(theProblem->solver->size, ((femBandSystem *)(theProblem->solver->solver))->band);
-    // femSolverInit(theSolver);
-    // femElasticityAssembleElements(theProblem, 1.0);
-    // femElasticityAssembleNeumann(theProblem, 1.0);
-    // femElasticityApplyDirichlet(theProblem, 1.0);
+    femSolver *theSolver = femSolverBandCreate(theProblem->solver->size, ((femBandSystem *)(theProblem->solver->solver))->band);
+    femSolverInit(theSolver);
+    theProblem->solver = theSolver;
+    femElasticityAssembleElements(theProblem, 1.0);
+    femElasticityAssembleNeumann(theProblem, 1.0);
+    femElasticityApplyDirichlet(theProblem, 1.0);
 
     for (int i = 0; i < n; i++)
     {
@@ -262,7 +292,7 @@ int main(int argc, char *argv[])
         else if (mode == 2)
         {
             glColor3f(1.0, 0.0, 0.0);
-            // glfemPlotSolver(theSolver, theSolver->size, w, h);
+            glfemPlotSolver(theSolver, theSolver->size, w, h);
         } 
         else if (mode==3)
         {

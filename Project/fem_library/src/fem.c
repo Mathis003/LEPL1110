@@ -329,7 +329,6 @@ double femBandSystemGet(femBandSystem *system, int myRow, int myCol)
     return isInBand(band, myRow, myCol) ? A[myRow][myCol] : 0.0;
 }
 
-// TODO
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size)
 {
     double **A, *B;
