@@ -264,7 +264,6 @@ void femBandSystemPrintInfos(femBandSystem *system, int size)
 
 int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myCol < myRow + band; }
 
-// TODO
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR)
 {
     double **A = system->A;
@@ -348,7 +347,6 @@ void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int
             B[i] -= value * val;
             if (node >= i) { A[i][node] = 0; }
         }
-        
     }
     for (i = 0; i < size; i++)
     {
