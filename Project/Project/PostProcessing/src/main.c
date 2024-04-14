@@ -166,9 +166,6 @@ int main(int argc, char *argv[])
     /* 2 : Calcul des forces         */
     /*     Création du système final */
     /*********************************/
-
-    printf("band = %d\n", ((femBandSystem *)(theProblem->solver->solver))->band);
-    printf("size = %d\n", theProblem->solver->size);
     
     double *theForces = femElasticityForces(theProblem);
     double area       = femElasticityIntegrate(theProblem, constFunct);
