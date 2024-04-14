@@ -26,7 +26,7 @@ typedef enum { DIRICHLET_X, DIRICHLET_Y, DIRICHLET_XY, DIRICHLET_N, DIRICHLET_T,
 typedef enum { FEM_TRIANGLE, FEM_QUAD, FEM_EDGE } femElementType;
 typedef enum { PLANAR_STRESS, PLANAR_STRAIN, AXISYM } femElasticCase;
 typedef enum {FEM_FULL,FEM_BAND} femSolverType;
-typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM} femRenumType;
+typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM,FEM_RCMK} femRenumType;
 typedef enum {FEM_DISCRETE_TYPE_LINEAR, FEM_DISCRETE_TYPE_QUADRATIC} femDiscreteType;
 
 /* Structures */
@@ -301,5 +301,34 @@ double femMax(double *x, int n);
 void femError(char *text, int line, char *file);
 void femErrorScan(int test, int line, char *file);
 void femWarning(char *text, int line, char *file);
+
+
+
+
+typedef struct Queue
+{
+	int capacity;
+	int size;
+	int front;
+	int rear;
+	int *elements;
+} Queue;
+
+void swap(int *a, int *b);
+void reverse_array(int *X, int n);
+
+Queue *createQueue(int max_elements);
+void enqueue(Queue *Q, int element);
+void dequeue(Queue *Q);
+int peek(Queue *Q);
+int isEmpty(Queue *Q);
+int isFull(Queue *Q);
+
+int partition(int arr1[], int arr2[], int low, int high);
+void quickSort(int arr1[], int arr2[], int low, int high);
+
+int *createAdjacencyMatrix(femMesh *mesh);
+void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue *Q, int element_idx);
+Queue *rcm(femMesh *theMesh, int nNodes);
 
 #endif // _FEM_H_

@@ -422,6 +422,7 @@ int comparPositionNode(const void *a, const void *b)
     return (diff < 0) - (diff > 0);
 }
 
+
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
 {
     int nNodes = theMesh->nodes->nNodes;
@@ -429,27 +430,53 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
     if (mapper == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
 
-    switch (renumType)
-    {        
-        case FEM_NO :
-            break;
-
-        case FEM_XNUM :
-            positionMeshNodes = theMesh->nodes->X;
-            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
-            break;
-
-        case FEM_YNUM :
-            positionMeshNodes = theMesh->nodes->Y;
-            qsort(mapper, nNodes, sizeof(int), comparPositionNode);
-            break;    
-
-        default : Error("Unexpected renumbering option");
+    if (renumType == FEM_NO) { return; }
+    else if (renumType == FEM_RCMK)
+    {
+        Queue *rcm_queue = rcm(theMesh, nNodes);
+        memcpy(mapper, rcm_queue->elements, nNodes * sizeof(int));
+        free(rcm_queue->elements);
+        rcm_queue->elements = NULL;
+        free(rcm_queue);
+        rcm_queue = NULL;
     }
+    else if (renumType == FEM_XNUM) { positionMeshNodes = theMesh->nodes->X; qsort(mapper, nNodes, sizeof(int), comparPositionNode); }
+    else if (renumType == FEM_YNUM) { positionMeshNodes = theMesh->nodes->Y; qsort(mapper, nNodes, sizeof(int), comparPositionNode); }
+    else { Error("Unknown renumbering type\n"); exit(EXIT_FAILURE); return; }
 
     for (int i = 0; i < nNodes; i++) { theMesh->nodes->number[mapper[i]] = i; }
-    free(mapper); 
+    free(mapper);
+    mapper = NULL;
 }
+
+// void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
+// {
+//     int nNodes = theMesh->nodes->nNodes;
+//     int *mapper = (int *) malloc(nNodes * sizeof(int));
+//     if (mapper == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+//     for (int i = 0; i < nNodes; i++) { mapper[i] = i; }
+
+//     switch (renumType)
+//     {        
+//         case FEM_NO :
+//             break;
+
+//         case FEM_XNUM :
+//             positionMeshNodes = theMesh->nodes->X;
+//             qsort(mapper, nNodes, sizeof(int), comparPositionNode);
+//             break;
+
+//         case FEM_YNUM :
+//             positionMeshNodes = theMesh->nodes->Y;
+//             qsort(mapper, nNodes, sizeof(int), comparPositionNode);
+//             break;    
+
+//         default : Error("Unexpected renumbering option");
+//     }
+
+//     for (int i = 0; i < nNodes; i++) { theMesh->nodes->number[mapper[i]] = i; }
+//     free(mapper); 
+// }
 
 int femMeshComputeBand(femMesh *theMesh)
 {
@@ -1828,4 +1855,272 @@ void femWarning(char *text, int line, char *file)
     printf("\n-------------------------------------------------------------------------------- ");
     printf("\n  Warning in %s:%d at line %d : \n  %s\n", file, line, line, text);
     printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+**************************
+*    Helper Functions    *
+**************************
+*/
+
+void swap(int *a, int *b)
+{
+	int t = *a;
+	*a = *b;
+	*b = t;
+}
+
+void reverse_array(int *X, int n)
+{
+	for (int i = 0; i < n / 2; i++) { swap(&X[i], &X[n - i - 1]); }
+}
+
+/*
+******************************
+*    Queue implementation    *
+******************************
+*/
+
+Queue *createQueue(int max_elements)
+{
+	Queue *Q = (Queue *) malloc(sizeof(Queue));
+    if (Q == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+	Q->elements = (int *) malloc(max_elements * sizeof(int));
+    if (Q->elements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+	if (Q->elements == NULL)
+	{
+		printf("Error: Memory allocation for Q->elements failed\n\n");
+		exit(1);
+	}
+
+	Q->size = 0;
+	Q->capacity = max_elements;
+	Q->front = 0;
+	Q->rear = -1;
+	return Q;
+}
+
+void enqueue(Queue *Q, int element)
+{
+	if (Q->size == Q->capacity) { printf("Queue is Full\n"); }
+	else
+	{
+		Q->size++; Q->rear += 1;
+		if (Q->rear == Q->capacity) { Q->rear = 0; }
+		Q->elements[Q->rear] = element;
+	}
+}
+
+void dequeue(Queue *Q)
+{
+	if (Q->size == 0) { printf("Queue is Empty\n"); }
+	else
+	{
+		Q->size--; Q->front++;
+		if (Q->front == Q->capacity) { Q->front = 0; }
+	}
+}
+
+int peek(Queue *Q)
+{
+	if (Q->size == 0) { printf("Queue is Empty\n"); exit(0); }
+	return Q->elements[Q->front];
+}
+
+int isEmpty(Queue *Q) { return (Q->size == 0) ? 1 : 0; }
+
+int isFull(Queue *Q) { return (Q->size == Q->capacity) ? 1 : 0; }
+
+/*
+**********************************
+*    QuickSort implementation    *
+**********************************
+*/
+
+int partition(int arr1[], int arr2[], int low, int high)
+{
+	int pivot = arr2[arr1[high]];
+	int i = low - 1;
+
+	for (int j = low; j <= high - 1; j++)
+	{
+		if (arr2[arr1[j]] < pivot)
+		{
+			i++;
+			swap(&arr1[i], &arr1[j]);
+		}
+	}
+	swap(&arr1[i + 1], &arr1[high]);
+	return (i + 1);
+}
+
+void quickSort(int arr1[], int arr2[], int low, int high)
+{
+	if (low < high)
+	{
+		int pi = partition(arr1, arr2, low, high);
+		quickSort(arr1, arr2, low, pi - 1);
+		quickSort(arr1, arr2, pi + 1, high);
+	}
+}
+
+/*
+***************************************
+*      - Reverse Cuthill McKee -      *
+***************************************
+*/
+
+int *createAdjacencyMatrix(femMesh *mesh)
+{
+    int nNodes = mesh->nodes->nNodes;
+    int nLocal = mesh->nLocalNode;
+    int map[nLocal];
+
+    int *adj = (int *) malloc(nNodes * nNodes * sizeof(int));
+
+    // exit(1);
+
+    for (int i = 0; i < nNodes * nNodes; i++) { adj[i] = 0.0; }
+    
+    if (adj == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+
+    for (int iElem = 0; iElem < mesh->nElem; iElem++)
+    {
+        for (int j = 0; j < nLocal; j++) { map[j] = mesh->elem[iElem * nLocal + j]; }
+
+        for (int i = 0; i < nLocal; i++)
+        {
+            for (int j = i + 1; j < nLocal; j++)
+            {
+                adj[nNodes * map[i] + map[j]] = 1;
+                adj[nNodes * map[j] + map[i]] = 1;
+            }
+        }
+    }
+    return adj;
+}
+
+void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue *Q, int element_idx)
+{
+	int num_of_neigh = degrees[element_idx];
+	int *neighbors = (int *) malloc(num_of_neigh * sizeof(int));
+	if (neighbors == NULL)
+	{
+		printf("Error: Memory allocation for 'neighbors' failed\n\n");
+		exit(1);
+	}
+
+	int count = 0;
+	for (int j = 0; j < n; j++)
+	{
+		if ((adj[n * element_idx + j] == 1) && (j != element_idx))
+		{
+			neighbors[count++] = j;
+			if (count == num_of_neigh) { break; }
+		}
+	}
+
+	quickSort(neighbors, degrees, 0, num_of_neigh - 1);
+
+	for (int i = 0; i < num_of_neigh; i++)
+		if (!inserted[neighbors[i]])
+		{
+			enqueue(Q, neighbors[i]);
+			inserted[neighbors[i]] = 1;
+		}
+
+	free(neighbors);
+    neighbors = NULL;
+}
+
+Queue *rcm(femMesh *theMesh, int nNodes)
+{
+	Queue *Q = createQueue(nNodes);
+	Queue *R = createQueue(nNodes);
+	int *degrees  = (int *) malloc(nNodes * sizeof(int));
+	int *inserted = (int *) malloc(nNodes * sizeof(int));
+
+    int *adj = createAdjacencyMatrix(theMesh);
+    
+	if (degrees == NULL)
+	{
+		printf("Error: Memory allocation for 'degrees' failed\n\n");
+		exit(1);
+	}
+	if (inserted == NULL)
+	{
+		printf("Error: Memory allocation for 'inserted' failed\n\n");
+		exit(1);
+	}
+
+	for (int i = 0; i < nNodes; i++) { inserted[i] = 0; R->elements[i] = -1; }
+
+	for (int i = 0; i < nNodes; i++)
+	{
+		int degree = 0;
+		for (int j = 0; j < nNodes; j++)
+        {
+            if (adj[nNodes * i + j] && (j != i)) { degree++; }
+        }
+		degrees[i] = degree;
+	}
+
+	while (!isFull(R))
+	{
+		int min_degree = nNodes + 1;
+		int min_degree_idx = -1;
+		for (int i = 0; i < nNodes; i++)
+		{
+			if ((degrees[i] < min_degree) && (inserted[i] == 0))
+			{
+				min_degree = degrees[i];
+				min_degree_idx = i;
+			}
+		}
+
+		enqueue(R, min_degree_idx);
+		inserted[min_degree_idx] = 1;
+		if (degrees[min_degree_idx])
+		{
+			add_neighbors_to_queue(adj, nNodes, degrees, inserted, Q, min_degree_idx);
+
+			while (!isEmpty(Q))
+			{
+				int removed_item = peek(Q);
+				dequeue(Q);
+				enqueue(R, removed_item);
+
+				if (degrees[removed_item]) { add_neighbors_to_queue(adj, nNodes, degrees, inserted, Q, removed_item); }
+			}
+		}
+	}
+	reverse_array(R->elements, nNodes);
+
+    free(Q->elements);
+    Q->elements = NULL;
+	free(Q);
+    Q = NULL;
+	free(degrees);
+    degrees = NULL;
+	free(inserted);
+    inserted = NULL;
+    free(adj);
+    adj = NULL;
+	return R;
 }
