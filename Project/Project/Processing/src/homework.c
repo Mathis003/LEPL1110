@@ -2,18 +2,17 @@
 
 /*
 TODO :
-- Verifier la validite de l'axisymetrique (IN PROGRESS)
-    - Elements billineaire (fonction de forme du deuxieme degre)   (IN PROGRESS)
-    - Solveur frontal creux
-    - Renumerotation des elements (pour solveur frontal)
+    - Conditions de Dirichlet (N, T, NT avec deplacement non nul)   (IN PROGRESS)
+    - Verifier la validite de l'axisymetrique                       (IN PROGRESS)
+    - Elements quadratiques (fonction de forme du deuxieme degre)   (IN PROGRESS)
     - Finir les conditions sur la geometrie du pont
+    - Résidus pour les forces
     - Calcul des tensions aux noeuds
 
 DONE :
     - Axisymetrique / tension plane / deformation plane
-    - Conditions de Dirichlet (X, Y, XY, N, T, NT)
+    - Conditions de Dirichlet (X, Y, XY, N, T, NT (avec deplacement nul))
     - Conditions de Neumann (X, Y, N, T)
-    - Résidus pour les forces (par noeud + globale)
     - Visualisation des résidus (Post-Processing avec 'X' et 'Y')
     - Visualisation de la matrice (Post-Processing avec 'S')
     - Script d'animation
