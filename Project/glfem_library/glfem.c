@@ -417,7 +417,7 @@ void glfemPlotSolver(femSolver *mySolver, int n, int w, int h)
     {   
         for (j = 0; j < n; j++)
         {
-            double value = femSolverGet(mySolver, j, i);
+            double value = femSolverGetA_Entry(mySolver, j, i);
             if (fabs(value) >= 1e-12)
             {    
             	// printf("value %d, %d : %f \n", i, j, fabs(value));

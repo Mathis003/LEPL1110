@@ -146,6 +146,15 @@ typedef struct {
     femConstrainedNode *constrainedNodes;
 } femProblem;
 
+typedef struct Queue
+{
+	int capacity;
+	int size;
+	int front;
+	int rear;
+	int *elements;
+} Queue;
+
 /* Variables */
 
 extern double *positionMeshNodes; // To renumber the mesh nodes
@@ -161,11 +170,11 @@ femFullSystem *femFullSystemCreate(int size);
 void femFullSystemFree(femFullSystem *mySystem);
 void femFullSystemAlloc(femFullSystem *mySystem, int size);
 void femFullSystemInit(femFullSystem *mySystem, int size);
+double femFullSystemGetA_Entry(femFullSystem *mySystem, int myRow, int myCol);
+double femFullSystemGetB_Entry(femFullSystem *mySystem, int myRow);
 void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR);
 void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double value, int size);
 void femFullSystemConstrainNT(femFullSystem *system, int size, int node1, int node2, double a, double b);
-double femFullSystemGet(femFullSystem* myFullSystem, int myRow, int myCol);
-void femFullSystemSetSystem(femFullSystem *system, double **A, double *B);
 double *femFullSystemEliminate(femFullSystem *mySystem, int size);
 void femFullSystemPrint(femFullSystem *mySystem, int size);
 void femFullSystemPrintInfos(femFullSystem *mySystem, int size);
@@ -175,38 +184,32 @@ void femBandSystemFree(femBandSystem *myBandSystem);
 void femBandSystemInit(femBandSystem *myBandSystem, int size);
 void femBandSystemAlloc(femBandSystem *system, int size, int band);
 int isInBand(int band, int myRow, int myCol);
-int comparPositionNode(const void *a, const void *b);
-void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
-int femMeshComputeBand(femMesh *theMesh);
+double femBandSystemGetA_Entry(femBandSystem *mySystem, int myRow, int myCol);
+double femBandSystemGetB_Entry(femBandSystem *mySystem, int myRow);
 void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR);
-double femBandSystemGet(femBandSystem* myBandSystem, int myRow, int myCol);
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size);
 void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b);
-void femBandSystemSetSystem(femBandSystem *system, double **A, double *B);
 double *femBandSystemEliminate(femBandSystem *myBand, int size);
 void femBandSystemPrint(femBandSystem *myBand, int size);
 void femBandSystemPrintInfos(femBandSystem *myBand, int size);
-int comparPositionNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 int femMeshComputeBand(femMesh *theMesh);
 
-void femSolverSetSystem(femSolver *mySolver, double **A, double *B);
 femSolver *femSolverCreate(int size);
 femSolver *femSolverFullCreate(int size);
 femSolver *femSolverBandCreate(int size, int band);
 void femSolverFree(femSolver *mySolver);
 void femSolverInit(femSolver *mySolver);
-double femSolverGet(femSolver *mySolver, int i, int j);
-double femSolverGetB(femSolver *mySolver, int i);
+double femSolverGetA_Entry(femSolver *mySolver, int myRow, int myCol);
+double femSolverGetB_Entry(femSolver *mySolver, int myRow);
+double **femSolverGetA(femSolver *mySolver);
+double *femSolverGetB(femSolver *mySolver);
 void femSolverPrint(femSolver *mySolver);
 void femSolverPrintInfos(femSolver *mySolver);
 void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR);
 void femSolverSystemConstrainXY(femSolver *mySolver, int node, double value);
 void femSolverSystemConstrainNT(femSolver *mySolver, int node1, int node2, double a, double b);
 double *femSolverEliminate(femSolver *mySolver);
-int femSolverConverged(femSolver *mySolver);
-double **getMatrixA(femSolver *mySolver);
-double *getVectorB(femSolver *mySolver);
 
 /**************************************/
 /* Discrete space + Integration space */
@@ -282,11 +285,10 @@ double *femElasticityForces(femProblem *theProblem);
 void femElasticityPrint(femProblem *theProblem);
 femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
-void femSystemWrite(femSolver *theSolver, const char *filename);
-
-femSolver *femBandSystemRead(const char *filename);
-femSolver *femFullSystemRead(const char *filename);
-femSolver *femSolverRead(femSolverType solverType, const char *filename);
+// void femSystemWrite(femSolver *theSolver, const char *filename);
+// femSolver *femBandSystemRead(const char *filename);
+// femSolver *femFullSystemRead(const char *filename);
+// femSolver *femSolverRead(femSolverType solverType, const char *filename);
 
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);
 int femSolutiondRead(int allocated_size, double *value, const char *filename);
@@ -302,22 +304,17 @@ void femError(char *text, int line, char *file);
 void femErrorScan(int test, int line, char *file);
 void femWarning(char *text, int line, char *file);
 
+/***************/
+/* Renumbering */
+/***************/
 
-
-
-typedef struct Queue
-{
-	int capacity;
-	int size;
-	int front;
-	int rear;
-	int *elements;
-} Queue;
+int comparPositionNode(const void *a, const void *b);
+void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 
 void swap(int *a, int *b);
-void reverse_array(int *X, int n);
+void reverse_array(int *adj, int n);
 
-Queue *createQueue(int max_elements);
+Queue *createQueue(int maxCapacity);
 void enqueue(Queue *Q, int element);
 void dequeue(Queue *Q);
 int peek(Queue *Q);

@@ -104,8 +104,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
     double oldValue, oldType;
     int changeType;
 
-    double **A = getMatrixA(theSolver);
-    double *B  = getVectorB(theSolver);
+    double **A = femSolverGetA(theSolver);
+    double *B  = femSolverGetB(theSolver);
 
     for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
     {

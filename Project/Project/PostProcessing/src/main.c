@@ -60,14 +60,14 @@ double *femElasticityForces(femProblem *theProblem)
             double val = 0.0;
             if (theSolver->type == FEM_BAND)
             {
-                if (j >= i) { val = femSolverGet(theSolver, i, j); }
-                else        { val = femSolverGet(theSolver, j, i); }
+                if (j >= i) { val = femSolverGetA_Entry(theSolver, i, j); }
+                else        { val = femSolverGetA_Entry(theSolver, j, i); }
             }
-            else { val = femSolverGet(theSolver, i, j); }
+            else { val = femSolverGetA_Entry(theSolver, i, j); }
             // printf("val = %f\n", val);
             residuals[i] += val * soluce[j];
         }
-        residuals[i] -= femSolverGetB(theSolver, i);
+        residuals[i] -= femSolverGetB_Entry(theSolver, i);
     }
 
     // Remove the numerotation of the nodes of the residuals
