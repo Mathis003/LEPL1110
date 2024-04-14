@@ -14,7 +14,7 @@ femGeometry theGeometry;
 femFullSystem *femFullSystemCreate(int size)
 {
     femFullSystem *system = malloc(sizeof(femFullSystem));
-    if (system == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (system == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     femFullSystemAlloc(system, size);
     femFullSystemInit(system, size);
     return system;
@@ -30,9 +30,9 @@ void femFullSystemFree(femFullSystem *system)
 void femFullSystemAlloc(femFullSystem *system, int size)
 {
     double *elem = malloc(sizeof(double) * size * (size + 1));
-    if (elem == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->A = malloc(sizeof(double *) * size);
-    if (system->A == NULL) { printf("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (system->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     system->B = elem;
     system->A[0] = elem + size;
     for (int i = 1; i < size; i++) { system->A[i] = system->A[i - 1] + size; }
@@ -106,23 +106,57 @@ void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double myValu
     B[myNode] = myValue;
 }
 
-void femFullSystemConstrainNT(femFullSystem *mySystem, int size, int myNode1, int myNode2, double a, double b)
+void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size, double FACTOR)
 {
-    double **A, *B;
-    int i;
+    double **A = theSystem->A;
+    double *B  = theSystem->B;
 
-    A = mySystem->A;
-    B = mySystem->B;
-
-    // Force this constraint to be applied : myNode2 = b + a * myNode1
-    for (i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
-        if      (i == myNode2) { A[myNode2][i] = 1.0; }
-        else if (i == myNode1) { A[myNode2][i] = - a; }
-        else                   { A[myNode2][i] = 0.0; }
+        double c_vect1 = vect1_x * A[Ux][i] + vect1_y * A[Uy][i];
+        B[i] -= myValue * FACTOR * c_vect1;
+
+        double lx = femFullSystemGetA_Entry(theSystem, Ux, i);
+        double ly = femFullSystemGetA_Entry(theSystem, Uy, i);
+        double cx = femFullSystemGetA_Entry(theSystem, i, Ux);
+        double cy = femFullSystemGetA_Entry(theSystem, i, Uy);
+        
+        A[Ux][i] = vect2_x * (vect2_x * lx + vect2_y * ly);
+        A[Uy][i] = vect2_y * (vect2_x * lx + vect2_y * ly);
+        A[i][Ux] = vect2_x * (vect2_x * cx + vect2_y * cy);
+        A[i][Uy] = vect2_y * (vect2_x * cx + vect2_y * cy);
     }
-    B[myNode2] = b;
+
+    double a_vect2_vect2 = vect2_x * (vect2_x * A[Ux][Ux] + vect2_y * A[Uy][Ux]) + vect2_y * (vect2_x * A[Ux][Uy] + vect2_y * A[Uy][Uy]);
+    double a_vect2_vect1 = vect1_x * (vect2_x * A[Ux][Ux] + vect2_y * A[Uy][Ux]) + vect1_y * (vect2_x * A[Ux][Uy] + vect2_y * A[Uy][Uy]);
+    double b_vect2 = vect2_x * B[Ux] + vect2_y * B[Uy];
+
+    A[Ux][Ux] = vect1_x * vect1_x + a_vect2_vect2 * vect2_x * vect2_x;
+    A[Ux][Uy] = vect1_x * vect1_y + a_vect2_vect2 * vect2_x * vect2_y;
+    A[Uy][Ux] = vect1_y * vect1_x + a_vect2_vect2 * vect2_y * vect2_x;
+    A[Uy][Uy] = vect1_y * vect1_y + a_vect2_vect2 * vect2_y * vect2_y;
+
+    B[Ux] = vect1_x * myValue * FACTOR + vect2_x * (b_vect2 * myValue * FACTOR * a_vect2_vect1);
+    B[Uy] = vect1_y * myValue * FACTOR + vect2_y * (b_vect2 * myValue * FACTOR * a_vect2_vect1);
 }
+
+// void femFullSystemConstrainNT(femFullSystem *mySystem, int size, int myNode1, int myNode2, double a, double b)
+// {
+//     double **A, *B;
+//     int i;
+
+//     A = mySystem->A;
+//     B = mySystem->B;
+
+//     // Force this constraint to be applied : myNode2 = b + a * myNode1
+//     for (i = 0; i < size; i++)
+//     {
+//         if      (i == myNode2) { A[myNode2][i] = 1.0; }
+//         else if (i == myNode1) { A[myNode2][i] = - a; }
+//         else                   { A[myNode2][i] = 0.0; }
+//     }
+//     B[myNode2] = b;
+// }
 
 double *femFullSystemEliminate(femFullSystem *system, int size)
 {
@@ -333,25 +367,71 @@ void femBandSystemConstrainXY(femBandSystem *system, int myNode, double myValue,
 }
 
 // TODO
-void femBandSystemConstrainNT(femBandSystem *system, int size, int node1, int node2, double a, double b)
+// void femBandSystemConstrainNT(femBandSystem *mySystem, int size, int myNode1, int myNode2, double a, double b)
+// {
+//     double **A, *B;
+//     int i, band;
+
+//     A    = mySystem->A;
+//     B    = mySystem->B;
+//     band = mySystem->band;
+
+//     // Force this constraint to be applied : myNode2 = b + a * myNode1
+//     for (int myCol = 0; myCol < size; myCol++)
+//     {
+//         double A_entry = (myNode2 >= myCol) ? femBandSystemGetA_Entry(mySystem, myCol, myNode2) : femBandSystemGetA_Entry(mySystem, myNode2, myCol);
+//         if (A_entry != 0.0)
+//         {
+//             if      (myCol == myNode2) { A[myNode2][myCol] = 1.0; }
+//             else if (myCol == myNode1) { A[myNode2][myCol] = -a; }
+//             else                       { A[myNode2][myCol] = 0.0; }
+//         }
+//     }
+//     B[myNode2] = b;
+// }
+
+
+// TODO
+void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size, double FACTOR)
 {
-    double **A, *B;
-    int i, band;
+    double **A, *B, A_entry;
+    
+    A = theSystem->A;
+    B = theSystem->B;
+    int band = theSystem->band;
 
-    A = system->A;
-    B = system->B;
-    band = system->band;
-
-    // Force this constraint to be applied : node2 = b + a * node1
     for (int i = 0; i < size; i++)
     {
-        if (!(isInBand(band, node2, i))) { continue; }
+        double A_Ux_i = femBandSystemGetA_Entry(theSystem, Ux, i);
+        double A_Uy_i = femBandSystemGetA_Entry(theSystem, Uy, i);
 
-        if      (i == node2) { A[node2][i] = 1.0; }
-        else if (i == node1) { A[node2][i] = - a; }
-        else                 { A[node2][i] = 0.0; }
+        double c_vect1 = vect1_x * A_Ux_i + vect1_y * A_Uy_i;
+       //  B[i] -= myValue * FACTOR * c_vect1;
+
+        double lx = A_Ux_i;
+        double ly = A_Uy_i;
+        double cx = femBandSystemGetA_Entry(theSystem, i, Ux);
+        double cy = femBandSystemGetA_Entry(theSystem, i, Uy);
+        
+        // if (isInBand(band, Ux, i)) { A[Ux][i] = vect2_x * (vect2_x * lx + vect2_y * ly); }
+        // if (isInBand(band, Uy, i)) { A[Uy][i] = vect2_y * (vect2_x * lx + vect2_y * ly); }
+        // if (isInBand(band, i, Ux)) { A[i][Ux] = vect2_x * (vect2_x * cx + vect2_y * cy); }
+        // if (isInBand(band, i, Uy)) { A[i][Uy] = vect2_y * (vect2_x * cx + vect2_y * cy); }
     }
-    B[node2] = b;
+
+    double A_Uy_Ux = femBandSystemGetA_Entry(theSystem, Uy, Ux);
+    double A_Ux_Uy = femBandSystemGetA_Entry(theSystem, Ux, Uy); // ?
+    double a_vect2_vect2 = vect2_x * (vect2_x * A[Ux][Ux] + vect2_y * A_Uy_Ux) + vect2_y * (vect2_x * A_Ux_Uy + vect2_y * A[Uy][Uy]);
+    double a_vect2_vect1 = vect1_x * (vect2_x * A[Ux][Ux] + vect2_y * A_Uy_Ux) + vect1_y * (vect2_x * A_Ux_Uy + vect2_y * A[Uy][Uy]);
+    double b_vect2 = vect2_x * B[Ux] + vect2_y * B[Uy];
+    
+    // A[Ux][Ux] = vect1_x * vect1_x + a_vect2_vect2 * vect2_x * vect2_x;
+    // A[Ux][Uy] = vect1_x * vect1_y + a_vect2_vect2 * vect2_x * vect2_y;
+    // // A[Uy][Ux] = vect1_y * vect1_x + a_vect2_vect2 * vect2_y * vect2_x;
+    // A[Uy][Uy] = vect1_y * vect1_y + a_vect2_vect2 * vect2_y * vect2_y;
+
+    // B[Ux] = vect1_x * myValue * FACTOR + vect2_x * (b_vect2 * myValue * FACTOR * a_vect2_vect1);
+    // B[Uy] = vect1_y * myValue * FACTOR + vect2_y * (b_vect2 * myValue * FACTOR * a_vect2_vect1);
 }
 
 double *femBandSystemEliminate(femBandSystem *system, int size)
@@ -538,15 +618,25 @@ void femSolverSystemConstrainXY(femSolver *mySolver, int node, double value)
     }
 }
 
-void femSolverSystemConstrainNT(femSolver *mySolver, int node1, int node2, double a, double b)
+void femSolverSystemConstrainNT(femSolver *mySolver, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, double FACTOR)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemConstrainNT((femFullSystem *) mySolver->solver, mySolver->size, node1 ,node2, a, b); break;
-        case FEM_BAND : femBandSystemConstrainNT((femBandSystem *) mySolver->solver, mySolver->size, node1, node2, a, b); break;
+        case FEM_FULL : femFullSystemConstrainNT((femFullSystem *) mySolver->solver, vect1_x, vect1_y, vect2_x, vect2_y, myValue, Ux, Uy, mySolver->size, FACTOR); break;
+        case FEM_BAND : femBandSystemConstrainNT((femBandSystem *) mySolver->solver, vect1_x, vect1_y, vect2_x, vect2_y, myValue, Ux, Uy, mySolver->size, FACTOR); break;
         default :       Error("Unexpected solver type");
     }
 }
+
+// void femSolverSystemConstrainNT(femSolver *mySolver, int node1, int node2, double a, double b)
+// {
+//     switch (mySolver->type)
+//     {
+//         case FEM_FULL : femFullSystemConstrainNT((femFullSystem *) mySolver->solver, mySolver->size, node1 ,node2, a, b); break;
+//         case FEM_BAND : femBandSystemConstrainNT((femBandSystem *) mySolver->solver, mySolver->size, node1, node2, a, b); break;
+//         default :       Error("Unexpected solver type");
+//     }
+// }
 
 double *femSolverEliminate(femSolver *mySolver)
 {

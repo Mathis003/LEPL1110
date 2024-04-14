@@ -214,21 +214,97 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
     }
 }
 
-void getValueConditionsNT(double vect_x, double vect_y, double value, int Ux, int Uy, int *node1, int *node2, double *a, double *b)
+void getValueConditionsNT(double vect_x, double vect_y, double myValue, int Ux, int Uy, int *myNode1, int *myNode2, double *a, double *b)
 {
     if (fabs(vect_x) >= fabs(vect_y))
     {
         *a = - vect_y / vect_x;
-        *b = value / vect_x;
-        *node1 = Ux; *node2 = Uy;
+        *b = myValue / vect_x;
+        *myNode1 = Ux;
+        *myNode2 = Uy;
     }
     else
     {
         *a = - vect_x / vect_y;
-        *b = value / vect_y;
-        *node1 = Uy; *node2 = Ux;
+        *b = myValue / vect_y;
+        *myNode1 = Uy;
+        *myNode2 = Ux;
     }
 }
+
+// void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
+// {
+//     femSolver *theSolver     = theProblem->solver;
+//     femGeometry *theGeometry = theProblem->geometry;
+//     femNodes *theNodes       = theGeometry->theNodes;
+
+//     int renumberNode;
+//     int *number = theNodes->number;
+
+//     for (int iNode = 0; iNode < theNodes->nNodes; iNode++)
+//     {
+//         femConstrainedNode *theConstrainedNode = &theProblem->constrainedNodes[iNode];
+//         if (theConstrainedNode->type == UNDEFINED) { continue; }
+//         femBoundaryType type = theConstrainedNode->type;
+
+//         renumberNode = number[iNode];
+
+//         int Ux = 2 * renumberNode;
+//         int Uy = 2 * renumberNode + 1;
+
+//         if (type == DIRICHLET_X)
+//         {
+//             double value = theConstrainedNode->value1;
+//             femSolverSystemConstrainXY(theSolver, Ux, value * FACTOR);
+//         }
+//         else if (type == DIRICHLET_Y)
+//         {
+//             double value = theConstrainedNode->value1;
+//             femSolverSystemConstrainXY(theSolver, Uy, value * FACTOR);
+//         }
+//         else if (type == DIRICHLET_XY)
+//         {
+//             double value_x = theConstrainedNode->value1;
+//             double value_y = theConstrainedNode->value2;
+            
+//             femSolverSystemConstrainXY(theSolver, Ux, value_x * FACTOR);
+//             femSolverSystemConstrainXY(theSolver, Uy, value_y * FACTOR);
+//         }
+//         else
+//         {
+//             double nx, ny, tx, ty, a_n, b_n, myValue_n, a_t, b_t, myValue_t;
+//             int myNode1, myNode2;
+
+//             myValue_n = theConstrainedNode->value1;
+//             myValue_t = theConstrainedNode->value2;
+
+//             // Already normalized
+//             nx = theConstrainedNode->nx;
+//             ny = theConstrainedNode->ny;
+
+//             if (type == DIRICHLET_N)
+//             {
+//                 getValueConditionsNT(nx, ny, myValue_n * FACTOR, Ux, Uy, &myNode1, &myNode2, &a_n, &b_n);
+//                 femSolverSystemConstrainNT(theSolver, myNode1, myNode2, a_n, b_n);
+//             }
+//             else if (type == DIRICHLET_T)
+//             {
+//                 tx = ny; ty = -nx;
+//                 getValueConditionsNT(tx, ty, myValue_t * FACTOR, Ux, Uy, &myNode1, &myNode2, &a_t, &b_t);
+//                 femSolverSystemConstrainNT(theSolver, myNode1, myNode2, a_t, b_t);
+//             }
+//             else if (type == DIRICHLET_NT)
+//             {
+//                 tx = ny; ty = -nx;
+//                 getValueConditionsNT(nx, ny, myValue_n * FACTOR, Ux, Uy, &myNode1, &myNode2, &a_n, &b_n);
+//                 femSolverSystemConstrainNT(theSolver, myNode1, myNode2, a_n, b_n);
+//                 getValueConditionsNT(tx, ty, myValue_t * FACTOR, Ux, Uy, &myNode1, &myNode2, &a_t, &b_t);
+//                 femSolverSystemConstrainNT(theSolver, myNode1, myNode2, a_t, b_t);
+//             }
+//         }
+//     }
+// }
+
 
 void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
 {
@@ -236,7 +312,9 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
     femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
 
+    int renumberNode;
     int *number = theNodes->number;
+    int size = theSolver->size;
 
     for (int iNode = 0; iNode < theNodes->nNodes; iNode++)
     {
@@ -244,8 +322,10 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
         if (theConstrainedNode->type == UNDEFINED) { continue; }
         femBoundaryType type = theConstrainedNode->type;
 
-        int Ux = 2 * number[iNode];
-        int Uy = 2 * number[iNode] + 1;
+        renumberNode = number[iNode];
+
+        int Ux = 2 * renumberNode;
+        int Uy = 2 * renumberNode + 1;
 
         if (type == DIRICHLET_X)
         {
@@ -267,40 +347,24 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
         }
         else
         {
-            double nx, ny, norm_n, tx, ty, norm_t, a_n, b_n, value_n, a_t, b_t, value_t;
-            int node1, node2;
+            double nx, ny, tx, ty, a_n, b_n, myValue_n, a_t, b_t, myValue_t;
+            int myNode1, myNode2;
 
-            value_n = theConstrainedNode->value1;
-            value_t = theConstrainedNode->value2;
+            myValue_n = theConstrainedNode->value1;
+            myValue_t = theConstrainedNode->value2;
+
+            // Already normalized
             nx = theConstrainedNode->nx;
             ny = theConstrainedNode->ny;
+            tx = ny;
+            ty = -nx;
 
-            if (type == DIRICHLET_N)
-            {
-                norm_n = sqrt(nx * nx + ny * ny);
-                nx /= norm_n; ny /= norm_n;
-                getValueConditionsNT(nx, ny, value_n * FACTOR, Ux, Uy, &node1, &node2, &a_n, &b_n);
-                femSolverSystemConstrainNT(theSolver, node1, node2, a_n, b_n);
-            }
-            else if (type == DIRICHLET_T)
-            {
-                tx = ny; ty = -nx;
-                norm_t = sqrt(tx * tx + ty * ty);
-                tx /= norm_t; ty /= norm_t;
-                getValueConditionsNT(tx, ty, value_t * FACTOR, Ux, Uy, &node1, &node2, &a_t, &b_t);
-                femSolverSystemConstrainNT(theSolver, node1, node2, a_t, b_t);
-            }
+            if (type == DIRICHLET_N)      { femSolverSystemConstrainNT(theSolver, nx, ny, tx, ty, myValue_n, Ux, Uy, FACTOR); }
+            else if (type == DIRICHLET_T) { femSolverSystemConstrainNT(theSolver, tx, ty, nx, ny, myValue_t, Ux, Uy, FACTOR); }
             else if (type == DIRICHLET_NT)
             {
-                tx = ny; ty = -nx;
-                norm_n = sqrt(nx * nx + ny * ny);
-                norm_t = sqrt(tx * tx + ty * ty);
-                nx /= norm_n; ny /= norm_n;
-                tx /= norm_t; ty /= norm_t;
-                getValueConditionsNT(nx, ny, value_n * FACTOR, Ux, Uy, &node1, &node2, &a_n, &b_n);
-                femSolverSystemConstrainNT(theSolver, node1, node2, a_n, b_n);
-                getValueConditionsNT(tx, ty, value_t * FACTOR, Ux, Uy, &node1, &node2, &a_t, &b_t);
-                femSolverSystemConstrainNT(theSolver, node1, node2, a_t, b_t);
+                femSolverSystemConstrainNT(theSolver, nx, ny, tx, ty, myValue_n, Ux, Uy, FACTOR);
+                femSolverSystemConstrainNT(theSolver, tx, ty, nx, ny, myValue_t, Ux, Uy, FACTOR);
             }
         }
     }
