@@ -15,6 +15,7 @@
 #include "../../../fem_library/include/fem.h"
 #include "../../../glfem_library/glfem.h"
 #include "../../var.h"
+#include "../../Processing/src/homework.c"
 
 double constFunct(double x, double y) { return 1.0; }
 
@@ -22,9 +23,16 @@ double *femElasticityForces(femProblem *theProblem)
 {
     double *residuals = theProblem->residuals;
     double *soluce    = theProblem->soluce;
+
+    femSolver *theSolver = theProblem->solver;
+    femSolverInit(theSolver);
+
+    femElasticityAssembleElements(theProblem, 1.0);
+    femElasticityAssembleNeumann(theProblem, 1.0);
     
     // Read the system from the file
-    femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/dirichletUnconstrainedSystem.txt");
+    // femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/dirichletUnconstrainedSystem.txt");
+    // femSystemWrite(theSolver, "../../Processing/data/dirichletUnconstrainedSystemWRITED.txt"); // DONT WORK...
     int size = theSolver->size;
 
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
@@ -113,9 +121,21 @@ int main(int argc, char *argv[])
     }
 
     // Create the solver with the final system to visualize the matrix by pressing 'S'
-    femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/finalSystem.txt");
-    femSolverPrint(theSolver);
-    femSystemWrite(theSolver, "../../Processing/data/finalSystemWRITED.txt"); // DONT WORK...
+    // femSolver *theSolver = femSolverRead(typeSolver, "../../Processing/data/finalSystem.txt");
+    // femSystemWrite(theSolver, "../../Processing/data/finalSystemWRITED.txt"); // DONT WORK...
+
+    // printf("band = %d\n", ((femBandSystem *)(theProblem->solver->solver))->band);
+    // printf("size = %d\n", theProblem->solver->size);
+    // femSolver *theSolver = femSolverBandCreate(theProblem->solver->size, ((femBandSystem *)(theProblem->solver->solver))->band);
+    // femSolverInit(theSolver);
+    // femElasticityAssembleElements(theProblem, 1.0);
+    // femElasticityAssembleNeumann(theProblem, 1.0);
+    // femElasticityApplyDirichlet(theProblem, 1.0);
+
+    for (int i = 0; i < n; i++)
+    {
+        printf("Node %d : Ux = %f, Uy = %f\n", i, theSoluce[2 * i], theSoluce[2 * i + 1]);
+    }
 
     double rho = theProblem->rho;
     double gy = theProblem->gy;
@@ -135,8 +155,8 @@ int main(int argc, char *argv[])
     femNodes *theNodes = theGeometry->theNodes;
 
     double deformationFactor;
-    if (exampleUsage == TRUE) { deformationFactor = 5e4; } // To change the deformation factor
-    else                      { deformationFactor = 5e4; } // To change the deformation factor
+    if (exampleUsage == TRUE) { deformationFactor = 1e4; } // To change the deformation factor
+    else                      { deformationFactor = 1e4; } // To change the deformation factor
 
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
     if (normDisplacement == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
@@ -242,7 +262,7 @@ int main(int argc, char *argv[])
         else if (mode == 2)
         {
             glColor3f(1.0, 0.0, 0.0);
-            glfemPlotSolver(theSolver, theSolver->size, w, h);
+            // glfemPlotSolver(theSolver, theSolver->size, w, h);
         } 
         else if (mode==3)
         {

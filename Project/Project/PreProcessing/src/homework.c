@@ -854,6 +854,7 @@ double geoSize(double x, double y)
 double geoSizeExample(double x, double y)
 {
   femGeometry *theGeometry = geoGetGeometry();
+  // return 0.4;
   return theGeometry->defaultSize * (1.0 - 0.5 * x);
 }
 

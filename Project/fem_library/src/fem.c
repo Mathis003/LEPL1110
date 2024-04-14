@@ -62,10 +62,10 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
         {
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac;
-                A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac;
-                A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac;
-                A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac;
+                A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac * FACTOR;
+                A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac * FACTOR;
+                A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac * FACTOR;
+                A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac * FACTOR;
             }
             B[mapX[i]] += phi[i] * gx * rho * weightedJac * FACTOR;
             B[mapY[i]] += phi[i] * gy * rho * weightedJac * FACTOR;
@@ -77,10 +77,10 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
         {
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + dphidx[i] * b * phi[j] + phi[i] * (b * dphidx[j] + a * phi[j] / xLoc)) * weightedJac;
-                A[mapX[i]][mapY[j]] += (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac;
-                A[mapY[i]][mapX[j]] += (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac;
-                A[mapY[i]][mapY[j]] += (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac;
+                A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + dphidx[i] * b * phi[j] + phi[i] * (b * dphidx[j] + a * phi[j] / xLoc)) * weightedJac * FACTOR;
+                A[mapX[i]][mapY[j]] += (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac * FACTOR;
+                A[mapY[i]][mapX[j]] += (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac * FACTOR;
+                A[mapY[i]][mapY[j]] += (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac * FACTOR;
             }
             B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
             B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
@@ -290,10 +290,10 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
                 jOffsetX = mapX[j];
                 jOffsetY = mapY[j];
 
-                A[iOffsetX][jOffsetX] += isInBand(band, iOffsetX, jOffsetX) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
-                A[iOffsetX][jOffsetY] += isInBand(band, iOffsetX, jOffsetY) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
-                A[iOffsetY][jOffsetX] += isInBand(band, iOffsetY, jOffsetX) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
-                A[iOffsetY][jOffsetY] += isInBand(band, iOffsetY, jOffsetY) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
+                A[iOffsetX][jOffsetX] += isInBand(band, iOffsetX, jOffsetX) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac * FACTOR : 0.0;
+                A[iOffsetX][jOffsetY] += isInBand(band, iOffsetX, jOffsetY) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac * FACTOR : 0.0;
+                A[iOffsetY][jOffsetX] += isInBand(band, iOffsetY, jOffsetX) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac * FACTOR : 0.0;
+                A[iOffsetY][jOffsetY] += isInBand(band, iOffsetY, jOffsetY) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac * FACTOR : 0.0;
             }
             B[iOffsetX] += phi[i] * gx * rho * weightedJac * FACTOR;
             B[iOffsetY] += phi[i] * gy * rho * weightedJac * FACTOR;
@@ -310,10 +310,10 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
                 jOffsetX = mapX[j];
                 jOffsetY = mapY[j];
 
-                A[iOffsetX][jOffsetX] += isInBand(band, iOffsetX, jOffsetX) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac : 0.0;
-                A[iOffsetX][jOffsetY] += isInBand(band, iOffsetX, jOffsetY) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac : 0.0;
-                A[iOffsetY][jOffsetX] += isInBand(band, iOffsetY, jOffsetX) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac : 0.0;
-                A[iOffsetY][jOffsetY] += isInBand(band, iOffsetY, jOffsetY) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac : 0.0;
+                A[iOffsetX][jOffsetX] += isInBand(band, iOffsetX, jOffsetX) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac * FACTOR : 0.0;
+                A[iOffsetX][jOffsetY] += isInBand(band, iOffsetX, jOffsetY) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac * FACTOR : 0.0;
+                A[iOffsetY][jOffsetX] += isInBand(band, iOffsetY, jOffsetX) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac * FACTOR : 0.0;
+                A[iOffsetY][jOffsetY] += isInBand(band, iOffsetY, jOffsetY) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac * FACTOR : 0.0;
             }
             B[iOffsetX] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
             B[iOffsetY] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
@@ -341,34 +341,23 @@ void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int
 
     for (i = 0; i < size; i++)
     {
-        if (isInBand(band, i, node))
+        double val = 0.0;
+        if (node >= i) { val = femBandSystemGet(system, i, node); }
+        else           { val = femBandSystemGet(system, node, i); }
+        if (val != 0.0)
         {
-            B[i] -= value * A[i][node];
-            A[i][node] = 0;
+            B[i] -= value * val;
+            if (node >= i) { A[i][node] = 0; }
         }
+        
     }
-    for (i = 0; i < size; i++) { if (isInBand(band, i, node)) { A[node][i] = 0; }}
+    for (i = 0; i < size; i++)
+    {
+        if (femBandSystemGet(system, node, i) != 0.0) {  A[node][i] = 0; }
+    }
 
     A[node][node] = 1.0;
     B[node] = value;
-
-
-    // int lowerBound = (node >= band) ? node - band + 1 : 0;
-    // for (i = lowerBound ; i < node; i++)
-    // {
-    //     B[i] -= value * A[i][node];
-    //     A[i][node] = 0;
-    // }
-
-    // int upperBound = (node + band >= size) ? size : node + band;
-    // for (i = node + 1; i < upperBound ; i++)
-    // {
-    //     B[i] -= value * A[node][i];
-    //     A[node][i] = 0;
-    // }
-
-    // A[node][node] = 1;
-    // B[node] = value;
 }
 
 // TODO
@@ -1275,8 +1264,10 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
     else if (typeSolver == FEM_BAND)
     {
+        printf("Band before renumbering = %d\n", femMeshComputeBand(theGeometry->theElements));
         femMeshRenumber(theGeometry->theElements, renumType);
         int band = femMeshComputeBand(theGeometry->theElements);
+        printf("Band after renumbering = %d\n", band);
         printf("Band = %d, size = %d\n", band, size);
         theProblem->solver = femSolverBandCreate(size, band);
     }
@@ -1351,7 +1342,14 @@ void femSystemWrite(femSolver *theSolver, const char *filename)
     for (int i = 0; i < size; i++)
     {
         int start = (theSolver->type == FEM_FULL) ? 0 : i;
-        int end = (theSolver->type == FEM_FULL) ? size : i + ((femBandSystem *)(theSolver->solver))->band);
+        int end;
+        if (theSolver->type == FEM_FULL) { end = size; }
+        else
+        {
+            end = i + ((femBandSystem *)(theSolver->solver))->band;
+            if (end > size) { end = size; }
+        }
+
         for (int j = start; j < end; j++)
         {
             fprintf(file, "%.18le\t", femSolverGet(theSolver, i, j));

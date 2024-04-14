@@ -275,6 +275,7 @@ int geoGetDomain(char *name);
 femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femDiscreteType dType);
 void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
+void femElasticityAssembleElements(femProblem *theProblem, double FACTOR);
 double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR);
 double *femElasticityForces(femProblem *theProblem);
 
