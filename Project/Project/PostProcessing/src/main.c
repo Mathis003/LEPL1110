@@ -21,7 +21,6 @@ double constFunct(double x, double y) { return 1.0; }
 
 void femElasticitySigma(femProblem *theProblem)
 {
-    // Premier systeme pour epsilon_x_x
     femIntegration *theRule  = theProblem->rule;
     femDiscrete *theSpace    = theProblem->space;
     femGeometry *theGeometry = theProblem->geometry;
@@ -29,14 +28,18 @@ void femElasticitySigma(femProblem *theProblem)
     femMesh *theMesh         = theGeometry->theElements;
 
     double *theSoluce = theProblem->soluce;
+    
 
     int nLocal = theSpace->n;
     // int *number = theMesh->nodes->number;    
 
-    double xLoc, x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal];
-    int iElem, iInteg, iEdge, i, map[nLocal], mapX[nLocal], mapY[nLocal], u[nLocal], v[nLocal];
+    double xLoc, x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal], u[nLocal], v[nLocal];
+    int iElem, iInteg, iEdge, i, map[nLocal], mapX[nLocal], mapY[nLocal];
     
+    // Premier systeme pour epsilon_x_x
     femSolver *theSolver = femSolverFullCreate(theNodes->nNodes);
+    double **A = femSolverGetA(theSolver);
+    double *B  = femSolverGetB(theSolver);
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {
@@ -47,7 +50,6 @@ void femElasticitySigma(femProblem *theProblem)
             y[i] = theNodes->Y[map[i]];
             u[i] = theSoluce[2 * map[i]];
             // map[i] = number[map[i]];
-            mapX[i] = map[i];
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -80,16 +82,14 @@ void femElasticitySigma(femProblem *theProblem)
             }
 
             double weightedJac = jac * weight;
-            double **A = femSolverGetA(theSolver);
-            double *B  = femSolverGetB(theSolver);
 
             for (int i = 0; i < theSpace->n; i++)
             {
                 for (int j = 0; j < theSpace->n; j++)
                 {
-                    A[mapX[i]][mapX[j]] += phi[i] * phi[j] * weightedJac;
+                    A[map[i]][map[i]] += phi[i] * phi[j] * weightedJac;
                 }
-                B[mapX[i]] += phi[i] * u[i] * dphidx[i] * weightedJac;
+                B[map[i]] += phi[i] * u[i] * dphidx[i] * weightedJac;
             }
         }
     }
@@ -113,7 +113,6 @@ void femElasticitySigma(femProblem *theProblem)
             y[i] = theNodes->Y[map[i]];
             v[i] = theProblem->soluce[2 * map[i] + 1];
             // map[i] = number[map[i]];
-            mapY[i] = map[i];
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -134,7 +133,6 @@ void femElasticitySigma(femProblem *theProblem)
                 dxdeta += x[i] * dphideta[i];
                 dydxsi += y[i] * dphidxsi[i];
                 dydeta += y[i] * dphideta[i];
-                xLoc   += x[i] * phi[i];
             }
 
             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
@@ -155,9 +153,9 @@ void femElasticitySigma(femProblem *theProblem)
             {
                 for (int j = 0; j < theSpace->n; j++)
                 {
-                    A[mapY[i]][mapY[j]] += phi[i] * phi[j] * weightedJac;
+                    A[map[i]][map[i]] += phi[i] * phi[j] * weightedJac;
                 }
-                B[mapY[i]] += phi[i] * dphidy[i] * v[i] * weightedJac;
+                B[map[i]] += phi[i] * dphidy[i] * v[i] * weightedJac;
             }
         }
     }
@@ -167,11 +165,14 @@ void femElasticitySigma(femProblem *theProblem)
     if (epsilon_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
     memcpy(epsilon_y_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
 
+    for (int i = 0; i < theNodes->nNodes; i++)
+    {
+        if (epsilon_y_y[i] != 0.0) { printf("%f\n", epsilon_y_y[i]); }    
+    }
 
+    // Troisieme systeme pour epsilon_x_y
 
-    // Deuxieme systeme pour epsilon_y_y
-
-    theSolver = femSolverFullCreate(2 * theNodes->nNodes);
+    theSolver = femSolverFullCreate(theNodes->nNodes);
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {
@@ -183,8 +184,6 @@ void femElasticitySigma(femProblem *theProblem)
             u[i] = theProblem->soluce[2 * map[i]];
             v[i] = theProblem->soluce[2 * map[i] + 1];
             // map[i] = number[map[i]];
-            mapX[i] = 2 * map[i];
-            mapY[i] = 2 * map[i] + 1;
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -198,7 +197,6 @@ void femElasticitySigma(femProblem *theProblem)
 
             double dxdxsi = 0.0; double dydxsi = 0.0;
             double dxdeta = 0.0; double dydeta = 0.0;
-            xLoc = 0.0;
 
             for (i = 0; i < theSpace->n; i++)
             {
@@ -206,7 +204,6 @@ void femElasticitySigma(femProblem *theProblem)
                 dxdeta += x[i] * dphideta[i];
                 dydxsi += y[i] * dphidxsi[i];
                 dydeta += y[i] * dphideta[i];
-                xLoc   += x[i] * phi[i];
             }
 
             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
@@ -227,51 +224,41 @@ void femElasticitySigma(femProblem *theProblem)
             {
                 for (int j = 0; j < theSpace->n; j++)
                 {
-                    A[mapX[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
-                    A[mapX[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
-                    A[mapY[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
-                    A[mapY[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
+                    A[map[i]][map[i]] += phi[i] * phi[j] * weightedJac;
                 }
-                B[mapX[i]] += phi[i] * (dphidy[i] * u[i] + dphidx[i] * v[i]) * weightedJac / 2.0;
-                B[mapY[i]] += phi[i] * (dphidy[i] * u[i] + dphidx[i] * v[i]) * weightedJac / 2.0;
+                B[map[i]] += phi[i] * (dphidy[i] * u[i] + dphidx[i] * v[i]) * weightedJac / 2.0;
             }
         }
     }
 
     femSolverEliminate(theSolver);
+    
     double *epsilon_x_y = (double *) malloc(theSolver->size * sizeof(double));
     if (epsilon_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
     memcpy(epsilon_x_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
 
-    
-    // for (int i = 0; i < 30; i++)
-    // {
-    //     for (int j = 0; j < 30; j++)
-    //     {
-    //         printf("%14.7e ", epsilon_x_x[30 * i + j]);
-    //     }
-    // }
+    for (int i = 0; i < theNodes->nNodes; i++)
+    {
+        if (epsilon_x_y[i] != 0.0) { printf("%f\n", epsilon_x_y[i]); }    
+    }
 
+    double a = theProblem->A;
+    double b = theProblem->B;
+    double c = theProblem->C;
 
-    // double a = theProblem->A;
-    // double b = theProblem->B;
-    // double c = theProblem->C;
+    double *sigma_x_x = (double *) malloc(theSolver->size * sizeof(double));
+    if (sigma_x_x == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
+    double *sigma_y_y = (double *) malloc(theSolver->size * sizeof(double));
+    if (sigma_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
+    double *sigma_x_y = (double *) malloc(theSolver->size * sizeof(double));
+    if (sigma_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
 
-    // double *sigma_x_x = (double *) malloc(theSolver->size * sizeof(double));
-    // if (sigma_x_x == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-    // double *sigma_y_y = (double *) malloc(theSolver->size * sizeof(double));
-    // if (sigma_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-    // double *sigma_x_y = (double *) malloc(theSolver->size * sizeof(double));
-    // if (sigma_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-
-    // for (int i = 0; i < theSolver->size; i++)
-    // {
-    //     sigma_x_x[i] = a * epsilon_x_x[i] + b * epsilon_y_y[i];
-    //     sigma_x_y[i] = 2 * c * epsilon_x_y[i];
-    //     sigma_y_y[i] = b * epsilon_x_x[i] + a * epsilon_y_y[i];
-    // }
-    
-    // // La on a les sigma :)
+    for (int i = 0; i < theSolver->size; i++)
+    {
+        sigma_x_x[i] = a * epsilon_x_x[i] + b * epsilon_y_y[i];
+        sigma_x_y[i] = 2 * c * epsilon_x_y[i];
+        sigma_y_y[i] = b * epsilon_x_x[i] + a * epsilon_y_y[i];
+    }
 }
 
 double *femElasticityForces(femProblem *theProblem)
