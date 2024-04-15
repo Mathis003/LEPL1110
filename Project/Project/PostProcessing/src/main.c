@@ -19,7 +19,7 @@
 
 double constFunct(double x, double y) { return 1.0; }
 
-void femElasticitySigma(femProblem *theProblem)
+void femElasticitySigma(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY)
 {
     femIntegration *theRule  = theProblem->rule;
     femDiscrete *theSpace    = theProblem->space;
@@ -29,7 +29,6 @@ void femElasticitySigma(femProblem *theProblem)
 
     double *theSoluce = theProblem->soluce;
     
-
     int nLocal = theSpace->n;
     // int *number = theMesh->nodes->number;    
 
@@ -246,18 +245,11 @@ void femElasticitySigma(femProblem *theProblem)
     double b = theProblem->B;
     double c = theProblem->C;
 
-    double *sigma_x_x = (double *) malloc(theSolver->size * sizeof(double));
-    if (sigma_x_x == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-    double *sigma_y_y = (double *) malloc(theSolver->size * sizeof(double));
-    if (sigma_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-    double *sigma_x_y = (double *) malloc(theSolver->size * sizeof(double));
-    if (sigma_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-
     for (int i = 0; i < theSolver->size; i++)
     {
-        sigma_x_x[i] = a * epsilon_x_x[i] + b * epsilon_y_y[i];
-        sigma_x_y[i] = 2 * c * epsilon_x_y[i];
-        sigma_y_y[i] = b * epsilon_x_x[i] + a * epsilon_y_y[i];
+        sigmaXX[i] = a * epsilon_x_x[i] + b * epsilon_y_y[i];
+        sigmaXY[i] = 2 * c * epsilon_x_y[i];
+        sigmaYY[i] = b * epsilon_x_x[i] + a * epsilon_y_y[i];
     }
 }
 
@@ -392,7 +384,13 @@ int main(int argc, char *argv[])
     /*     Création du système final */
     /*********************************/
 
-    femElasticitySigma(theProblem); // TODO : Decommenter quand c'est fonctionnel
+    double *sigmaXX = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
+    if (sigmaXX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    double *sigmaYY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
+    if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
+    if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
     
     double *theForces = femElasticityForces(theProblem);
     double area       = femElasticityIntegrate(theProblem, constFunct);
@@ -484,8 +482,11 @@ int main(int argc, char *argv[])
         if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
         if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
         if (glfwGetKey(window, 'S') == GLFW_PRESS) { mode = 2; }
-        if (glfwGetKey(window, 'X') == GLFW_PRESS) { mode = 3;}
-        if (glfwGetKey(window, 'Y') == GLFW_PRESS) { mode = 4;}
+        if (glfwGetKey(window, 'X') == GLFW_PRESS) { mode = 3; }
+        if (glfwGetKey(window, 'Y') == GLFW_PRESS) { mode = 4; }
+        if (glfwGetKey(window, 'A') == GLFW_PRESS) { mode = 5; }
+        if (glfwGetKey(window, 'B') == GLFW_PRESS) { mode = 6; }
+        if (glfwGetKey(window, 'C') == GLFW_PRESS) { mode = 7; }
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -524,7 +525,28 @@ int main(int argc, char *argv[])
         }
         else if (mode == 4)
         {
-            glfemPlotField(theGeometry->theElements,forcesY);
+            glfemPlotField(theGeometry->theElements, forcesY);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+        }
+        else if (mode == 5)
+        {
+            glfemPlotField(theGeometry->theElements, sigmaXX);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+        }
+        else if (mode == 6)
+        {
+            glfemPlotField(theGeometry->theElements, sigmaYY);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+        }
+        else if (mode == 7)
+        {
+            glfemPlotField(theGeometry->theElements, sigmaXY);
             glfemPlotMesh(theGeometry->theElements); 
             sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
             glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
