@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
             theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i);
             nNodes = theGeometry->theNodes->nNodes;
             if (exampleUsage == TRUE) { sprintf(filename, "../data/animations/UV_example_%d.txt", i); }
-            else                      { sprintf(filename, "../data/animations/UV_%d.txt", i); }
+            else                      { sprintf(filename, "../data/animations/UV_%d.txt", i); }         
             femSolutionWrite(nNodes, 2, theSoluce, filename);
         }
 

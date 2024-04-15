@@ -311,7 +311,7 @@ double *femElasticityForces(femProblem *theProblem)
         soluce[2 * theNodes->number[i] + 1] = theSoluce[2 * i + 1];
     }
 
-    femElasticityAssembleElements(theProblem, 1.0);
+    femElasticityAssembleElements(theProblem);
     femElasticityAssembleNeumann(theProblem, 1.0);
 
     double **A = femSolverGetA(theSolver);
@@ -481,6 +481,7 @@ int main(int argc, char *argv[])
         char command[100] = "python3 ../src/plot.py";
         if (exampleUsage == TRUE) { strcat(command, " -e"); }
         if (animation == TRUE)    { strcat(command, " -a"); }
+        printf(" ==== Command : %s \n", command);
         system(command);
     }
 

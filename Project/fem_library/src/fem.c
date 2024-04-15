@@ -47,7 +47,7 @@ double femFullSystemGetA_Entry(femFullSystem *mySystem, int myRow, int myCol) { 
 
 double femFullSystemGetB_Entry(femFullSystem *mySystem, int myRow) { return mySystem->B[myRow]; }
 
-void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR)
+void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     double **A = system->A;
     double *B  = system->B;
@@ -64,13 +64,13 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
         {
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac * FACTOR;
-                A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac * FACTOR;
-                A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac * FACTOR;
-                A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac * FACTOR;
+                A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac;
+                A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac;
+                A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac;
+                A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac;
             }
-            B[mapX[i]] += phi[i] * gx * rho * weightedJac * FACTOR;
-            B[mapY[i]] += phi[i] * gy * rho * weightedJac * FACTOR;
+            B[mapX[i]] += phi[i] * gx * rho * weightedJac;
+            B[mapY[i]] += phi[i] * gy * rho * weightedJac;
         }
     }
     else if (theProblem->planarStrainStress == AXISYM)
@@ -79,13 +79,13 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
         {
             for (int j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + dphidx[i] * b * phi[j] + phi[i] * (b * dphidx[j] + a * phi[j] / xLoc)) * weightedJac * FACTOR;
-                A[mapX[i]][mapY[j]] += (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac * FACTOR;
-                A[mapY[i]][mapX[j]] += (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac * FACTOR;
-                A[mapY[i]][mapY[j]] += (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac * FACTOR;
+                A[mapX[i]][mapX[j]] += (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + dphidx[i] * b * phi[j] + phi[i] * (b * dphidx[j] + a * phi[j] / xLoc)) * weightedJac;
+                A[mapX[i]][mapY[j]] += (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac;
+                A[mapY[i]][mapX[j]] += (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac;
+                A[mapY[i]][mapY[j]] += (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac;
             }
-            B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
-            B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
+            B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac;
+            B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac;
         }
     }
     else { Error("Unexpected problem type"); }
@@ -313,7 +313,7 @@ double femBandSystemGetA_Entry(femBandSystem *mySystem, int myRow, int myCol) { 
 
 double femBandSystemGetB_Entry(femBandSystem *mySystem, int myRow) { return mySystem->B[myRow]; }
 
-void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR)
+void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     double **A, *B, a, b, c, rho, gx, gy;
     int band, i, j;
@@ -334,13 +334,13 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
         {
             for (j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac * FACTOR : 0.0;
-                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac * FACTOR : 0.0;
-                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac * FACTOR : 0.0;
-                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac * FACTOR : 0.0;
+                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * weightedJac : 0.0;
+                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * weightedJac : 0.0;
             }
-            B[mapX[i]] += phi[i] * gx * rho * weightedJac * FACTOR;
-            B[mapY[i]] += phi[i] * gy * rho * weightedJac * FACTOR;
+            B[mapX[i]] += phi[i] * gx * rho * weightedJac;
+            B[mapY[i]] += phi[i] * gy * rho * weightedJac;
         }
     }
     else if (theProblem->planarStrainStress == AXISYM)
@@ -349,13 +349,13 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
         {
             for (j = 0; j < nLoc; j++)
             {
-                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac * FACTOR : 0.0;
-                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac * FACTOR : 0.0;
-                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac * FACTOR : 0.0;
-                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac * FACTOR : 0.0;
+                A[mapX[i]][mapX[j]] += isInBand(band, mapX[i], mapX[j]) ? (dphidx[i] * a * xLoc * dphidx[j] + dphidy[i] * c * xLoc * dphidy[j] + phi[i] * ((b * dphidx[j]) + (a * phi[j] / xLoc)) + dphidx[i] * b * phi[j]) * weightedJac : 0.0;
+                A[mapX[i]][mapY[j]] += isInBand(band, mapX[i], mapY[j]) ? (dphidx[i] * b * xLoc * dphidy[j] + dphidy[i] * c * xLoc * dphidx[j] + phi[i] * b * dphidy[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapX[j]] += isInBand(band, mapY[i], mapX[j]) ? (dphidy[i] * b * xLoc * dphidx[j] + dphidx[i] * c * xLoc * dphidy[j] + dphidy[i] * b * phi[j]) * weightedJac : 0.0;
+                A[mapY[i]][mapY[j]] += isInBand(band, mapY[i], mapY[j]) ? (dphidy[i] * a * xLoc * dphidy[j] + dphidx[i] * c * xLoc * dphidx[j]) * weightedJac : 0.0;
             }
-            B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac * FACTOR;
-            B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac * FACTOR;
+            B[mapX[i]] += phi[i] * xLoc * gx * rho * weightedJac;
+            B[mapY[i]] += phi[i] * xLoc * gy * rho * weightedJac;
         }
     }
     else { Error("Unexpected problem type"); }
@@ -597,12 +597,12 @@ void femSolverPrintInfos(femSolver *mySolver)
     }
 }
 
-void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR)
+void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemAssemble((femFullSystem *) mySolver->solver, theProblem, mapX, mapY, phi, dphidx, dphidy, weightedJac, xLoc, nLoc, FACTOR); break;
-        case FEM_BAND : femBandSystemAssemble((femBandSystem *) mySolver->solver, theProblem, mapX, mapY, phi, dphidx, dphidy, weightedJac, xLoc, nLoc, FACTOR); break;
+        case FEM_FULL : femFullSystemAssemble((femFullSystem *) mySolver->solver, theProblem, mapX, mapY, phi, dphidx, dphidy, weightedJac, xLoc, nLoc); break;
+        case FEM_BAND : femBandSystemAssemble((femBandSystem *) mySolver->solver, theProblem, mapX, mapY, phi, dphidx, dphidy, weightedJac, xLoc, nLoc); break;
         default :       Error("Unexpected solver type");
     }
 }

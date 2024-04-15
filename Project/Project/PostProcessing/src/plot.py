@@ -92,7 +92,7 @@ def generate_frame(i):
 
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
-    factor = 5e4
+    factor = 1e4
 
     plt.clf()
     cb = mesh.plotfield(uv_norm, uv * factor, cmap="turbo")
@@ -145,11 +145,12 @@ if __name__ == "__main__":
         plt.savefig("../../Processing/data/plot.png")
 
     else:
+        print("Generating animation...")
         NB_IMAGES = 50
         fig, ax = plt.subplots()
-        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
+        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=2)
         plt.show()
-        animation.save("../../Processing/data/animation.mp4")
+        # animation.save("../../Processing/data/animation.mov")
 
 
 # %%

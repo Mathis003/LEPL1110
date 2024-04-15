@@ -5,6 +5,18 @@
         "map": "c",
         "set": "c",
         "unordered_map": "c",
-        "chrono": "c"
+        "chrono": "c",
+        "__node_handle": "c",
+        "atomic": "c",
+        "__memory": "c",
+        "limits": "c",
+        "locale": "c",
+        "optional": "c",
+        "ratio": "c",
+        "system_error": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "vector": "c",
+        "cstddef": "c"
     }
 }
