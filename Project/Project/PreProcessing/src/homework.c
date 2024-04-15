@@ -1,11 +1,6 @@
 #include "../../../fem_library/include/fem.h"
 #include "../../../fem_library/include/gmsh.h"
 
-/*
-* TODO
-* - Ajouter les conditions aux limites (finir)
-* - Vérifier le sens des contours (convention pour la normale)
-*/
 
 /**********************************/
 /********* Gmsh functions *********/
@@ -565,31 +560,136 @@ void setDomainsName(void)
         char *name;
     } domain_Mapping_t;
 
-    // TO ADD !
-    // geoSetDomainName(0, "PYLON 1 L"); // NUMERO
-    // geoSetDomainName(0, "PYLON 1 R"); // NUMERO
-    // geoSetDomainName(0, "PYLON 1 UL"); // NUMERO
-    // geoSetDomainName(0, "PYLON 1 UR"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 L"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 R"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 UL"); // NUMERO
-    // geoSetDomainName(0, "PYLON 2 UR"); // NUMERO
-    // geoSetDomainName(0, "PYLON 3 L"); // NUMERO
-    // geoSetDomainName(0, "PYLON 3 R"); // NUMERO
-
-    // geoSetDomainName(0, "TOP BALL 1"); // NUMERO
-    // geoSetDomainName(0, "TOP BALL 2"); // NUMERO
-
-    // geoSetDomainName(13, "ROADWAY U 1"); // NUMERO
-    // geoSetDomainName(24, "ROADWAY U 2"); // NUMERO
-    domain_Mapping_t domain_mapping[] = {{5, "PILAR R 1"}, {6, "PILAR D 1"}, {7, "PILAR L 1"}, {1, "PILAR R 2"},
-        {2, "PILAR D 2"}, {3, "PILAR L 2"}, {10, "SUB ROADWAY U 1"}, {33, "SUB ROADWAY U 2"}, {38, "SUB ROADWAY U 3"},
-        {42, "SUB ROADWAY U 4"}, {51, "SUB ROADWAY U 5"}, {49, "SUB ROADWAY U 6"}, {56, "SUB ROADWAY U 7"},
-        {27, "SUB ROADWAY U 8"}, {8, "SUB ROADWAY D 1"}, {4, "SUB ROADWAY D 2"}, {0, "SUB ROADWAY D 3"}, {9, "SUB ROADWAY L"},
-        {28, "SUB ROADWAY R"}, {13, "ROADWAY L"}, {24, "ROADWAY R"}, {29, "WINDOW D 1"}, {30, "WINDOW L 1"}, {31, "WINDOW R 1"},
-        {32, "WINDOW U 1"}, {43, "WINDOW D 2"}, {44, "WINDOW L 2"}, {45, "WINDOW R 2"}, {46, "WINDOW U 2"}, {11, "PILE L 1"},
-        {35, "PILE R 1"}, {37, "PILE L 2"}, {41, "PILE R 2"}, {40, "PILE L 3"}, {52, "PILE R 3"}, {48, "PILE L 4"}, {55, "PILE R 4"}, {54, "PILE L 5"},
-        {26, "PILE R 5"}, {12, "ARC 1"}, {34, "ARC 2"}, {36, "ARC 3"}, {39, "ARC 4"}, {50, "ARC 5"}, {47, "ARC 6"}, {53, "ARC 7"}, {25, "ARC 8"}
+    domain_Mapping_t domain_mapping[] = {
+        {5, "PILAR R 1"},
+        {6, "PILAR D 1"},
+        {7, "PILAR L 1"},
+        {1, "PILAR R 2"},
+        {2, "PILAR D 2"},
+        {3, "PILAR L 2"},
+        {10, "SUB ROADWAY U 1"},
+        {33, "SUB ROADWAY U 2"},
+        {38, "SUB ROADWAY U 3"},
+        {42, "SUB ROADWAY U 4"},
+        {51, "SUB ROADWAY U 5"},
+        {49, "SUB ROADWAY U 6"},
+        {56, "SUB ROADWAY U 7"},
+        {27, "SUB ROADWAY U 8"},
+        {8, "SUB ROADWAY D 1"},
+        {4, "SUB ROADWAY D 2"},
+        {0, "SUB ROADWAY D 3"},
+        {9, "SUB ROADWAY L"},
+        {28, "SUB ROADWAY R"},
+        {13, "ROADWAY L"},
+        {24, "ROADWAY R"},
+        {29, "WINDOW D 1"},
+        {30, "WINDOW L 1"},
+        {31, "WINDOW R 1"},
+        {32, "WINDOW U 1"},
+        {43, "WINDOW D 2"},
+        {44, "WINDOW L 2"},
+        {45, "WINDOW R 2"},
+        {46, "WINDOW U 2"},
+        {11, "PILE L 1"},
+        {35, "PILE R 1"},
+        {37, "PILE L 2"},
+        {41, "PILE R 2"},
+        {40, "PILE L 3"},
+        {52, "PILE R 3"},
+        {48, "PILE L 4"},
+        {55, "PILE R 4"},
+        {54, "PILE L 5"},
+        {26, "PILE R 5"},
+        {12, "ARC 1"},
+        {34, "ARC 2"},
+        {36, "ARC 3"},
+        {39, "ARC 4"},
+        {50, "ARC 5"},
+        {47, "ARC 6"},
+        {53, "ARC 7"},
+        {25, "ARC 8"},
+        {15, "STAYCABLES L U 1"},
+        {102, "STAYCABLES L U 2"},
+        {98, "STAYCABLES L U 3"},
+        {94, "STAYCABLES L U 4"},
+        {90, "STAYCABLES L U 5"},
+        {85, "STAYCABLES L U 6"},
+        {82, "STAYCABLES L U 7"},
+        {66, "STAYCABLES L U 8"},
+        {63, "STAYCABLES L U 9"},
+        {101, "STAYCABLES L D 1"},
+        {97, "STAYCABLES L D 2"},
+        {93, "STAYCABLES L D 3"},
+        {87, "STAYCABLES L D 4"},
+        {84, "STAYCABLES L D 5"},
+        {79, "STAYCABLES L D 6"},
+        {65, "STAYCABLES L D 7"},
+        {60, "STAYCABLES L D 8"},
+        {59, "STAYCABLES L D 9"},
+        {22, "STAYCABLES R U 1"},
+        {127, "STAYCABLES R U 2"},
+        {123, "STAYCABLES R U 3"},
+        {119, "STAYCABLES R U 4"},
+        {113, "STAYCABLES R U 5"},
+        {110, "STAYCABLES R U 6"},
+        {106, "STAYCABLES R U 7"},
+        {77, "STAYCABLES R U 8"},
+        {73, "STAYCABLES R U 9"},
+        {126, "STAYCABLES R D 1"},
+        {122, "STAYCABLES R D 2"},
+        {118, "STAYCABLES R D 3"},
+        {116, "STAYCABLES R D 4"},
+        {109, "STAYCABLES R D 5"},
+        {105, "STAYCABLES R D 6"},
+        {76, "STAYCABLES R D 7"},
+        {72, "STAYCABLES R D 8"},
+        {70, "STAYCABLES R D 9"},
+        {58, "PYLON 1 L 1"},
+        {62, "PYLON 1 L 2"},
+        {64, "PYLON 1 L 3"},
+        {81, "PYLON 1 L 4"},
+        {83, "PYLON 1 L 5"},
+        {68, "PYLON 1 R 1"},
+        {74, "PYLON 1 R 2"},
+        {78, "PYLON 1 R 3"},
+        {107, "PYLON 1 R 4"},
+        {111, "PYLON 1 R 5"},
+        {89, "PYLON 2 L 1"},
+        {92, "PYLON 2 L 2"},
+        {96, "PYLON 2 L 3"},
+        {100, "PYLON 2 L 4"},
+        {114, "PYLON 2 R 1"},
+        {120, "PYLON 2 R 2"},
+        {124, "PYLON 2 R 3"},
+        {128, "PYLON 2 R 4"},
+        {17, "PYLON 3 L 1"},
+        {20, "PYLON 3 R 1"},
+        {91, "PYLON 1 U L"},
+        {112, "PYLON 1 U R"},
+        {16, "PYLON 2 U L"},
+        {21, "PYLON 2 U R"},
+        {18, "TOPBALL 1"},
+        {19, "TOPBALL 2"},
+        {14, "ROADWAY U 1"},
+        {103, "ROADWAY U 2"},
+        {99, "ROADWAY U 3"},
+        {95, "ROADWAY U 4"},
+        {88, "ROADWAY U 5"},
+        {86, "ROADWAY U 6"},
+        {80, "ROADWAY U 7"},
+        {67, "ROADWAY U 8"},
+        {61, "ROADWAY U 9"},
+        {57, "ROADWAY U 10"},
+        {69, "ROADWAY U 11"},
+        {71, "ROADWAY U 12"},
+        {75, "ROADWAY U 13"},
+        {104, "ROADWAY U 14"},
+        {108, "ROADWAY U 15"},
+        {115, "ROADWAY U 16"},
+        {117, "ROADWAY U 17"},
+        {121, "ROADWAY U 18"},
+        {125, "ROADWAY U 19"},
+        {23, "ROADWAY U 20"}
     };
 
     const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);

@@ -2,11 +2,17 @@
 
 /*
 TODO AUJ ! (15/04/2024) :
-    - Verifier l’axisymmétrie
-    - Les trucs quadratiques (faire que ça marche avec les triangles et finir d’ajouter après avec les quads)
+    - Verifier l’axisymmétrie     (IN PROGRESS)
+    - Les trucs quadratiques (faire que ça marche avec les triangles et finir d’ajouter après avec les quads)    (IN PROGRESS)
+    - Trouver sigma aux noeuds    (IN PROGRESS)
     - Finir les conditions sur la geometrie du pont
-    - Trouver sigma aux noeuds
-    
+    - Vérifier le sens des contours (convention pour la normale)
+
+    * A VERIF !!!!
+    - Programme qui fonctionne et fournit un resultat qui semble coherent (avec tous les differents cas !)
+    - Precision des resultats
+    - Rapidite du code de calcul
+
 DONE :
     - Axisymetrique / tension plane / deformation plane
     - Conditions de Dirichlet (X, Y, XY, N, T, NT)
