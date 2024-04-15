@@ -282,6 +282,7 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
 void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 void femElasticityAssembleElements(femProblem *theProblem);
+void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR);
 double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR);
 double *femElasticityForces(femProblem *theProblem);
 

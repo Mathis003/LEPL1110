@@ -22,7 +22,6 @@ double constFunct(double x, double y) { return 1.0; }
 void femElasticitySigma(femProblem *theProblem)
 {
     // Premier systeme pour epsilon_x_x
-    femSolver *theSolver     = theProblem->solver;
     femIntegration *theRule  = theProblem->rule;
     femDiscrete *theSpace    = theProblem->space;
     femGeometry *theGeometry = theProblem->geometry;
@@ -36,8 +35,9 @@ void femElasticitySigma(femProblem *theProblem)
 
     double xLoc, x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal];
     int iElem, iInteg, iEdge, i, map[nLocal], mapX[nLocal], mapY[nLocal], u[nLocal], v[nLocal];
+    
+    femSolver *theSolver = femSolverFullCreate(theNodes->nNodes);
 
-    femSolverInit(theSolver);
     for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {
         for (i = 0; i < theSpace->n; i++)
@@ -45,10 +45,9 @@ void femElasticitySigma(femProblem *theProblem)
             map[i] = theMesh->elem[iElem * nLocal + i];
             x[i] = theNodes->X[map[i]];
             y[i] = theNodes->Y[map[i]];
+            u[i] = theSoluce[2 * map[i]];
             // map[i] = number[map[i]];
-            mapX[i] = 2 * map[i];
-            mapY[i] = 2 * map[i] + 1;
-            u[i] = theSoluce[mapX[i]];
+            mapX[i] = map[i];
         }
 
         for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -89,23 +88,12 @@ void femElasticitySigma(femProblem *theProblem)
                 for (int j = 0; j < theSpace->n; j++)
                 {
                     A[mapX[i]][mapX[j]] += phi[i] * phi[j] * weightedJac;
-                    A[mapX[i]][mapY[j]] += phi[i] * phi[j] * weightedJac;
-                    A[mapY[i]][mapX[j]] += phi[i] * phi[j] * weightedJac;
-                    A[mapY[i]][mapY[j]] += phi[i] * phi[j] * weightedJac;
                 }
                 B[mapX[i]] += phi[i] * u[i] * dphidx[i] * weightedJac;
-                B[mapY[i]] += phi[i] * u[i] * dphidx[i] * weightedJac;
             }
         }
     }
 
-    double **A = femSolverGetA(theSolver);
-    int count = 0;
-    for (int i = 0; i < theSolver->size; i++)
-    {
-        if (A[i][i] == 0.0) { count++; }
-    }
-    
     femSolverEliminate(theSolver);
     double *epsilon_x_x = (double *) malloc(theSolver->size * sizeof(double));
     if (epsilon_x_x == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
@@ -113,149 +101,147 @@ void femElasticitySigma(femProblem *theProblem)
 
 
     // Deuxieme systeme pour epsilon_y_y
-    // femSolverInit(theSolver);
-    // for (iElem = 0; iElem < theMesh->nElem; iElem++)
-    // {
-    //     for (i = 0; i < theSpace->n; i++)
-    //     {
-    //         map[i] = theMesh->elem[iElem * nLocal + i];
-    //         x[i] = theNodes->X[map[i]];
-    //         y[i] = theNodes->Y[map[i]];
-    //         map[i] = number[map[i]];
-    //         mapX[i] = 2 * map[i];
-    //         mapY[i] = 2 * map[i] + 1;
-    //         v[i] = theProblem->soluce[mapY[i]];
-    //     }
 
-    //     for (iInteg = 0; iInteg < theRule->n; iInteg++)
-    //     {
-    //         double xsi    = theRule->xsi[iInteg];
-    //         double eta    = theRule->eta[iInteg];
-    //         double weight = theRule->weight[iInteg];
+    theSolver = femSolverFullCreate(theNodes->nNodes);
 
-    //         femDiscretePhi2(theSpace, xsi, eta, phi);
-    //         femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
+    for (iElem = 0; iElem < theMesh->nElem; iElem++)
+    {
+        for (i = 0; i < theSpace->n; i++)
+        {
+            map[i] = theMesh->elem[iElem * nLocal + i];
+            x[i] = theNodes->X[map[i]];
+            y[i] = theNodes->Y[map[i]];
+            v[i] = theProblem->soluce[2 * map[i] + 1];
+            // map[i] = number[map[i]];
+            mapY[i] = map[i];
+        }
 
-    //         double dxdxsi = 0.0; double dydxsi = 0.0;
-    //         double dxdeta = 0.0; double dydeta = 0.0;
-    //         xLoc = 0.0;
+        for (iInteg = 0; iInteg < theRule->n; iInteg++)
+        {
+            double xsi    = theRule->xsi[iInteg];
+            double eta    = theRule->eta[iInteg];
+            double weight = theRule->weight[iInteg];
 
-    //         for (i = 0; i < theSpace->n; i++)
-    //         {
-    //             dxdxsi += x[i] * dphidxsi[i];
-    //             dxdeta += x[i] * dphideta[i];
-    //             dydxsi += y[i] * dphidxsi[i];
-    //             dydeta += y[i] * dphideta[i];
-    //             xLoc   += x[i] * phi[i];
-    //         }
+            femDiscretePhi2(theSpace, xsi, eta, phi);
+            femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
 
-    //         double jac = dxdxsi * dydeta - dxdeta * dydxsi;
-    //         if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
-    //         jac = fabs(jac);
+            double dxdxsi = 0.0; double dydxsi = 0.0;
+            double dxdeta = 0.0; double dydeta = 0.0;
 
-    //         for (i = 0; i < theSpace->n; i++)
-    //         {
-    //             dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
-    //             dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
-    //         }
+            for (i = 0; i < theSpace->n; i++)
+            {
+                dxdxsi += x[i] * dphidxsi[i];
+                dxdeta += x[i] * dphideta[i];
+                dydxsi += y[i] * dphidxsi[i];
+                dydeta += y[i] * dphideta[i];
+                xLoc   += x[i] * phi[i];
+            }
 
-    //         double weightedJac = jac * weight;
-    //         double **A = femSolverGetA(theSolver);
-    //         double *B = femSolverGetB(theSolver);
+            double jac = dxdxsi * dydeta - dxdeta * dydxsi;
+            if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
+            jac = fabs(jac);
 
-    //         for (int i = 0; i < theSpace->n; i++)
-    //         {
-    //             for (int j = 0; j < theSpace->n; j++)
-    //             {
-    //                 A[mapX[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
-    //                 A[mapX[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
-    //                 A[mapY[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
-    //                 A[mapY[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
-    //             }
-    //             B[mapX[i]] += phi[i] * dphidy[i] * v[i] * weightedJac;
-    //             B[mapY[i]] += phi[i] * dphidy[i] * v[i] * weightedJac;
-    //         }
-    //     }
-    // }
+            for (i = 0; i < theSpace->n; i++)
+            {
+                dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
+                dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
+            }
 
-    // femSolverEliminate(theSolver);
-    // double *epsilon_y_y = (double *) malloc(theSolver->size * sizeof(double));
-    // if (epsilon_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-    // memcpy(epsilon_y_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
+            double weightedJac = jac * weight;
+            double **A = femSolverGetA(theSolver);
+            double *B = femSolverGetB(theSolver);
+
+            for (int i = 0; i < theSpace->n; i++)
+            {
+                for (int j = 0; j < theSpace->n; j++)
+                {
+                    A[mapY[i]][mapY[j]] += phi[i] * phi[j] * weightedJac;
+                }
+                B[mapY[i]] += phi[i] * dphidy[i] * v[i] * weightedJac;
+            }
+        }
+    }
+
+    femSolverEliminate(theSolver);
+    double *epsilon_y_y = (double *) malloc(theSolver->size * sizeof(double));
+    if (epsilon_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
+    memcpy(epsilon_y_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
 
 
 
     // Deuxieme systeme pour epsilon_y_y
-    // femSolverInit(theSolver);
-    // for (iElem = 0; iElem < theMesh->nElem; iElem++)
-    // {
-    //     for (i = 0; i < theSpace->n; i++)
-    //     {
-    //         map[i] = theMesh->elem[iElem * nLocal + i];
-    //         x[i] = theNodes->X[map[i]];
-    //         y[i] = theNodes->Y[map[i]];
-    //         map[i] = number[map[i]];
-    //         mapX[i] = 2 * map[i];
-    //         mapY[i] = 2 * map[i] + 1;
-    //         u[i] = theProblem->soluce[mapX[i]];
-    //         v[i] = theProblem->soluce[mapY[i]];
-    //     }
 
-    //     for (iInteg = 0; iInteg < theRule->n; iInteg++)
-    //     {
-    //         double xsi    = theRule->xsi[iInteg];
-    //         double eta    = theRule->eta[iInteg];
-    //         double weight = theRule->weight[iInteg];
+    theSolver = femSolverFullCreate(2 * theNodes->nNodes);
 
-    //         femDiscretePhi2(theSpace, xsi, eta, phi);
-    //         femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
+    for (iElem = 0; iElem < theMesh->nElem; iElem++)
+    {
+        for (i = 0; i < theSpace->n; i++)
+        {
+            map[i] = theMesh->elem[iElem * nLocal + i];
+            x[i] = theNodes->X[map[i]];
+            y[i] = theNodes->Y[map[i]];
+            u[i] = theProblem->soluce[2 * map[i]];
+            v[i] = theProblem->soluce[2 * map[i] + 1];
+            // map[i] = number[map[i]];
+            mapX[i] = 2 * map[i];
+            mapY[i] = 2 * map[i] + 1;
+        }
 
-    //         double dxdxsi = 0.0; double dydxsi = 0.0;
-    //         double dxdeta = 0.0; double dydeta = 0.0;
-    //         xLoc = 0.0;
+        for (iInteg = 0; iInteg < theRule->n; iInteg++)
+        {
+            double xsi    = theRule->xsi[iInteg];
+            double eta    = theRule->eta[iInteg];
+            double weight = theRule->weight[iInteg];
 
-    //         for (i = 0; i < theSpace->n; i++)
-    //         {
-    //             dxdxsi += x[i] * dphidxsi[i];
-    //             dxdeta += x[i] * dphideta[i];
-    //             dydxsi += y[i] * dphidxsi[i];
-    //             dydeta += y[i] * dphideta[i];
-    //             xLoc   += x[i] * phi[i];
-    //         }
+            femDiscretePhi2(theSpace, xsi, eta, phi);
+            femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
 
-    //         double jac = dxdxsi * dydeta - dxdeta * dydxsi;
-    //         if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
-    //         jac = fabs(jac);
+            double dxdxsi = 0.0; double dydxsi = 0.0;
+            double dxdeta = 0.0; double dydeta = 0.0;
+            xLoc = 0.0;
 
-    //         for (i = 0; i < theSpace->n; i++)
-    //         {
-    //             dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
-    //             dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
-    //         }
+            for (i = 0; i < theSpace->n; i++)
+            {
+                dxdxsi += x[i] * dphidxsi[i];
+                dxdeta += x[i] * dphideta[i];
+                dydxsi += y[i] * dphidxsi[i];
+                dydeta += y[i] * dphideta[i];
+                xLoc   += x[i] * phi[i];
+            }
 
-    //         double weightedJac = jac * weight;
-    //         double **A = femSolverGetA(theSolver);
-    //         double *B = femSolverGetB(theSolver);
+            double jac = dxdxsi * dydeta - dxdeta * dydxsi;
+            if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
+            jac = fabs(jac);
 
-    //         for (int i = 0; i < theSpace->n; i++)
-    //         {
-    //             for (int j = 0; j < theSpace->n; j++)
-    //             {
-    //                 A[mapX[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
-    //                 A[mapX[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
-    //                 A[mapY[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
-    //                 A[mapY[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
-    //             }
-    //             B[mapX[i]] += phi[i] * (dphidx[i] * u[i] + dphidy[i] * v[i]) * weightedJac / 2.0;
-    //             B[mapY[i]] += phi[i] * (dphidx[i] * u[i] + dphidy[i] * v[i]) * weightedJac / 2.0;
-    //         }
-    //     }
-    // }
+            for (i = 0; i < theSpace->n; i++)
+            {
+                dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
+                dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
+            }
 
-    // femSolverEliminate(theSolver);
-    // double *epsilon_x_y = (double *) malloc(theSolver->size * sizeof(double));
-    // if (epsilon_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-    // memcpy(epsilon_x_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
+            double weightedJac = jac * weight;
+            double **A = femSolverGetA(theSolver);
+            double *B = femSolverGetB(theSolver);
+
+            for (int i = 0; i < theSpace->n; i++)
+            {
+                for (int j = 0; j < theSpace->n; j++)
+                {
+                    A[mapX[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
+                    A[mapX[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
+                    A[mapY[i]][mapX[j]] += (phi[i] * phi[j]) * weightedJac;
+                    A[mapY[i]][mapY[j]] += (phi[i] * phi[j]) * weightedJac;
+                }
+                B[mapX[i]] += phi[i] * (dphidy[i] * u[i] + dphidx[i] * v[i]) * weightedJac / 2.0;
+                B[mapY[i]] += phi[i] * (dphidy[i] * u[i] + dphidx[i] * v[i]) * weightedJac / 2.0;
+            }
+        }
+    }
+
+    femSolverEliminate(theSolver);
+    double *epsilon_x_y = (double *) malloc(theSolver->size * sizeof(double));
+    if (epsilon_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
+    memcpy(epsilon_x_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
 
     
     // for (int i = 0; i < 30; i++)
@@ -419,7 +405,7 @@ int main(int argc, char *argv[])
     /*     Création du système final */
     /*********************************/
 
-    // femElasticitySigma(theProblem); // TODO : Decommenter quand c'est fonctionnel
+    femElasticitySigma(theProblem); // TODO : Decommenter quand c'est fonctionnel
     
     double *theForces = femElasticityForces(theProblem);
     double area       = femElasticityIntegrate(theProblem, constFunct);
