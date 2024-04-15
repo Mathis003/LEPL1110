@@ -206,6 +206,7 @@ double femSolverGetA_Entry(femSolver *mySolver, int myRow, int myCol);
 double femSolverGetB_Entry(femSolver *mySolver, int myRow);
 double **femSolverGetA(femSolver *mySolver);
 double *femSolverGetB(femSolver *mySolver);
+void femSolverSet(femSolver *mySolver, double **newA, double *newB);
 void femSolverGetResidual(femSolver *mySolver, double *residuals, double *theSoluce);
 void femSolverPrint(femSolver *mySolver);
 void femSolverPrintInfos(femSolver *mySolver);

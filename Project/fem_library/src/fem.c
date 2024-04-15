@@ -567,6 +567,23 @@ double **femSolverGetA(femSolver *mySolver)
     }
 }
 
+void femSolverSet(femSolver *mySolver, double **newA, double *newB)
+{
+    if (mySolver->type == FEM_FULL)
+    {
+        femFullSystem *mySystem = mySolver->solver;
+        mySystem->A = newA;
+        mySystem->B = newB;
+    }
+    else if (mySolver->type == FEM_BAND)
+    {
+        femBandSystem *mySystem = mySolver->solver;
+        mySystem->A = newA;
+        mySystem->B = newB;
+    }
+    else { Error("Unexpected solver type"); }
+}
+
 double *femSolverGetB(femSolver *mySolver)
 {
     switch (mySolver->type)

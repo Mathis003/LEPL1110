@@ -17,6 +17,13 @@
         "tuple": "c",
         "type_traits": "c",
         "vector": "c",
-        "cstddef": "c"
+        "cstddef": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "__tree": "c",
+        "array": "c",
+        "initializer_list": "c",
+        "string": "c",
+        "string_view": "c"
     }
 }
