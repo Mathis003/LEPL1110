@@ -283,7 +283,7 @@ double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, doubl
 double *femElasticityForces(femProblem *theProblem);
 
 void femElasticityPrint(femProblem *theProblem);
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType);
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType, int activateRenum);
 void femElasticityWrite(femProblem *theProbconst, const char *filename);
 
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);

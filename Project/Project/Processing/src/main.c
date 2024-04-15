@@ -58,12 +58,12 @@ int main(int argc, char *argv[])
     if (exampleUsage == TRUE)
     {
         geoMeshRead("../data/mesh_example.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem_example.txt", renumType, discretType, TRUE);
     }
     else
     {
         geoMeshRead("../data/mesh.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType, TRUE);
     }
     
     femElasticityPrint(theProblem);

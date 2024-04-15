@@ -490,9 +490,9 @@ void glfemPlotField(femMesh *theMesh, double *u)
         nodes = &(theMesh->elem[i * nLocalNode]);
         for (j = 0; j < nLocalNode; ++j)
         {
-        xLoc[j] = theNodes->X[nodes[j]];
-        yLoc[j] = theNodes->Y[nodes[j]];
-        uLoc[j] = glScale(uMin, uMax, u[nodes[j]]);
+            xLoc[j] = theNodes->X[nodes[j]];
+            yLoc[j] = theNodes->Y[nodes[j]];
+            uLoc[j] = glScale(uMin, uMax, u[nodes[j]]);
         }
         glfemDrawColorElement(xLoc, yLoc, uLoc, nLocalNode);
     }

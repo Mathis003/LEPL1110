@@ -1,17 +1,24 @@
 #include "../../../fem_library/include/fem.h"
 
 /*
+
+TODO Auj :
+    - Verifier l’axisymmétrie
+    - Les trucs quadratiques (faire que ça marche avec les triangles et finir d’ajouter après avec les quads) [Adrien]
+    - Résidus des forces [Mathis]
+    - Trouver sigma aux noeuds 
+
+
 TODO :
-    - Conditions de Dirichlet (N, T, NT avec deplacement non nul)   (IN PROGRESS)
-    - Verifier la validite de l'axisymetrique                       (IN PROGRESS)
-    - Elements quadratiques (fonction de forme du deuxieme degre)   (IN PROGRESS)
+    - Verifier la validite de l'axisymetrique                      (IN PROGRESS)
+    - Elements quadratiques (fonction de forme du deuxieme degre)  (IN PROGRESS)
     - Finir les conditions sur la geometrie du pont
     - Résidus pour les forces
     - Calcul des tensions aux noeuds
 
 DONE :
     - Axisymetrique / tension plane / deformation plane
-    - Conditions de Dirichlet (X, Y, XY, N, T, NT (avec deplacement nul))
+    - Conditions de Dirichlet (X, Y, XY, N, T, NT)
     - Conditions de Neumann (X, Y, N, T)
     - Visualisation des résidus (Post-Processing avec 'X' et 'Y')
     - Visualisation de la matrice (Post-Processing avec 'S')

@@ -26,11 +26,11 @@ double *femElasticityForces(femProblem *theProblem)
     femSolver *theSolver = theProblem->solver;
     int size = theSolver->size;
 
-    double *soluce = (double *) malloc(size * sizeof(double));
-    double *residuals = (double *) malloc(size * sizeof(double));
+    double *soluce       = (double *) malloc(size * sizeof(double));
+    double *residuals    = (double *) malloc(size * sizeof(double));
     int *inverted_number = (int *) malloc(theNodes->nNodes * sizeof(int));
-    if (soluce == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
-    if (residuals == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (soluce == NULL)          { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
+    if (residuals == NULL)       { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
     if (inverted_number == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
 
     for (int i = 0; i < size; i++) { residuals[i] = 0.0; }
@@ -38,46 +38,54 @@ double *femElasticityForces(femProblem *theProblem)
     // Numerote the nodes of the solution
     for (int i = 0; i < theNodes->nNodes; i++)
     {
-        soluce[2 * i]     = theSoluce[2 * theNodes->number[i]];
-        soluce[2 * i + 1] = theSoluce[2 * theNodes->number[i] + 1];
+        soluce[2 * theNodes->number[i]]     = theSoluce[2 * i];
+        soluce[2 * theNodes->number[i] + 1] = theSoluce[2 * i + 1];
     }
 
     femElasticityAssembleElements(theProblem, 1.0);
     femElasticityAssembleNeumann(theProblem, 1.0);
 
-    for (int i = 0; i < size; i++)
+    double **A = femSolverGetA(theSolver);
+    double *B = femSolverGetB(theSolver);
+
+    if (theSolver->type == FEM_FULL)
     {
-        int start = (theSolver->type == FEM_BAND) ? i : 0;
-        int end;
-        if (theSolver->type == FEM_BAND)
+        for (int i = 0; i < size; i++)
         {
-            end = i + ((femBandSystem *)(theSolver->solver))->band;
-            if (end > size) { end = size; }
-        } else { end = size; }
-    
-        for (int j = start; j < end; j++)
-        {
-            double val = 0.0;
-            if (theSolver->type == FEM_BAND)
+            for (int j = 0; j < size; j++)
             {
-                if (j >= i) { val = femSolverGetA_Entry(theSolver, i, j); }
-                else        { val = femSolverGetA_Entry(theSolver, j, i); }
+                residuals[i] += A[i][j] * soluce[j];
             }
-            else { val = femSolverGetA_Entry(theSolver, i, j); }
-            // printf("val = %f\n", val);
-            residuals[i] += val * soluce[j];
+            residuals[i] -= B[i];
         }
-        residuals[i] -= femSolverGetB_Entry(theSolver, i);
     }
+    else if (theSolver->type == FEM_BAND)
+    {
+        double A_ij;
+        int band = ((femBandSystem *)(theSolver->solver))->band;
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                A_ij = (j >= i) ? femSolverGetA_Entry(theSolver, i, j) : femSolverGetA_Entry(theSolver, j, i);
+                residuals[i] += A_ij * soluce[j];
+            }
+            residuals[i] -= B[i];
+        }
+    }
+    else { Error("Unknown Solver Type\n"); }
 
     // Remove the numerotation of the nodes of the residuals
     for (int i = 0; i < theNodes->nNodes; i++) { inverted_number[theNodes->number[i]] = i; }
 
     for (int i = 0; i < theNodes->nNodes; i++)
     {
-        theProblem->residuals[2 * i]     = residuals[2 * inverted_number[i]];
-        theProblem->residuals[2 * i + 1] = residuals[2 * inverted_number[i] + 1];
+        theProblem->residuals[2 * inverted_number[i]]     = residuals[2 * i];
+        theProblem->residuals[2 * inverted_number[i] + 1] = residuals[2 * i + 1];
     }
+
+    // Apply the Dirichlet boundary conditions to the system to plot the final system
+    femElasticityApplyDirichlet(theProblem, 1.0);
 
     free(residuals); residuals = NULL;
     free(soluce); soluce = NULL;
@@ -143,7 +151,7 @@ int main(int argc, char *argv[])
     if (exampleUsage == TRUE)
     {
         geoMeshRead("../../Processing/data/mesh_example.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem_example.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem_example.txt", renumType, discretType, TRUE);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV_example.txt");
@@ -152,7 +160,7 @@ int main(int argc, char *argv[])
     else
     {
         geoMeshRead("../../Processing/data/mesh.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Processing/data/problem.txt", renumType, discretType, TRUE);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Processing/data/UV.txt");
@@ -170,9 +178,6 @@ int main(int argc, char *argv[])
     double *theForces = femElasticityForces(theProblem);
     double area       = femElasticityIntegrate(theProblem, constFunct);
 
-    // Apply the Dirichlet boundary conditions to the system to plot the final system
-    femElasticityApplyDirichlet(theProblem, 1.0);
-
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 
     /*     Creation du champ de la norme du deplacement */
@@ -181,7 +186,7 @@ int main(int argc, char *argv[])
     femNodes *theNodes = theGeometry->theNodes;
 
     double deformationFactor;
-    if (exampleUsage == TRUE) { deformationFactor = 1e4; } // To change the deformation factor
+    if (exampleUsage == TRUE) { deformationFactor = 1e5; } // To change the deformation factor
     else                      { deformationFactor = 1e4; } // To change the deformation factor
 
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
@@ -213,8 +218,8 @@ int main(int argc, char *argv[])
     double theGlobalForce[2] = {0, 0};
     for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
     {
-        theGlobalForce[0] += theForces[2*i+0];
-        theGlobalForce[1] += theForces[2*i+1];
+        theGlobalForce[0] += theForces[2 * i];
+        theGlobalForce[1] += theForces[2 * i + 1];
     }
 
     printf(" ==== Global horizontal force       : %14.7e [N] \n",theGlobalForce[0]);
@@ -259,8 +264,8 @@ int main(int argc, char *argv[])
         if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
         if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
         if (glfwGetKey(window, 'S') == GLFW_PRESS) { mode = 2; }
-        if (glfwGetKey(window,'X')  == GLFW_PRESS) { mode = 3;}
-        if (glfwGetKey(window,'Y')  == GLFW_PRESS) { mode = 4;}
+        if (glfwGetKey(window, 'X') == GLFW_PRESS) { mode = 3;}
+        if (glfwGetKey(window, 'Y') == GLFW_PRESS) { mode = 4;}
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -289,24 +294,22 @@ int main(int argc, char *argv[])
         {
             glColor3f(1.0, 0.0, 0.0);
             glfemPlotSolver(theProblem->solver, theProblem->solver->size, w, h);
-        } 
-        else if (mode==3)
+        }
+        else if (mode == 3)
         {
-            glfemPlotField(theGeometry->theElements,forcesX);
+            glfemPlotField(theGeometry->theElements, forcesX);
             glfemPlotMesh(theGeometry->theElements); 
             sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
             glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
         }
-        else if (mode==4)
+        else if (mode == 4)
         {
             glfemPlotField(theGeometry->theElements,forcesY);
             glfemPlotMesh(theGeometry->theElements); 
             sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
             glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
-        } else {
-            printf("Mode %d not implemented\n", mode);
         }
-        
+        else { printf("Mode %d not implemented\n", mode); }  
 
         glfwSwapBuffers(window);
         glfwPollEvents();
