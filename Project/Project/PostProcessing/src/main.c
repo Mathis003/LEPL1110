@@ -48,32 +48,7 @@ double *femElasticityForces(femProblem *theProblem)
     double **A = femSolverGetA(theSolver);
     double *B = femSolverGetB(theSolver);
 
-    if (theSolver->type == FEM_FULL)
-    {
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                residuals[i] += A[i][j] * soluce[j];
-            }
-            residuals[i] -= B[i];
-        }
-    }
-    else if (theSolver->type == FEM_BAND)
-    {
-        double A_ij;
-        int band = ((femBandSystem *)(theSolver->solver))->band;
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                A_ij = (j >= i) ? femSolverGetA_Entry(theSolver, i, j) : femSolverGetA_Entry(theSolver, j, i);
-                residuals[i] += A_ij * soluce[j];
-            }
-            residuals[i] -= B[i];
-        }
-    }
-    else { Error("Unknown Solver Type\n"); }
+    femSolverGetResidual(theSolver, residuals, soluce);
 
     // Remove the numerotation of the nodes of the residuals
     for (int i = 0; i < theNodes->nNodes; i++) { inverted_number[theNodes->number[i]] = i; }

@@ -176,6 +176,7 @@ void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *m
 void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double value, int size);
 void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size);
 double *femFullSystemEliminate(femFullSystem *mySystem, int size);
+void femFullSystemGetResidual(femFullSystem *mySystem, int size, double *residuals, double *theSoluce);
 void femFullSystemPrint(femFullSystem *mySystem, int size);
 void femFullSystemPrintInfos(femFullSystem *mySystem, int size);
 
@@ -190,6 +191,7 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
 void femBandSystemConstrainXY(femBandSystem *system, int node, double value, int size);
 void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size);
 double *femBandSystemEliminate(femBandSystem *myBand, int size);
+void femBandSystemGetResidual(femBandSystem *mySystem, int size, double *residuals, double *theSoluce);
 void femBandSystemPrint(femBandSystem *myBand, int size);
 void femBandSystemPrintInfos(femBandSystem *myBand, int size);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
@@ -204,6 +206,7 @@ double femSolverGetA_Entry(femSolver *mySolver, int myRow, int myCol);
 double femSolverGetB_Entry(femSolver *mySolver, int myRow);
 double **femSolverGetA(femSolver *mySolver);
 double *femSolverGetB(femSolver *mySolver);
+void femSolverGetResidual(femSolver *mySolver, double *residuals, double *theSoluce);
 void femSolverPrint(femSolver *mySolver);
 void femSolverPrintInfos(femSolver *mySolver);
 void femSolverAssemble(femSolver *mySolver, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc, const double FACTOR);

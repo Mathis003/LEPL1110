@@ -174,6 +174,24 @@ double *femFullSystemEliminate(femFullSystem *system, int size)
     return system->B;
 }
 
+void femFullSystemGetResidual(femFullSystem *mySystem, int size, double *residuals, double *theSoluce)
+{
+    double **A, *B;
+    int i, j;
+
+    A = mySystem->A;
+    B = mySystem->B;
+
+    for (i = 0; i < size; i++)
+    {
+        for (j = 0; j < size; j++)
+        {
+            residuals[i] += A[i][j] * theSoluce[j];
+        }
+        residuals[i] -= B[i];
+    }
+}
+
 void femFullSystemPrint(femFullSystem *system, int size)
 {
     double **A, *B;
@@ -234,6 +252,28 @@ void femBandSystemFree(femBandSystem *system)
     free(system->B);
     free(system->A); 
     free(system);
+}
+
+void femBandSystemGetResidual(femBandSystem *mySystem, int size, double *residuals, double *theSoluce)
+{
+    double **A, *B, A_ij;
+    int band, start, end, i, j;
+
+    A    = mySystem->A;
+    B    = mySystem->B;
+    band = mySystem->band;
+
+    for (i = 0; i < size; i++)
+    {
+        start = (i - band > 0) ? i - band : 0;
+        end = (i + band < size) ? i + band : size;
+        for (j = start; j < end; j++)
+        {
+            A_ij = (j >= i) ? femBandSystemGetA_Entry(mySystem, i, j) : femBandSystemGetA_Entry(mySystem, j, i);
+            residuals[i] += A_ij * theSoluce[j];
+        }
+        residuals[i] -= B[i];
+    }
 }
 
 void femBandSystemPrint(femBandSystem *system, int size)
@@ -593,6 +633,16 @@ double *femSolverEliminate(femSolver *mySolver)
     {
         case FEM_FULL : return femFullSystemEliminate((femFullSystem *) mySolver->solver, mySolver->size); break;
         case FEM_BAND : return femBandSystemEliminate((femBandSystem *) mySolver->solver, mySolver->size); break;
+        default :       Error("Unexpected solver type");
+    }
+}
+
+void femSolverGetResidual(femSolver *mySolver, double *residuals, double *theSoluce)
+{
+    switch (mySolver->type)
+    {
+        case FEM_FULL : femFullSystemGetResidual((femFullSystem *) mySolver->solver, mySolver->size, residuals, theSoluce); break;
+        case FEM_BAND : femBandSystemGetResidual((femBandSystem *) mySolver->solver, mySolver->size, residuals, theSoluce); break;
         default :       Error("Unexpected solver type");
     }
 }
