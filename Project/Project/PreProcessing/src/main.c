@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_N, 1e4, NAN);
         // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_X, 0.0, NAN);
         femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_N, -1e-5, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, -1e-5, 1e-5);
         // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e5, NAN);
 
         femElasticityPrint(theProblem);
