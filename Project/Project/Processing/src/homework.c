@@ -1,21 +1,12 @@
 #include "../../../fem_library/include/fem.h"
 
 /*
-
-TODO Auj :
+TODO AUJ ! (15/04/2024) :
     - Verifier l’axisymmétrie
-    - Les trucs quadratiques (faire que ça marche avec les triangles et finir d’ajouter après avec les quads) [Adrien]
-    - Résidus des forces [Mathis]
-    - Trouver sigma aux noeuds 
-
-
-TODO :
-    - Verifier la validite de l'axisymetrique                      (IN PROGRESS)
-    - Elements quadratiques (fonction de forme du deuxieme degre)  (IN PROGRESS)
+    - Les trucs quadratiques (faire que ça marche avec les triangles et finir d’ajouter après avec les quads)
     - Finir les conditions sur la geometrie du pont
-    - Résidus pour les forces
-    - Calcul des tensions aux noeuds
-
+    - Trouver sigma aux noeuds
+    
 DONE :
     - Axisymetrique / tension plane / deformation plane
     - Conditions de Dirichlet (X, Y, XY, N, T, NT)
@@ -26,6 +17,7 @@ DONE :
     - Renumerotation des noeuds X/Y
     - Renumerotation des noeuds RCMK
     - Faire un solveur bande
+    - Résidus des forces
 */
 
 void femElasticityAssembleElements(femProblem *theProblem, double FACTOR)
