@@ -22,6 +22,7 @@
 
 #include <getopt.h>
 #include <unistd.h>
+#include <time.h>
 
 int main(int argc, char *argv[])
 {
@@ -70,9 +71,19 @@ int main(int argc, char *argv[])
 
     if (!animaion)
     {
+        clock_t start;
+        if(showRunTime == TRUE) { 
+            printf("Solving the system...\n"); 
+            start = clock();    
+        }
         double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0);
-
         int nNodes = theGeometry->theNodes->nNodes;
+
+        if(showRunTime == TRUE) { 
+            printf("System solved !\n"); 
+            printf("Time elapsed: %f secs for %d nodes\n", (double)(clock() - start) / CLOCKS_PER_SEC, nNodes);
+        }
+
         if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV_example.txt"); }
         else                      { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); }
         femElasticityFree(theProblem);

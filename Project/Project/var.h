@@ -8,5 +8,6 @@ femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LIN
 femElasticCase theCase      = PLANAR_STRESS; // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
 femSolverType typeSolver    = FEM_BAND;  // FEM_FULL or FEM_BAND
 femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
+int showRunTime             = TRUE;      // TRUE or FALSE
 
 #endif // _VAR_H_
