@@ -81,7 +81,15 @@ int main(int argc, char *argv[])
         int nNodes = theGeometry->theNodes->nNodes;
 
         if( showRunTime == TRUE)
-        { 
+        {
+            double sum_deformation_x = 0.0;
+            double sum_deformation_y = 0.0;
+            for (int i = 0; i < 2 * nNodes; i++) { sum_deformation_x += theSoluce[2 * i]; sum_deformation_y += theSoluce[2 * i + 1];}
+            
+            printf("Sum of deformation X = %f\n", sum_deformation_x);
+            printf("Sum of deformation X / nNodes = %.64f\n", sum_deformation_x / nNodes);
+            printf("Sum of deformation Y = %f\n", sum_deformation_y);
+            printf("Sum of deformation Y / nNodes = %.64f\n", sum_deformation_y / nNodes);
             printf("System solved !\n"); 
             printf("Time elapsed: %f secs for %d nodes\n", (double)(clock() - start) / CLOCKS_PER_SEC, nNodes);
             printf("type = %d\n", theProblem->solver->type);

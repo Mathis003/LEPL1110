@@ -1047,7 +1047,7 @@ double geoSizeBridge(double x, double y)
 
 double geoSize(double x, double y)
 {
-    return 0.25;
+    return 3.84;
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
