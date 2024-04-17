@@ -72,16 +72,22 @@ int main(int argc, char *argv[])
     if (!animaion)
     {
         clock_t start;
-        if(showRunTime == TRUE) { 
+        if (showRunTime == TRUE)
+        { 
             printf("Solving the system...\n"); 
             start = clock();    
         }
         double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0);
         int nNodes = theGeometry->theNodes->nNodes;
 
-        if(showRunTime == TRUE) { 
+        if( showRunTime == TRUE)
+        { 
             printf("System solved !\n"); 
             printf("Time elapsed: %f secs for %d nodes\n", (double)(clock() - start) / CLOCKS_PER_SEC, nNodes);
+            printf("type = %d\n", theProblem->solver->type);
+            int size = theProblem->solver->size;
+            int band = (theProblem->solver->type == FEM_FULL) ? size : ((femBandSystem *)(theProblem->solver->solver))->band;
+            printf("Size / Band = %d / %d = %f\n", size, band,(double) size/band);
         }
 
         if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV_example.txt"); }

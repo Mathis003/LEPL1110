@@ -1047,11 +1047,12 @@ double geoSizeBridge(double x, double y)
 
 double geoSize(double x, double y)
 {
+    return 0.25;
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
 
-    double factor_size = 3.0;
+    double factor_size = 0.085;
     if (x > 0) { return factor_size * h_max; }
 
     if (y < theGeometry->heightPillars)                                       { return factor_size * geoSizePillars(x, y); }
@@ -1068,7 +1069,6 @@ double geoSize(double x, double y)
 double geoSizeExample(double x, double y)
 {
   femGeometry *theGeometry = geoGetGeometry();
-  // return 0.4;
   return theGeometry->defaultSize * (1.0 - 0.5 * x);
 }
 
