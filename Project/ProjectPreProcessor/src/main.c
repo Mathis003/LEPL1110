@@ -25,10 +25,11 @@ int main(int argc, char *argv[])
     // Deal with the options arguments
     int opt;
     int meshVisualizer = TRUE;
-    int exampleUsage   = FALSE;
+    int exampleBeam_Example = FALSE;
+    int exampleUForm_Example = FALSE;
     int beam_mesh      = FALSE;
     int bridgeSimplified = FALSE;
-    while ((opt = getopt(argc, argv, "smebh")) != -1)
+    while ((opt = getopt(argc, argv, "smubh")) != -1)
     {
         switch (opt)
         {
@@ -38,23 +39,23 @@ int main(int argc, char *argv[])
             case 'm':
                 meshVisualizer = FALSE;
                 break;
-            case 'e':
-                exampleUsage = TRUE;
+            case 'u':
+                exampleUForm_Example = TRUE;
                 break;
             case 'b':
-                beam_mesh = TRUE;
+                exampleBeam_Example = TRUE;
                 break;
             case 'h':
-                printf("Usage: %s [-s] [-m] [-e] [-b] [-h]\n", argv[0]);
+                printf("Usage: %s [-s] [-m] [-u] [-b] [-h]\n", argv[0]);
                 printf("Options:\n");
                 printf("  -s : Start the program with the bridge without stay cables and pylon\n");
-                printf("  -e : Start the program with the example mesh\n");
+                printf("  -u : Start the program with the example mesh\n");
                 printf("  -m : Disable the mesh visualizer\n");
                 printf("  -b : Start the program with the beam mesh\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-s] [-m] [-e] [-b] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-s] [-m] [-u] [-b] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -67,34 +68,40 @@ int main(int argc, char *argv[])
     femGeometry *theGeometry = geoGetGeometry();
     theGeometry->elementType = elementType;
 
-    if (exampleUsage == TRUE)
+    if (exampleUForm_Example == TRUE)
     {
-        geoMeshGenerateExample(discretType, beam_mesh);
+        geoMeshGenerateExample(discretType, FALSE);
         geoMeshImport(discretType);
 
-        if (beam_mesh == TRUE)
-        {
-            geoSetDomainName(0, "Bottom");
-            geoSetDomainName(1, "Right");
-            geoSetDomainName(2, "Top");
-            geoSetDomainName(3, "Left");
-            geoMeshWrite("../../Rapport/data/mesh_beam.txt", discretType);
-        }
-        else
-        {
-            geoSetDomainName(0, "Symmetry");
-            geoSetDomainName(7, "Bottom");
-            geoSetDomainName(1, "Top");
-            geoMeshWrite("../../Rapport/data/mesh_example.txt", discretType);
-        }
+        geoSetDomainName(0, "Symmetry");
+        geoSetDomainName(7, "Bottom");
+        geoSetDomainName(1, "Top");
+        geoMeshWrite("../../Rapport/data/mesh_example.txt", discretType);
+    }
+    else if (exampleBeam_Example == TRUE)
+    {
+        geoMeshGenerateExample(discretType, TRUE);
+        geoMeshImport(discretType);
+
+        geoSetDomainName(0, "Bottom");
+        geoSetDomainName(1, "Right");
+        geoSetDomainName(2, "Top");
+        geoSetDomainName(3, "Left");
+        geoMeshWrite("../../Rapport/data/mesh_beam.txt", discretType);
+    }
+    else if (bridgeSimplified == TRUE)
+    {
+        geoMeshGenerate(discretType, bridgeSimplified);
+        geoMeshImport(discretType);
+        setDomainsName(bridgeSimplified);
+        geoMeshWrite("../../Rapport/data/mesh_simplified.txt", discretType);
     }
     else
     {
         geoMeshGenerate(discretType, bridgeSimplified);
         geoMeshImport(discretType);
         setDomainsName(bridgeSimplified);
-        if (bridgeSimplified == TRUE) { geoMeshWrite("../../Rapport/data/mesh_simplified.txt", discretType); }
-        else                           { geoMeshWrite("../../Rapport/data/mesh.txt", discretType); }
+        geoMeshWrite("../../Rapport/data/mesh.txt", discretType);
     }
 
     /******************************/
@@ -105,45 +112,54 @@ int main(int argc, char *argv[])
     double gx = 0.0;
     double gy = -9.81;
 
-    if (exampleUsage == TRUE)
+    double E = 211.e9;
+    double nu = 0.3;
+    double rho = 7.85e1;
+
+    theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, theCase, discretType);
+
+    if (exampleUForm_Example == TRUE)
     {
-        double E_example = 211.e9;
-        double nu_example = 0.3;
-        double rho_example = 7.85e1;
-
-        theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase, discretType);
-
-        if (beam_mesh == TRUE)
-        {
-            double w = 1e7 / theGeometry->LxPlate; // 1250 kN/m
-            femElasticityAddBoundaryCondition(theProblem, "Left", DIRICHLET_XY, 0.0, 0.0);
-            femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
-            femElasticityWrite(theProblem, "../../Rapport/data/problem_beam.txt");
-        }
-        else
-        {
-            femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
-            femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
-            femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e3, NAN);
-            femElasticityWrite(theProblem, "../../Rapport/data/problem_example.txt");
-        }
-
-        femElasticityPrint(theProblem);
+        femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e3, NAN);
+        femElasticityWrite(theProblem, "../../Rapport/data/problem_example.txt");
     }
-    else
+    else if (exampleBeam_Example)
     {
-        double E_steel = 200.e9;
-        double nu_steel = 0.3;
-        double rho_steel = 7.85e3;
+        double w = 1e7 / theGeometry->LxPlate; // 1250 kN/m
+        femElasticityAddBoundaryCondition(theProblem, "Left", DIRICHLET_XY, 0.0, 0.0);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
+        femElasticityWrite(theProblem, "../../Rapport/data/problem_beam.txt");
+    }
+    else if (bridgeSimplified == TRUE)
+    {
+        /* For steel */
+        E = 200.e9;
+        nu = 0.3;
+        rho = 7.85e3;
         // double E_reinforced_concrete = 35e9;
         // double nu_reinforced_concrete = 0.2;
         // double rho_reinforced_concrete = 2.5e3;
-        theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, theCase, discretType);
+        theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, theCase, discretType);
         createBoundaryConditions(theProblem, bridgeSimplified);
         femElasticityPrint(theProblem);
 
-        if (bridgeSimplified == TRUE) { femElasticityWrite(theProblem, "../../Rapport/data/problem_simplified.txt"); }
-        else                          { femElasticityWrite(theProblem, "../../Rapport/data/problem.txt"); }
+        femElasticityWrite(theProblem, "../../Rapport/data/problem_simplified.txt");
+    }
+    else
+    {
+        /* For steel */
+        E = 200.e9;
+        nu = 0.3;
+        rho = 7.85e3;
+        // double E_reinforced_concrete = 35e9;
+        // double nu_reinforced_concrete = 0.2;
+        // double rho_reinforced_concrete = 2.5e3;
+        theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, theCase, discretType);
+        createBoundaryConditions(theProblem, bridgeSimplified);
+        femElasticityPrint(theProblem);
+        femElasticityWrite(theProblem, "../../Rapport/data/problem.txt");
     }
 
     /***************************************************/

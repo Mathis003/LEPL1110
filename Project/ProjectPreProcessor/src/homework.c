@@ -1123,7 +1123,7 @@ double geoSize(double x, double y)
 double geoSizeExample(double x, double y)
 {
     femGeometry *theGeometry = geoGetGeometry();
-    return theGeometry->defaultSize * (theGeometry->LxPlate / 2 + 0.5 - 0.5 * x);
+    return theGeometry->defaultSize;
 }
 
 void geoMeshGenerateExample(femDiscreteType discreteType, int beam_example)
@@ -1207,7 +1207,7 @@ void geoMeshGenerate_Beam(femDiscreteType discreteType)
     double Ly = 1.0;
     theGeometry->LxPlate = Lx;
     theGeometry->LyPlate = Ly;
-    theGeometry->defaultSize = Lx * 0.02;
+    theGeometry->defaultSize = Lx * 0.01;
     theGeometry->geoSize = geoSizeExample;
 
     geoSetSizeCallback(theGeometry->geoSize);

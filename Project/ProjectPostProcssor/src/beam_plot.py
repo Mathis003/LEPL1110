@@ -71,9 +71,9 @@ class Mesh:
         def y(x):
             return (- w * x**2 / (24 * E * I)) * (x**2 - 4 * L * x + 6 * L**2)
 
-        factor = 1e2
+        factor_def = 1e2
         x_values = np.linspace(0, L, 1000)
-        y_values = y(x_values) * factor +  1/2
+        y_values = y(x_values) * factor_def +  1/2
 
         plt.plot(x_values, y_values, "r", lw=2, label="Analytical Solution")
         plt.legend()
@@ -106,11 +106,11 @@ if __name__ == "__main__":
 
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
-    factor = 2e4
+    factor_def = 1e2
 
-    cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
+    cb = mesh.plotfield(uv_norm, uv * factor_def, cmap="turbo")
     plt.colorbar(cb)
-    mesh.plot(uv*factor, lw=0.2, c="k")
+    mesh.plot(uv * factor_def, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
     plt.grid(alpha=0.2)
     plt.title('Elastic Deformation of Beam under\nForce Density on Both Decks')
