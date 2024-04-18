@@ -318,12 +318,12 @@ void geoFinalize(void);
 void geoMeshImport(femDiscreteType discreteType);
 void femErrorGmsh(int ierr, int line, char *file);
 
-void geoMeshGenerate(femDiscreteType discreteType);
+void geoMeshGenerate(femDiscreteType discreteType, int bridgeSimplified);
 void geoMeshGenerateExample(femDiscreteType discreteType, int beam_example);
 void geoMeshGenerate_UForm(femDiscreteType discreteType);
 void geoMeshGenerate_Beam(femDiscreteType discreteType);
-void setDomainsName(void);
-void createBoundaryConditions(femProblem *theProblem);
+void setDomainsName(int bridgeSimplified);
+void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified);
 
 /***************/
 /* Renumbering */

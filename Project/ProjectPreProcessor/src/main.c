@@ -27,10 +27,14 @@ int main(int argc, char *argv[])
     int meshVisualizer = TRUE;
     int exampleUsage   = FALSE;
     int beam_mesh      = FALSE;
-    while ((opt = getopt(argc, argv, "mebh")) != -1)
+    int bridgeSimplified = FALSE;
+    while ((opt = getopt(argc, argv, "smebh")) != -1)
     {
         switch (opt)
         {
+            case 's':
+                bridgeSimplified = TRUE;
+                break;
             case 'm':
                 meshVisualizer = FALSE;
                 break;
@@ -41,15 +45,16 @@ int main(int argc, char *argv[])
                 beam_mesh = TRUE;
                 break;
             case 'h':
-                printf("Usage: %s [-m] [-e] [-h]\n", argv[0]);
+                printf("Usage: %s [-s] [-m] [-e] [-b] [-h]\n", argv[0]);
                 printf("Options:\n");
+                printf("  -s : Start the program with the bridge without stay cables and pylon\n");
                 printf("  -e : Start the program with the example mesh\n");
                 printf("  -m : Disable the mesh visualizer\n");
                 printf("  -b : Start the program with the beam mesh\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-m] [-e] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-s] [-m] [-e] [-b] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -73,22 +78,23 @@ int main(int argc, char *argv[])
             geoSetDomainName(1, "Right");
             geoSetDomainName(2, "Top");
             geoSetDomainName(3, "Left");
-            geoMeshWrite("../Project/data/mesh_beam.txt", discretType);
+            geoMeshWrite("../../Rapport/data/mesh_beam.txt", discretType);
         }
         else
         {
             geoSetDomainName(0, "Symmetry");
             geoSetDomainName(7, "Bottom");
             geoSetDomainName(1, "Top");
-            geoMeshWrite("../Project/data/mesh_example.txt", discretType);
+            geoMeshWrite("../../Rapport/data/mesh_example.txt", discretType);
         }
     }
     else
     {
-        geoMeshGenerate(discretType);
+        geoMeshGenerate(discretType, bridgeSimplified);
         geoMeshImport(discretType);
-        setDomainsName();
-        geoMeshWrite("../Project/data/mesh.txt", discretType);
+        setDomainsName(bridgeSimplified);
+        if (bridgeSimplified == TRUE) { geoMeshWrite("../../Rapport/data/mesh_simplified.txt", discretType); }
+        else                           { geoMeshWrite("../../Rapport/data/mesh.txt", discretType); }
     }
 
     /******************************/
@@ -112,14 +118,14 @@ int main(int argc, char *argv[])
             double w = 1e7 / theGeometry->LxPlate; // 1250 kN/m
             femElasticityAddBoundaryCondition(theProblem, "Left", DIRICHLET_XY, 0.0, 0.0);
             femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
-            femElasticityWrite(theProblem, "../Project/data/problem_beam.txt");
+            femElasticityWrite(theProblem, "../../Rapport/data/problem_beam.txt");
         }
         else
         {
             femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
             femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
             femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e3, NAN);
-            femElasticityWrite(theProblem, "../Project/data/problem_example.txt");
+            femElasticityWrite(theProblem, "../../Rapport/data/problem_example.txt");
         }
 
         femElasticityPrint(theProblem);
@@ -133,9 +139,11 @@ int main(int argc, char *argv[])
         // double nu_reinforced_concrete = 0.2;
         // double rho_reinforced_concrete = 2.5e3;
         theProblem = femElasticityCreate(theGeometry, E_steel, nu_steel, rho_steel, gx, gy, theCase, discretType);
-        createBoundaryConditions(theProblem);
+        createBoundaryConditions(theProblem, bridgeSimplified);
         femElasticityPrint(theProblem);
-        femElasticityWrite(theProblem, "../Project/data/problem.txt");
+
+        if (bridgeSimplified == TRUE) { femElasticityWrite(theProblem, "../../Rapport/data/problem_simplified.txt"); }
+        else                          { femElasticityWrite(theProblem, "../../Rapport/data/problem.txt"); }
     }
 
     /***************************************************/

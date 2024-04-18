@@ -1,5 +1,4 @@
 #include "fem.h"
-#include "gmsh.h"
 
 /**********************************/
 /********* Gmsh functions *********/
@@ -345,7 +344,7 @@ void cutHalfGeometryBySymmetry(femGeometry *theGeometry, int *bridge)
 /********* Create Bridge (Generate Mesh) *********/
 /*************************************************/
 
-void geoMeshGenerate(femDiscreteType discreteType)
+void geoMeshGenerate(femDiscreteType discreteType, int bridgeSimplified)
 {
     femGeometry *theGeometry = geoGetGeometry();
 
@@ -403,9 +402,13 @@ void geoMeshGenerate(femDiscreteType discreteType)
     // Create each part of the bridge
     createBridgeMainSpan(theGeometry, &idBridge);
     createPillars(theGeometry, idPillars);
-    // createPylons(theGeometry, idPylons);
-    // createTopBall(theGeometry, idTopBall);
-    // createStayCables(theGeometry, idStayCables, positionStayCablesX, positionStayCablesY);
+
+    if (!bridgeSimplified)
+    {
+        createPylons(theGeometry, idPylons);
+        createTopBall(theGeometry, idTopBall);
+        createStayCables(theGeometry, idStayCables, positionStayCablesX, positionStayCablesY);
+    }
     createArcs(theGeometry, idArcs);
     createWindows(theGeometry, idWindows);
     createSubRoadWay(theGeometry, &idSubRoadWay);
@@ -415,37 +418,47 @@ void geoMeshGenerate(femDiscreteType discreteType)
     subRoadWay[0] = 2; subRoadWay[1] = idSubRoadWay;
 
     for (int i = 0; i < 4; i++)  { pillars[i][0] = 2; pillars[i][1] = idPillars[i]; }
-    // for (int i = 0; i < 6; i++)  { pylons[i][0] = 2; pylons[i][1] = idPylons[i]; }
+    if (!bridgeSimplified) { for (int i = 0; i < 6; i++)  { pylons[i][0] = 2; pylons[i][1] = idPylons[i]; } }
     for (int i = 0; i < 5; i++)  { arcs[i][0] = 2; arcs[i][1] = idArcs[i]; }
     for (int i = 0; i < 4; i++)  { windows[i][0] = 2; windows[i][1] = idWindows[i]; }
-    // for (int i = 0; i < 2; i++)  { topBall[i][0] = 2; topBall[i][1] = idTopBall[i]; }
+    if (!bridgeSimplified) { for (int i = 0; i < 2; i++)  { topBall[i][0] = 2; topBall[i][1] = idTopBall[i]; } }
     for (int i = 0; i < 10; i++) { piles[i][0] = 2; piles[i][1] = idPiles[i]; }
-    // for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
-    // for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
+    if (!bridgeSimplified)
+    {
+        for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
+        for (int i = 0; i < 36; i++) { stayCables[i][0] = 2; stayCables[i][1] = idStayCables[i]; }
+    }
 
     // Cut the arcs and the windows
     for (int i = 0; i < 5; i++) { cutElement(bridge, arcs[i]); }
     for (int i = 0; i < 4; i++) { cutElement(bridge, windows[i]); }
 
     // Rotate the stay cables
-    // for (int i = 0; i < 18; i++)  { rotateElement(stayCables[i], positionStayCablesX[i], positionStayCablesY[i], -theGeometry->angleStayCables); }
-    // for (int i = 18; i < 36; i++) { rotateElement(stayCables[i], positionStayCablesX[i], positionStayCablesY[i], theGeometry->angleStayCables); }
+    if (!bridgeSimplified)
+    {
+        for (int i = 0; i < 18; i++)  { rotateElement(stayCables[i], positionStayCablesX[i], positionStayCablesY[i], -theGeometry->angleStayCables); }
+        for (int i = 18; i < 36; i++) { rotateElement(stayCables[i], positionStayCablesX[i], positionStayCablesY[i], theGeometry->angleStayCables); }
+    }
     
     // Fuse all the elements together to create the bridge
     fuseElement(bridge, subRoadWay);
-    fuseElement(pylons[2], topBall[0]);
-    fuseElement(pylons[5], topBall[1]);
+    if (!bridgeSimplified)
+    {
+        fuseElement(pylons[2], topBall[0]);
+        fuseElement(pylons[5], topBall[1]);
+    }
     for (int i = 0; i < 4; i++)   { fuseElement(bridge, pillars[i]); }
     for (int i = 0; i < 10; i++)  { fuseElement(bridge, piles[i]); }
-    // for (int i = 1; i < 3; i++)   { fuseElement(pylons[0], pylons[i]); }
-    // for (int i = 4; i < 6; i++)   { fuseElement(pylons[3], pylons[i]); }
-    // fuseElement(bridge, pylons[0]);
-    // fuseElement(bridge, pylons[3]);
-    // for (int i = 0; i < 9; i++)   { fuseElement(bridge, stayCables[i]); }
-    // for (int i = 27; i < 36; i++) { fuseElement(bridge, stayCables[i]); }
-    // for (int i = 9; i < 27; i++)  { fuseElement(bridge, stayCables[i]); }
-
-    // gmshModelMeshReverse(const int * dimTags, const size_t dimTags_n, &ierr);
+    if (!bridgeSimplified)
+    {
+        for (int i = 1; i < 3; i++)   { fuseElement(pylons[0], pylons[i]); }
+        for (int i = 4; i < 6; i++)   { fuseElement(pylons[3], pylons[i]); }
+        fuseElement(bridge, pylons[0]);
+        fuseElement(bridge, pylons[3]);
+        for (int i = 0; i < 9; i++)   { fuseElement(bridge, stayCables[i]); }
+        for (int i = 27; i < 36; i++) { fuseElement(bridge, stayCables[i]); }
+        for (int i = 9; i < 27; i++)  { fuseElement(bridge, stayCables[i]); }
+    }
 
     // Cut the half of the bridge by symmetry
     cutHalfGeometryBySymmetry(theGeometry, bridge);
@@ -503,190 +516,191 @@ void geoMeshGenerate(femDiscreteType discreteType)
 /********* Name Domains + Boundary Conditions *********/
 /******************************************************/
 
-void setDomainsName(void)
+void setDomainsName(int bridgeSimplified)
 {
     typedef struct domainMapping {
         int id;
         char *name;
     } domain_Mapping_t;
 
-    // domain_Mapping_t domain_mapping[] = {
-    //     {5, "PILAR R 1"},
-    //     {6, "PILAR D 1"},
-    //     {7, "PILAR L 1"},
-    //     {1, "PILAR R 2"},
-    //     {2, "PILAR D 2"},
-    //     {3, "PILAR L 2"},
-    //     {10, "SUB ROADWAY U 1"},
-    //     {33, "SUB ROADWAY U 2"},
-    //     {38, "SUB ROADWAY U 3"},
-    //     {45, "SUB ROADWAY U 4"}, // 45
-    //     {40, "SUB ROADWAY U 5"},
-    //     {52, "SUB ROADWAY U 6"}, // 52
-    //     {56, "SUB ROADWAY U 7"},
-    //     {27, "SUB ROADWAY U 8"},
-    //     {8, "SUB ROADWAY D 1"},
-    //     {4, "SUB ROADWAY D 2"},
-    //     {0, "SUB ROADWAY D 3"},
-    //     {9, "SUB ROADWAY L"},
-    //     {28, "SUB ROADWAY R"},
-    //     {13, "ROADWAY L"},
-    //     {24, "ROADWAY R"},
-    //     {29, "WINDOW D 1"},
-    //     {30, "WINDOW L 1"},
-    //     {31, "WINDOW R 1"},
-    //     {32, "WINDOW U 1"},
-    //     {46, "WINDOW D 2"}, // 46,
-    //     {47, "WINDOW L 2"}, // 47
-    //     {48, "WINDOW R 2"}, // 48
-    //     {49, "WINDOW U 2"}, // 49
-    //     {11, "PILE L 1"},
-    //     {35, "PILE R 1"},
-    //     {37, "PILE L 2"},
-    //     {44, "PILE R 2"}, // 44
-    //     {43, "PILE L 3"}, // 43
-    //     {41, "PILE R 3"}, // 41
-    //     {51, "PILE L 4"}, // 51
-    //     {55, "PILE R 4"},
-    //     {54, "PILE L 5"},
-    //     {26, "PILE R 5"},
-    //     {12, "ARC 1"},
-    //     {34, "ARC 2"},
-    //     {36, "ARC 3"},
-    //     {42, "ARC 4"}, // 42
-    //     {39, "ARC 5"}, // 39
-    //     {50, "ARC 6"}, // 50
-    //     {53, "ARC 7"},
-    //     {25, "ARC 8"},
-    //     {15, "STAYCABLES L U 1"},
-    //     {102, "STAYCABLES L U 2"},
-    //     {98, "STAYCABLES L U 3"},
-    //     {94, "STAYCABLES L U 4"},
-    //     {90, "STAYCABLES L U 5"},
-    //     {85, "STAYCABLES L U 6"},
-    //     {82, "STAYCABLES L U 7"},
-    //     {66, "STAYCABLES L U 8"},
-    //     {63, "STAYCABLES L U 9"},
-    //     {101, "STAYCABLES L D 1"},
-    //     {97, "STAYCABLES L D 2"},
-    //     {93, "STAYCABLES L D 3"},
-    //     {87, "STAYCABLES L D 4"},
-    //     {84, "STAYCABLES L D 5"},
-    //     {79, "STAYCABLES L D 6"},
-    //     {65, "STAYCABLES L D 7"},
-    //     {60, "STAYCABLES L D 8"},
-    //     {59, "STAYCABLES L D 9"},
-    //     {22, "STAYCABLES R U 1"},
-    //     {127, "STAYCABLES R U 2"},
-    //     {123, "STAYCABLES R U 3"},
-    //     {119, "STAYCABLES R U 4"},
-    //     {113, "STAYCABLES R U 5"},
-    //     {110, "STAYCABLES R U 6"},
-    //     {106, "STAYCABLES R U 7"},
-    //     {77, "STAYCABLES R U 8"},
-    //     {73, "STAYCABLES R U 9"},
-    //     {126, "STAYCABLES R D 1"},
-    //     {122, "STAYCABLES R D 2"},
-    //     {118, "STAYCABLES R D 3"},
-    //     {116, "STAYCABLES R D 4"},
-    //     {109, "STAYCABLES R D 5"},
-    //     {105, "STAYCABLES R D 6"},
-    //     {76, "STAYCABLES R D 7"},
-    //     {72, "STAYCABLES R D 8"},
-    //     {70, "STAYCABLES R D 9"},
-    //     {58, "PYLON 1 L 1"},
-    //     {62, "PYLON 1 L 2"},
-    //     {64, "PYLON 1 L 3"},
-    //     {81, "PYLON 1 L 4"},
-    //     {83, "PYLON 1 L 5"},
-    //     {68, "PYLON 1 R 1"},
-    //     {74, "PYLON 1 R 2"},
-    //     {78, "PYLON 1 R 3"},
-    //     {107, "PYLON 1 R 4"},
-    //     {111, "PYLON 1 R 5"},
-    //     {89, "PYLON 2 L 1"},
-    //     {92, "PYLON 2 L 2"},
-    //     {96, "PYLON 2 L 3"},
-    //     {100, "PYLON 2 L 4"},
-    //     {114, "PYLON 2 R 1"},
-    //     {120, "PYLON 2 R 2"},
-    //     {124, "PYLON 2 R 3"},
-    //     {128, "PYLON 2 R 4"},
-    //     {17, "PYLON 3 L 1"},
-    //     {20, "PYLON 3 R 1"},
-    //     {91, "PYLON 1 U L"},
-    //     {112, "PYLON 1 U R"},
-    //     {16, "PYLON 2 U L"},
-    //     {21, "PYLON 2 U R"},
-    //     {18, "TOPBALL 1"},
-    //     {19, "TOPBALL 2"},
-    //     {14, "ROADWAY U 1"},
-    //     {103, "ROADWAY U 2"},
-    //     {99, "ROADWAY U 3"},
-    //     {95, "ROADWAY U 4"},
-    //     {88, "ROADWAY U 5"},
-    //     {86, "ROADWAY U 6"},
-    //     {80, "ROADWAY U 7"},
-    //     {67, "ROADWAY U 8"},
-    //     {61, "ROADWAY U 9"},
-    //     {57, "ROADWAY U 10"},
-    //     {69, "ROADWAY U 11"},
-    //     {71, "ROADWAY U 12"},
-    //     {75, "ROADWAY U 13"},
-    //     {104, "ROADWAY U 14"},
-    //     {108, "ROADWAY U 15"},
-    //     {115, "ROADWAY U 16"},
-    //     {117, "ROADWAY U 17"},
-    //     {121, "ROADWAY U 18"},
-    //     {125, "ROADWAY U 19"},
-    //     {23, "ROADWAY U 20"}
-    // };
-
-    // const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);
-
-    // for (int i = 0; i < NB_DOMAINS; ++i)
-    // {
-    //     domain_Mapping_t domain = domain_mapping[i];
-    //     geoSetDomainName(domain.id, domain.name);
-    // }
-
-
-    domain_Mapping_t domain_mapping[] = {
-        {1, "PILAR R 1"},
-        {2, "PILAR D 1"},
-        {3, "PILAR L 1"},
-        {5, "PILAR R 2"},
-        {6, "PILAR D 2"},
-        {7, "PILAR L 2"},
-        {13, "ROADWAY L"},
-        {15, "ROADWAY R"},
-        {14, "ROADWAY U"},
-        {9, "SUB ROADWAY L"},
-        {19, "SUB ROADWAY R"},
-
-        {10, "SUB ROADWAY U 1"},
-        {28, "SUB ROADWAY U 2"},
-        {33, "SUB ROADWAY U 3"},
-        {47, "SUB ROADWAY U 4"},
-        {35, "SUB ROADWAY U 5"},
-        {39, "SUB ROADWAY U 6"},
-        {43, "SUB ROADWAY U 7"},
-        {18, "SUB ROADWAY U 8"},
-        {8, "SUB ROADWAY D 1"},
-        {4, "SUB ROADWAY D 2"},
-        {0, "SUB ROADWAY D 3"}
-    };
-
-    const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);
-
-    for (int i = 0; i < NB_DOMAINS; ++i)
+    if (bridgeSimplified == TRUE)
     {
-        domain_Mapping_t domain = domain_mapping[i];
-        geoSetDomainName(domain.id, domain.name);
+        domain_Mapping_t domain_mapping[] = {
+            {1, "PILAR R 1"},
+            {2, "PILAR D 1"},
+            {3, "PILAR L 1"},
+            {5, "PILAR R 2"},
+            {6, "PILAR D 2"},
+            {7, "PILAR L 2"},
+            {13, "ROADWAY L"},
+            {15, "ROADWAY R"},
+            {14, "ROADWAY U"},
+            {9, "SUB ROADWAY L"},
+            {19, "SUB ROADWAY R"},
+            {10, "SUB ROADWAY U 1"},
+            {28, "SUB ROADWAY U 2"},
+            {33, "SUB ROADWAY U 3"},
+            {47, "SUB ROADWAY U 4"},
+            {35, "SUB ROADWAY U 5"},
+            {39, "SUB ROADWAY U 6"},
+            {43, "SUB ROADWAY U 7"},
+            {18, "SUB ROADWAY U 8"},
+            {8, "SUB ROADWAY D 1"},
+            {4, "SUB ROADWAY D 2"},
+            {0, "SUB ROADWAY D 3"}
+        };
+
+        const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);
+        for (int i = 0; i < NB_DOMAINS; ++i)
+        {
+            domain_Mapping_t domain = domain_mapping[i];
+            geoSetDomainName(domain.id, domain.name);
+        }
+    }
+    else
+    {
+        domain_Mapping_t domain_mapping[] = {
+            {5, "PILAR R 1"},
+            {6, "PILAR D 1"},
+            {7, "PILAR L 1"},
+            {1, "PILAR R 2"},
+            {2, "PILAR D 2"},
+            {3, "PILAR L 2"},
+            {10, "SUB ROADWAY U 1"},
+            {33, "SUB ROADWAY U 2"},
+            {38, "SUB ROADWAY U 3"},
+            {45, "SUB ROADWAY U 4"},
+            {40, "SUB ROADWAY U 5"},
+            {52, "SUB ROADWAY U 6"},
+            {56, "SUB ROADWAY U 7"},
+            {27, "SUB ROADWAY U 8"},
+            {8, "SUB ROADWAY D 1"},
+            {4, "SUB ROADWAY D 2"},
+            {0, "SUB ROADWAY D 3"},
+            {9, "SUB ROADWAY L"},
+            {28, "SUB ROADWAY R"},
+            {13, "ROADWAY L"},
+            {24, "ROADWAY R"},
+            {29, "WINDOW D 1"},
+            {30, "WINDOW L 1"},
+            {31, "WINDOW R 1"},
+            {32, "WINDOW U 1"},
+            {46, "WINDOW D 2"},
+            {47, "WINDOW L 2"},
+            {48, "WINDOW R 2"},
+            {49, "WINDOW U 2"},
+            {11, "PILE L 1"},
+            {35, "PILE R 1"},
+            {37, "PILE L 2"},
+            {44, "PILE R 2"},
+            {43, "PILE L 3"},
+            {41, "PILE R 3"},
+            {51, "PILE L 4"},
+            {55, "PILE R 4"},
+            {54, "PILE L 5"},
+            {26, "PILE R 5"},
+            {12, "ARC 1"},
+            {34, "ARC 2"},
+            {36, "ARC 3"},
+            {42, "ARC 4"},
+            {39, "ARC 5"},
+            {50, "ARC 6"},
+            {53, "ARC 7"},
+            {25, "ARC 8"},
+            {15, "STAYCABLES L U 1"},
+            {102, "STAYCABLES L U 2"},
+            {98, "STAYCABLES L U 3"},
+            {94, "STAYCABLES L U 4"},
+            {90, "STAYCABLES L U 5"},
+            {85, "STAYCABLES L U 6"},
+            {82, "STAYCABLES L U 7"},
+            {66, "STAYCABLES L U 8"},
+            {63, "STAYCABLES L U 9"},
+            {101, "STAYCABLES L D 1"},
+            {97, "STAYCABLES L D 2"},
+            {93, "STAYCABLES L D 3"},
+            {87, "STAYCABLES L D 4"},
+            {84, "STAYCABLES L D 5"},
+            {79, "STAYCABLES L D 6"},
+            {65, "STAYCABLES L D 7"},
+            {60, "STAYCABLES L D 8"},
+            {59, "STAYCABLES L D 9"},
+            {22, "STAYCABLES R U 1"},
+            {127, "STAYCABLES R U 2"},
+            {123, "STAYCABLES R U 3"},
+            {119, "STAYCABLES R U 4"},
+            {113, "STAYCABLES R U 5"},
+            {110, "STAYCABLES R U 6"},
+            {106, "STAYCABLES R U 7"},
+            {77, "STAYCABLES R U 8"},
+            {73, "STAYCABLES R U 9"},
+            {126, "STAYCABLES R D 1"},
+            {122, "STAYCABLES R D 2"},
+            {118, "STAYCABLES R D 3"},
+            {116, "STAYCABLES R D 4"},
+            {109, "STAYCABLES R D 5"},
+            {105, "STAYCABLES R D 6"},
+            {76, "STAYCABLES R D 7"},
+            {72, "STAYCABLES R D 8"},
+            {70, "STAYCABLES R D 9"},
+            {58, "PYLON 1 L 1"},
+            {62, "PYLON 1 L 2"},
+            {64, "PYLON 1 L 3"},
+            {81, "PYLON 1 L 4"},
+            {83, "PYLON 1 L 5"},
+            {68, "PYLON 1 R 1"},
+            {74, "PYLON 1 R 2"},
+            {78, "PYLON 1 R 3"},
+            {107, "PYLON 1 R 4"},
+            {111, "PYLON 1 R 5"},
+            {89, "PYLON 2 L 1"},
+            {92, "PYLON 2 L 2"},
+            {96, "PYLON 2 L 3"},
+            {100, "PYLON 2 L 4"},
+            {114, "PYLON 2 R 1"},
+            {120, "PYLON 2 R 2"},
+            {124, "PYLON 2 R 3"},
+            {128, "PYLON 2 R 4"},
+            {17, "PYLON 3 L 1"},
+            {20, "PYLON 3 R 1"},
+            {91, "PYLON 1 U L"},
+            {112, "PYLON 1 U R"},
+            {16, "PYLON 2 U L"},
+            {21, "PYLON 2 U R"},
+            {18, "TOPBALL 1"},
+            {19, "TOPBALL 2"},
+            {14, "ROADWAY U 1"},
+            {103, "ROADWAY U 2"},
+            {99, "ROADWAY U 3"},
+            {95, "ROADWAY U 4"},
+            {88, "ROADWAY U 5"},
+            {86, "ROADWAY U 6"},
+            {80, "ROADWAY U 7"},
+            {67, "ROADWAY U 8"},
+            {61, "ROADWAY U 9"},
+            {57, "ROADWAY U 10"},
+            {69, "ROADWAY U 11"},
+            {71, "ROADWAY U 12"},
+            {75, "ROADWAY U 13"},
+            {104, "ROADWAY U 14"},
+            {108, "ROADWAY U 15"},
+            {115, "ROADWAY U 16"},
+            {117, "ROADWAY U 17"},
+            {121, "ROADWAY U 18"},
+            {125, "ROADWAY U 19"},
+            {23, "ROADWAY U 20"}
+        };
+
+        const int NB_DOMAINS = sizeof(domain_mapping) / sizeof(domain_mapping[0]);
+        for (int i = 0; i < NB_DOMAINS; ++i)
+        {
+            domain_Mapping_t domain = domain_mapping[i];
+            geoSetDomainName(domain.id, domain.name);
+        }
     }
 }
 
-void createBoundaryConditions(femProblem *theProblem)
+void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
 {
     typedef struct domainBoundaryMapping {
         char *name;
@@ -695,196 +709,200 @@ void createBoundaryConditions(femProblem *theProblem)
         double value2;
     } domainBoundaryMapping_t;
 
-    // double length_camion = 16.5;
-    // double width_camion = 2.55;
-    // int nb_camion = 100;
-    // double mass_camion = 32000.0;
-    // int nb_pedestrian = 1;
-    // double mass_pedestrian = 70.0;
-
-    // double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
-    // double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
-
-    // domainBoundaryMapping_t mapping[] = {
-    //     {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
-    //     {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
-    //     {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0},
-    //     {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
-    //     {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
-    //     {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
-    //     {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-    //     {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
-    //     {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
-    //     {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
-    //     {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
-    //     {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
-    //     {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
-    //     {"ROADWAY R", DIRICHLET_X, 0.0, NAN},
-    //     {"WINDOW D 1", NEUMANN_X, 0.0, NAN},
-    //     {"WINDOW L 1", NEUMANN_Y, 0.0, NAN},
-    //     {"WINDOW R 1", NEUMANN_Y, 0.0, NAN},
-    //     {"WINDOW U 1", NEUMANN_X, 0.0, NAN},
-    //     {"WINDOW D 2", NEUMANN_X, 0.0, NAN},
-    //     {"WINDOW L 2", NEUMANN_Y, 0.0, NAN},
-    //     {"WINDOW R 2", NEUMANN_Y, 0.0, NAN},
-    //     {"WINDOW U 2", NEUMANN_X, 0.0, NAN},
-    //     {"PILE L 1", NEUMANN_X, 0.0, NAN},
-    //     {"PILE R 1", NEUMANN_X, 0.0, NAN},
-    //     {"PILE L 2", NEUMANN_X, 0.0, NAN},
-    //     {"PILE R 2", NEUMANN_X, 0.0, NAN},
-    //     {"PILE L 3", NEUMANN_X, 0.0, NAN},
-    //     {"PILE R 3", NEUMANN_X, 0.0, NAN},
-    //     {"PILE L 4", NEUMANN_X, 0.0, NAN},
-    //     {"PILE R 4", NEUMANN_X, 0.0, NAN},
-    //     {"PILE L 5", NEUMANN_X, 0.0, NAN},
-    //     {"PILE R 5", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 1", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 2", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 3", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 4", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 5", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 6", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 7", NEUMANN_X, 0.0, NAN},
-    //     {"ARC 8", NEUMANN_X, 0.0, NAN},
-    //     {"STAYCABLES L U 1", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 2", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 3", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 4", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 5", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 6", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 7", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 8", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L U 9", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 1", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 2", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 3", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 4", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 5", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 6", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 7", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 8", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES L D 9", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 1", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 2", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 3", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 4", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 5", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 6", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 7", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 8", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R U 9", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 1", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 2", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 3", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 4", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 5", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 6", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 7", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 8", DIRICHLET_T, 0.0, NAN},
-    //     {"STAYCABLES R D 9", DIRICHLET_T, 0.0, NAN},
-    //     // {"PYLON 1 L 1", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 1 L 2", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 1 L 3", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 1 L 4", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 1 L 5", NEUMANN_X, windForce, NAN},
-    //     {"PYLON 1 R 1", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 1 R 2", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 1 R 3", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 1 R 4", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 1 R 5", NEUMANN_X, 0.0, NAN},
-    //     // {"PYLON 2 L 1", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 2 L 2", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 2 L 3", NEUMANN_X, windForce, NAN},
-    //     // {"PYLON 2 L 4", NEUMANN_X, windForce, NAN},
-    //     {"PYLON 2 R 1", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 2 R 2", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 2 R 3", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 2 R 4", NEUMANN_X, 0.0, NAN},
-    //     // {"PYLON 3 L 1", NEUMANN_X, windForce, NAN},
-    //     {"PYLON 3 R 1", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 1 U L", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 1 U R", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 2 U L", NEUMANN_X, 0.0, NAN},
-    //     {"PYLON 2 U R", NEUMANN_X, 0.0, NAN},
-    //     {"TOPBALL 1", DIRICHLET_XY, 0.0, 0.0},
-    //     {"TOPBALL 2", DIRICHLET_XY, 0.0, 0.0},
-    //     {"ROADWAY U 1", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 2", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 3", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 4", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 5", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 6", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 7", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 8", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 9", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 10", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 11", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 13", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 14", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 15", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 16", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 17", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 18", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 19", NEUMANN_Y, -weightCamionDensityBridge, NAN},
-    //     {"ROADWAY U 20", NEUMANN_Y, -weightCamionDensityBridge, NAN}
-    // };
-
-    // const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
-
-    // for (int i = 0; i < NB_DOMAINS; ++i)
-    // {
-    //     domainBoundaryMapping_t domain = mapping[i];
-    //     femElasticityAddBoundaryCondition(theProblem, domain.name, domain.type, domain.value1, domain.value2);
-    // }
-
-
-    double length_camion = 16.5;
-    double width_camion = 2.55;
-    int nb_camion = 2;
-    double mass_camion = 32000.0;
-    int nb_pedestrian = 1;
-    double mass_pedestrian = 70.0;
-
-    double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
-
-    domainBoundaryMapping_t mapping[] = {
-        {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
-        {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
-        // {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-        // {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
-        // {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
-        // {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
-        {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
-        {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
-        {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
-        {"ROADWAY R", DIRICHLET_X, 0.0, NAN},
-        {"ROADWAY U", NEUMANN_Y, -weightCamionDensityBridge, NAN}
-    };
-
-    const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
-
-    for (int i = 0; i < NB_DOMAINS; ++i)
+    if (bridgeSimplified == TRUE)
     {
-        domainBoundaryMapping_t domain = mapping[i];
-        femElasticityAddBoundaryCondition(theProblem, domain.name, domain.type, domain.value1, domain.value2);
+        double length_camion = 16.5;
+        double width_camion = 2.55;
+        int nb_camion = 2;
+        double mass_camion = 32000.0;
+        int nb_pedestrian = 1;
+        double mass_pedestrian = 70.0;
+
+        double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
+
+        domainBoundaryMapping_t mapping[] = {
+            {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
+            // {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            // {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
+            // {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
+            // {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
+            {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+            {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
+            {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+            {"ROADWAY R", DIRICHLET_X, 0.0, NAN},
+            {"ROADWAY U", NEUMANN_Y, -weightCamionDensityBridge, NAN}
+        };
+
+        const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
+
+        for (int i = 0; i < NB_DOMAINS; ++i)
+        {
+            domainBoundaryMapping_t domain = mapping[i];
+            femElasticityAddBoundaryCondition(theProblem, domain.name, domain.type, domain.value1, domain.value2);
+        }
+    }
+    else
+    {
+        double length_camion = 16.5;
+        double width_camion = 2.55;
+        int nb_camion = 100;
+        double mass_camion = 32000.0;
+        int nb_pedestrian = 1;
+        double mass_pedestrian = 70.0;
+
+        double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
+        double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
+
+        domainBoundaryMapping_t mapping[] = {
+            {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR L 1", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
+            {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
+            {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
+            {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
+            {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
+            {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+            {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
+            {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
+            {"ROADWAY R", DIRICHLET_X, 0.0, NAN},
+            {"WINDOW D 1", NEUMANN_X, 0.0, NAN},
+            {"WINDOW L 1", NEUMANN_Y, 0.0, NAN},
+            {"WINDOW R 1", NEUMANN_Y, 0.0, NAN},
+            {"WINDOW U 1", NEUMANN_X, 0.0, NAN},
+            {"WINDOW D 2", NEUMANN_X, 0.0, NAN},
+            {"WINDOW L 2", NEUMANN_Y, 0.0, NAN},
+            {"WINDOW R 2", NEUMANN_Y, 0.0, NAN},
+            {"WINDOW U 2", NEUMANN_X, 0.0, NAN},
+            {"PILE L 1", NEUMANN_X, 0.0, NAN},
+            {"PILE R 1", NEUMANN_X, 0.0, NAN},
+            {"PILE L 2", NEUMANN_X, 0.0, NAN},
+            {"PILE R 2", NEUMANN_X, 0.0, NAN},
+            {"PILE L 3", NEUMANN_X, 0.0, NAN},
+            {"PILE R 3", NEUMANN_X, 0.0, NAN},
+            {"PILE L 4", NEUMANN_X, 0.0, NAN},
+            {"PILE R 4", NEUMANN_X, 0.0, NAN},
+            {"PILE L 5", NEUMANN_X, 0.0, NAN},
+            {"PILE R 5", NEUMANN_X, 0.0, NAN},
+            {"ARC 1", NEUMANN_X, 0.0, NAN},
+            {"ARC 2", NEUMANN_X, 0.0, NAN},
+            {"ARC 3", NEUMANN_X, 0.0, NAN},
+            {"ARC 4", NEUMANN_X, 0.0, NAN},
+            {"ARC 5", NEUMANN_X, 0.0, NAN},
+            {"ARC 6", NEUMANN_X, 0.0, NAN},
+            {"ARC 7", NEUMANN_X, 0.0, NAN},
+            {"ARC 8", NEUMANN_X, 0.0, NAN},
+            {"STAYCABLES L U 1", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 2", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 3", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 4", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 5", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 6", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 7", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 8", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L U 9", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 1", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 2", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 3", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 4", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 5", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 6", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 7", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 8", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES L D 9", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 1", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 2", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 3", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 4", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 5", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 6", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 7", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 8", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R U 9", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 1", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 2", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 3", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 4", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 5", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 6", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 7", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 8", DIRICHLET_T, 0.0, NAN},
+            {"STAYCABLES R D 9", DIRICHLET_T, 0.0, NAN},
+            // {"PYLON 1 L 1", NEUMANN_X, windForce, NAN},
+            // {"PYLON 1 L 2", NEUMANN_X, windForce, NAN},
+            // {"PYLON 1 L 3", NEUMANN_X, windForce, NAN},
+            // {"PYLON 1 L 4", NEUMANN_X, windForce, NAN},
+            // {"PYLON 1 L 5", NEUMANN_X, windForce, NAN},
+            {"PYLON 1 R 1", NEUMANN_X, 0.0, NAN},
+            {"PYLON 1 R 2", NEUMANN_X, 0.0, NAN},
+            {"PYLON 1 R 3", NEUMANN_X, 0.0, NAN},
+            {"PYLON 1 R 4", NEUMANN_X, 0.0, NAN},
+            {"PYLON 1 R 5", NEUMANN_X, 0.0, NAN},
+            // {"PYLON 2 L 1", NEUMANN_X, windForce, NAN},
+            // {"PYLON 2 L 2", NEUMANN_X, windForce, NAN},
+            // {"PYLON 2 L 3", NEUMANN_X, windForce, NAN},
+            // {"PYLON 2 L 4", NEUMANN_X, windForce, NAN},
+            {"PYLON 2 R 1", NEUMANN_X, 0.0, NAN},
+            {"PYLON 2 R 2", NEUMANN_X, 0.0, NAN},
+            {"PYLON 2 R 3", NEUMANN_X, 0.0, NAN},
+            {"PYLON 2 R 4", NEUMANN_X, 0.0, NAN},
+            // {"PYLON 3 L 1", NEUMANN_X, windForce, NAN},
+            {"PYLON 3 R 1", NEUMANN_X, 0.0, NAN},
+            {"PYLON 1 U L", NEUMANN_X, 0.0, NAN},
+            {"PYLON 1 U R", NEUMANN_X, 0.0, NAN},
+            {"PYLON 2 U L", NEUMANN_X, 0.0, NAN},
+            {"PYLON 2 U R", NEUMANN_X, 0.0, NAN},
+            {"TOPBALL 1", DIRICHLET_XY, 0.0, 0.0},
+            {"TOPBALL 2", DIRICHLET_XY, 0.0, 0.0},
+            {"ROADWAY U 1", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 2", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 3", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 4", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 5", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 6", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 7", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 8", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 9", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 10", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 11", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 13", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 14", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 15", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 16", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 17", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 18", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 19", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+            {"ROADWAY U 20", NEUMANN_Y, -weightCamionDensityBridge, NAN}
+        };
+
+        const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
+
+        for (int i = 0; i < NB_DOMAINS; ++i)
+        {
+            domainBoundaryMapping_t domain = mapping[i];
+            femElasticityAddBoundaryCondition(theProblem, domain.name, domain.type, domain.value1, domain.value2);
+        }
     }
 }
 
@@ -1104,15 +1122,14 @@ double geoSize(double x, double y)
 
 double geoSizeExample(double x, double y)
 {
-    // return 1.0;
     femGeometry *theGeometry = geoGetGeometry();
-    return theGeometry->defaultSize * (1.0 - 0.5 * x);
+    return theGeometry->defaultSize * (theGeometry->LxPlate / 2 + 0.5 - 0.5 * x);
 }
 
 void geoMeshGenerateExample(femDiscreteType discreteType, int beam_example)
 {
-    if (beam_mesh) { geoMeshGenerate_UForm(discreteType); }
-    else           { geoMeshGenerate_Beam(discreteType); }
+    if (beam_example == TRUE) { geoMeshGenerate_Beam(discreteType); }
+    else                      { geoMeshGenerate_UForm(discreteType); }
 }
 
 void geoMeshGenerate_UForm(femDiscreteType discreteType)
@@ -1136,7 +1153,7 @@ void geoMeshGenerate_UForm(femDiscreteType discreteType)
     double Ly = 1.0;
     theGeometry->LxPlate = Lx;
     theGeometry->LyPlate = Ly;
-    theGeometry->defaultSize = Lx * 0.05;
+    theGeometry->defaultSize = Lx * 0.02;
     theGeometry->geoSize = geoSizeExample;
 
     geoSetSizeCallback(theGeometry->geoSize);
@@ -1190,7 +1207,7 @@ void geoMeshGenerate_Beam(femDiscreteType discreteType)
     double Ly = 1.0;
     theGeometry->LxPlate = Lx;
     theGeometry->LyPlate = Ly;
-    theGeometry->defaultSize = Lx * 0.05;
+    theGeometry->defaultSize = Lx * 0.02;
     theGeometry->geoSize = geoSizeExample;
 
     geoSetSizeCallback(theGeometry->geoSize);
