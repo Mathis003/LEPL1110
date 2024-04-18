@@ -253,6 +253,18 @@ double constFunct(double x, double y) { return 1.0; }
 //     }
 // }
 
+double *femElasticityVonMises(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY, int nNodes)
+{
+    double *vonMises = (double *) malloc(theProblem->geometry->theNodes->nNodes * sizeof(double));
+    if (vonMises == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return NULL; }
+
+    for (int i = 0; i < nNodes; i++)
+    {
+        vonMises[i] = sqrt(sigmaXX[i] * sigmaXX[i] - sigmaXX[i] * sigmaYY[i] + sigmaYY[i] * sigmaYY[i] + 3 * sigmaXY[i] * sigmaXY[i]);
+    }
+    return vonMises;
+}
+
 void femElasticitySigma(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY)
 {
     femIntegration *theRule  = theProblem->rule;
@@ -529,6 +541,8 @@ int main(int argc, char *argv[])
     double *theForces = femElasticityForces(theProblem);
     double area       = femElasticityIntegrate(theProblem, constFunct);
 
+    femNodes *theNodes = theGeometry->theNodes;
+    int nNodes = theNodes->nNodes;
 
     double *sigmaXX = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (sigmaXX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
@@ -536,14 +550,14 @@ int main(int argc, char *argv[])
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    // femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+
+    double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
 
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 
     /*     Creation du champ de la norme du deplacement */
     /****************************************************/
-
-    femNodes *theNodes = theGeometry->theNodes;
 
     double deformationFactor;
     if (exampleUsage == TRUE) { deformationFactor = 1e5; } // To change the deformation factor
@@ -630,6 +644,7 @@ int main(int argc, char *argv[])
         if (glfwGetKey(window, 'A') == GLFW_PRESS) { mode = 5; }
         if (glfwGetKey(window, 'B') == GLFW_PRESS) { mode = 6; }
         if (glfwGetKey(window, 'C') == GLFW_PRESS) { mode = 7; }
+        if (glfwGetKey(window, 'U') == GLFW_PRESS) { mode = 8; }
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -690,6 +705,14 @@ int main(int argc, char *argv[])
         else if (mode == 7)
         {
             glfemPlotField(theGeometry->theElements, sigmaXY);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+        }
+        else if (mode == 8)
+        {
+            printf("%.12f\n", femMax(vonMises, nNodes));
+            glfemPlotField(theGeometry->theElements, vonMises);
             glfemPlotMesh(theGeometry->theElements); 
             sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
             glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);

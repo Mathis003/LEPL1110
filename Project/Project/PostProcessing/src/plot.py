@@ -134,13 +134,14 @@ if __name__ == "__main__":
 
         uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
         uv_norm = np.linalg.norm(uv, axis=1)
-        factor = 5e4
+        factor = 1e2 
 
         cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
         plt.colorbar(cb)
         mesh.plot(uv*factor, lw=0.2, c="k")
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
+        plt.title('Deformation Analysis of a Fixed-End\nBeam under Uniform Surface Loading')
         plt.show()
         plt.savefig("../../Processing/data/plot.pdf")
 

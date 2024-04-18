@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 
     femProblem *theProblem;
     double gx = 0.0;
-    double gy = 0.0;
+    double gy = -9.81;
 
     if (exampleUsage == TRUE)
     {
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         // double I = 0.0;
         // double L = theGeometry->LxPlate;
         // double E = theProblem->E;
-        double w = 1e3;
+        double w = 1e7 / theGeometry->LxPlate; // 1250 kN/m
 
         femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
 
