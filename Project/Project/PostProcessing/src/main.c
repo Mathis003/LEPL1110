@@ -553,7 +553,12 @@ int main(int argc, char *argv[])
     femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
 
     double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
-
+    
+    FILE *file = fopen("../../Processing/data/vonMises.txt", "w");
+    if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
+    fclose(file);
+    
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 
     /*     Creation du champ de la norme du deplacement */

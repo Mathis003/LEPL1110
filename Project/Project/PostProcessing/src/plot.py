@@ -63,6 +63,23 @@ class Mesh:
             x[:,5] = np.nan
             x = x.ravel()
             a = plt.plot(x, y, *args, **kwargs)
+
+        # Paramètres poutre
+        # L = 8.0
+        # rho = 7850
+        # w = (1e7 + rho * 9.81 * L) / L
+        # E = 2.11e11
+        # I = 1**4 / 12
+
+        # def y(x):
+        #     return (- w * x**2 / (24 * E * I)) * (x**2 - 4 * L * x + 6 * L**2)
+
+        # factor = 1e2
+        # x_values = np.linspace(0, L, 1000)
+        # y_values = y(x_values) * factor +  1/2
+
+        # plt.plot(x_values, y_values, "r", lw=2, label="Analytical Solution")
+        plt.legend()
         return a
 
     def plotfield(self, field, displace=None, *args, **kwargs):
@@ -99,6 +116,7 @@ def generate_frame(i):
 
     # plt.xlim(right=1.15) # To change for the final plot
     plt.colorbar(cb)
+    plt.title("Elastic Deformation of Bridge under\nHuge Force Density on Both Decks")
     mesh.plot(uv * factor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
     plt.grid(alpha=0.2)
@@ -134,22 +152,23 @@ if __name__ == "__main__":
 
         uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
         uv_norm = np.linalg.norm(uv, axis=1)
-        factor = 1e2 
+        factor = 2e4
 
         cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
         plt.colorbar(cb)
         mesh.plot(uv*factor, lw=0.2, c="k")
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
-        plt.title('Deformation Analysis of a Fixed-End\nBeam under Uniform Surface Loading')
-        plt.show()
-        plt.savefig("../../Processing/data/plot.pdf")
+        plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+        # plt.show()
+        plt.savefig("../../Processing/data/elasticityBridge.pdf", bbox_inches='tight')
 
     else:
         print("Generating animation...")
         NB_IMAGES = 50
         fig, ax = plt.subplots()
         animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=2)
+        plt.title('Elastic Deformation of Bridge under\nHuge Force Density on Both Decks')
         plt.show()
         # animation.save("../../Processing/data/animation.mov")
 

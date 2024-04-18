@@ -500,6 +500,9 @@ void geoMeshGenerate(femDiscreteType discreteType)
     // Cut the half of the bridge by symmetry
     cutHalfGeometryBySymmetry(theGeometry, bridge);
 
+    // Cut the half of the bridge by symmetry
+    // cutUpperBridge(theGeometry, bridge);
+
     geoSetSizeCallback(geoSize);
     gmshModelOccSynchronize(&ierr);
 
@@ -710,6 +713,16 @@ void createBoundaryConditions(femProblem *theProblem)
         double value2;
     } domainBoundaryMapping_t;
 
+    double length_camion = 16.5;
+    double width_camion = 2.55;
+    int nb_camion = 100;
+    double mass_camion = 32000.0;
+    int nb_pedestrian = 1;
+    double mass_pedestrian = 70.0;
+
+    double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
+    double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
+
     domainBoundaryMapping_t mapping[] = {
         {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
         {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
@@ -717,21 +730,21 @@ void createBoundaryConditions(femProblem *theProblem)
         {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
         {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
         {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
-        {"SUB ROADWAY U 1", NEUMANN_Y, -47e4, NAN},
-        {"SUB ROADWAY U 2", NEUMANN_Y, -46e4, NAN},
-        {"SUB ROADWAY U 3", NEUMANN_Y, -5e4, NAN},
-        {"SUB ROADWAY U 4", NEUMANN_Y, -44e4, NAN},
-        {"SUB ROADWAY U 5", NEUMANN_Y, -43e4, NAN},
-        {"SUB ROADWAY U 6", NEUMANN_Y, -42e4, NAN},
-        {"SUB ROADWAY U 7", NEUMANN_Y, -41e4, NAN},
-        {"SUB ROADWAY U 8", NEUMANN_Y, -4e4, NAN},
+        {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+        {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
         {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
         {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
         {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
         {"SUB ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
         {"SUB ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
         {"ROADWAY L", DIRICHLET_XY, 0.0, 0.0},
-        {"ROADWAY R", DIRICHLET_XY, 0.0, 0.0},
+        {"ROADWAY R", DIRICHLET_X, 0.0, NAN},
         {"WINDOW D 1", NEUMANN_X, 0.0, NAN},
         {"WINDOW L 1", NEUMANN_Y, 0.0, NAN},
         {"WINDOW R 1", NEUMANN_Y, 0.0, NAN},
@@ -794,51 +807,51 @@ void createBoundaryConditions(femProblem *theProblem)
         {"STAYCABLES R D 7", DIRICHLET_T, 0.0, NAN},
         {"STAYCABLES R D 8", DIRICHLET_T, 0.0, NAN},
         {"STAYCABLES R D 9", DIRICHLET_T, 0.0, NAN},
-        {"PYLON 1 L 1", NEUMANN_X, 0.0, NAN},
-        {"PYLON 1 L 2", NEUMANN_X, 0.0, NAN},
-        {"PYLON 1 L 3", NEUMANN_X, 0.0, NAN},
-        {"PYLON 1 L 4", NEUMANN_X, 0.0, NAN},
-        {"PYLON 1 L 5", NEUMANN_X, 0.0, NAN},
+        // {"PYLON 1 L 1", NEUMANN_X, windForce, NAN},
+        // {"PYLON 1 L 2", NEUMANN_X, windForce, NAN},
+        // {"PYLON 1 L 3", NEUMANN_X, windForce, NAN},
+        // {"PYLON 1 L 4", NEUMANN_X, windForce, NAN},
+        // {"PYLON 1 L 5", NEUMANN_X, windForce, NAN},
         {"PYLON 1 R 1", NEUMANN_X, 0.0, NAN},
         {"PYLON 1 R 2", NEUMANN_X, 0.0, NAN},
         {"PYLON 1 R 3", NEUMANN_X, 0.0, NAN},
         {"PYLON 1 R 4", NEUMANN_X, 0.0, NAN},
         {"PYLON 1 R 5", NEUMANN_X, 0.0, NAN},
-        {"PYLON 2 L 1", NEUMANN_X, 0.0, NAN},
-        {"PYLON 2 L 2", NEUMANN_X, 0.0, NAN},
-        {"PYLON 2 L 3", NEUMANN_X, 0.0, NAN},
-        {"PYLON 2 L 4", NEUMANN_X, 0.0, NAN},
+        // {"PYLON 2 L 1", NEUMANN_X, windForce, NAN},
+        // {"PYLON 2 L 2", NEUMANN_X, windForce, NAN},
+        // {"PYLON 2 L 3", NEUMANN_X, windForce, NAN},
+        // {"PYLON 2 L 4", NEUMANN_X, windForce, NAN},
         {"PYLON 2 R 1", NEUMANN_X, 0.0, NAN},
         {"PYLON 2 R 2", NEUMANN_X, 0.0, NAN},
         {"PYLON 2 R 3", NEUMANN_X, 0.0, NAN},
         {"PYLON 2 R 4", NEUMANN_X, 0.0, NAN},
-        {"PYLON 3 L 1", NEUMANN_X, 0.0, NAN},
+        // {"PYLON 3 L 1", NEUMANN_X, windForce, NAN},
         {"PYLON 3 R 1", NEUMANN_X, 0.0, NAN},
         {"PYLON 1 U L", NEUMANN_X, 0.0, NAN},
         {"PYLON 1 U R", NEUMANN_X, 0.0, NAN},
         {"PYLON 2 U L", NEUMANN_X, 0.0, NAN},
         {"PYLON 2 U R", NEUMANN_X, 0.0, NAN},
-        {"TOPBALL 1", NEUMANN_X, 0.0, NAN},
-        {"TOPBALL 2", NEUMANN_X, 0.0, NAN},
-        {"ROADWAY U 1", NEUMANN_Y, -39e4, NAN},
-        {"ROADWAY U 2", NEUMANN_Y, -4e4, NAN},
-        {"ROADWAY U 3", NEUMANN_Y, -39e4, NAN},
-        {"ROADWAY U 4", NEUMANN_Y, -35e4, NAN},
-        {"ROADWAY U 5", NEUMANN_Y, -35e4, NAN},
-        {"ROADWAY U 6", NEUMANN_Y, -39e4, NAN},
-        {"ROADWAY U 7", NEUMANN_Y, -38e4, NAN},
-        {"ROADWAY U 8", NEUMANN_Y, -39e4, NAN},
-        {"ROADWAY U 9", NEUMANN_Y, -4e4, NAN},
-        {"ROADWAY U 10", NEUMANN_Y, -4e4, NAN},
-        {"ROADWAY U 11", NEUMANN_Y, -44e4, NAN},
-        {"ROADWAY U 13", NEUMANN_Y, -42e4, NAN},
-        {"ROADWAY U 14", NEUMANN_Y, -44e4, NAN},
-        {"ROADWAY U 15", NEUMANN_Y, -39e4, NAN},
-        {"ROADWAY U 16", NEUMANN_Y, -4e4, NAN},
-        {"ROADWAY U 17", NEUMANN_Y, -4e4, NAN},
-        {"ROADWAY U 18", NEUMANN_Y, -39e4, NAN},
-        {"ROADWAY U 19", NEUMANN_Y, -35e4, NAN},
-        {"ROADWAY U 20", NEUMANN_Y, -4e4, NAN}
+        {"TOPBALL 1", DIRICHLET_XY, 0.0, 0.0},
+        {"TOPBALL 2", DIRICHLET_XY, 0.0, 0.0},
+        {"ROADWAY U 1", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 2", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 3", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 4", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 5", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 6", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 7", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 8", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 9", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 10", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 11", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 13", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 14", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 15", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 16", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 17", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 18", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 19", NEUMANN_Y, -weightCamionDensityBridge, NAN},
+        {"ROADWAY U 20", NEUMANN_Y, -weightCamionDensityBridge, NAN}
     };
 
     const int NB_DOMAINS = sizeof(mapping) / sizeof(mapping[0]);
@@ -1047,12 +1060,11 @@ double geoSizeBridge(double x, double y)
 
 double geoSize(double x, double y)
 {
-    // return 10.0; // 3.84 BUG
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
 
-    double factor_size = 0.085;
+    double factor_size = 3.0;
     if (x > 0) { return factor_size * h_max; }
 
     if (y < theGeometry->heightPillars)                                       { return factor_size * geoSizePillars(x, y); }
@@ -1068,7 +1080,7 @@ double geoSize(double x, double y)
 
 double geoSizeExample(double x, double y)
 {
-    return 0.12;
+    return 1.0;
     femGeometry *theGeometry = geoGetGeometry();
     return theGeometry->defaultSize * (1.0 - 0.5 * x);
 }

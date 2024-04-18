@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     {
         double E_example = 211.e9;
         double nu_example = 0.3;
-        double rho_example = 7.85e3;
+        double rho_example = 7.85e1;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase, discretType);
         // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
         // femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         // double E = theProblem->E;
         double w = 1e7 / theGeometry->LxPlate; // 1250 kN/m
 
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
+        // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
 
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");

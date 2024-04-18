@@ -118,6 +118,6 @@ axes[1].set_yscale('log')
 axes[1].set_xscale('log')
 axes[1].legend(loc='upper left', fontsize='small')
 
-plt.tight_layout()  # Pour éviter que les labels se chevauchent
-plt.savefig('../../Processing/data/solver_plot.pdf')
+plt.tight_layout()
+plt.savefig('../../Processing/data/solver_plot.pdf', bbox_inches='tight')
 plt.show()
