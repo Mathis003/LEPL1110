@@ -96,6 +96,21 @@ int main(int argc, char *argv[])
             int size = theProblem->solver->size;
             int band = (theProblem->solver->type == FEM_FULL) ? size : ((femBandSystem *)(theProblem->solver->solver))->band;
             printf("Size / Band = %d / %d = %f\n", size, band,(double) size/band);
+
+            double hMax = femMax(theSoluce, 2 * nNodes);
+            double E = theProblem->E;
+            double w = 1e3;
+            double L = 8.0;
+            double l = 1.0;
+            double I = l * l * l * l / 12.0;
+            printf("E = %.64f\n", E);
+            printf("w = %.64f\n", w);
+            printf("L = %.64f\n", L);
+            printf("I = %.64f\n", I);
+            double theorical_hMax = - w * L * L * L * L / (8 * E * I);
+            printf("hMax = %.64f\n", hMax);
+            printf("Theorical hMax = %.64f\n", theorical_hMax);
+            printf("Error = %.64f\n", hMax - theorical_hMax);
         }
 
         if (exampleUsage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV_example.txt"); }

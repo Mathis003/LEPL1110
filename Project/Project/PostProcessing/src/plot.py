@@ -142,7 +142,7 @@ if __name__ == "__main__":
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
         plt.show()
-        plt.savefig("../../Processing/data/plot.png")
+        plt.savefig("../../Processing/data/plot.pdf")
 
     else:
         print("Generating animation...")

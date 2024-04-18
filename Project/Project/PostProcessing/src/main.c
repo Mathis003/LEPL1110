@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+    // femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
 
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 

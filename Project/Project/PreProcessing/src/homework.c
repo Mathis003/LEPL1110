@@ -1047,7 +1047,7 @@ double geoSizeBridge(double x, double y)
 
 double geoSize(double x, double y)
 {
-    return 10.0; // 3.84 BUG
+    // return 10.0; // 3.84 BUG
     femGeometry *theGeometry = geoGetGeometry();
     double h_max = theGeometry->defaultSize;
     double h_stayCables_min = h_max / 15;
@@ -1068,8 +1068,9 @@ double geoSize(double x, double y)
 
 double geoSizeExample(double x, double y)
 {
-  femGeometry *theGeometry = geoGetGeometry();
-  return theGeometry->defaultSize * (1.0 - 0.5 * x);
+    return 0.06;
+    femGeometry *theGeometry = geoGetGeometry();
+    return theGeometry->defaultSize * (1.0 - 0.5 * x);
 }
 
 void geoMeshGenerateExample(femDiscreteType discreteType)
@@ -1088,8 +1089,59 @@ void geoMeshGenerateExample(femDiscreteType discreteType)
     1 ------------------ 2
     */
 
+    // femGeometry *theGeometry = geoGetGeometry();
+    // double Lx = 1.0;
+    // double Ly = 1.0;
+    // theGeometry->LxPlate = Lx;
+    // theGeometry->LyPlate = Ly;
+    // theGeometry->defaultSize = Lx * 0.05;
+    // theGeometry->geoSize = geoSizeExample;
+
+    // geoSetSizeCallback(theGeometry->geoSize);
+
+    // double w = theGeometry->LxPlate;
+    // double h = theGeometry->LyPlate;
+
+    // int ierr;
+    // double r = w / 4;
+    // int idRect = createRectangle(0.0, 0.0, w, h);
+    // int idDisk = createDisk(w / 2.0, h / 2.0, r, r);
+    // int idSlit = createRectangle(w / 2.0, h / 2.0 - r, w, 2.0 * r);
+    // int rect[] = {2, idRect};
+    // int disk[] = {2, idDisk};
+    // int slit[] = {2, idSlit};
+
+    // cutElement(rect, disk);
+    // cutElement(rect, slit);
+
+    // // gmshModelOccRotate(rect, 2, w / 2, h / 2, 0.0, 0.0, 0.0, 1.0, 90.0, &ierr);
+
+    // gmshModelOccSynchronize(&ierr);
+
+    // if (theGeometry->elementType == FEM_QUAD)
+    // {
+    //     // Generate quadratic elements
+    //     if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); }
+    //     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+    //     gmshOptionSetNumber("Mesh.RecombineAll", 1, &ierr);
+    //     gmshOptionSetNumber("Mesh.Algorithm", 8, &ierr);
+    //     gmshOptionSetNumber("Mesh.RecombinationAlgorithm", 1.0, &ierr);
+    //     gmshModelGeoMeshSetRecombine(2, 1, 45, &ierr);
+    //     gmshModelMeshGenerate(2, &ierr);
+    // }
+
+    // if (theGeometry->elementType == FEM_TRIANGLE)
+    // {
+    //     // Generate quadratic elements
+    //     if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { gmshOptionSetNumber("Mesh.ElementOrder", 2, &ierr); }
+    //     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
+    //     gmshModelMeshGenerate(2, &ierr);
+    // }
+    
+    // return;
+
     femGeometry *theGeometry = geoGetGeometry();
-    double Lx = 1.0;
+    double Lx = 8.0;
     double Ly = 1.0;
     theGeometry->LxPlate = Lx;
     theGeometry->LyPlate = Ly;
@@ -1104,16 +1156,6 @@ void geoMeshGenerateExample(femDiscreteType discreteType)
     int ierr;
     double r = w / 4;
     int idRect = createRectangle(0.0, 0.0, w, h);
-    int idDisk = createDisk(w / 2.0, h / 2.0, r, r);
-    int idSlit = createRectangle(w / 2.0, h / 2.0 - r, w, 2.0 * r);
-    int rect[] = {2, idRect};
-    int disk[] = {2, idDisk};
-    int slit[] = {2, idSlit};
-
-    cutElement(rect, disk);
-    cutElement(rect, slit);
-
-    // gmshModelOccRotate(rect, 2, w / 2, h / 2, 0.0, 0.0, 0.0, 1.0, 90.0, &ierr);
 
     gmshModelOccSynchronize(&ierr);
 

@@ -58,9 +58,15 @@ int main(int argc, char *argv[])
     {
         geoMeshGenerateExample(discretType);
         geoMeshImport(discretType);
-        geoSetDomainName(0, "Symmetry");
-        geoSetDomainName(7, "Bottom");
-        geoSetDomainName(1, "Top");
+        // geoSetDomainName(0, "Symmetry");
+        // geoSetDomainName(7, "Bottom");
+        // geoSetDomainName(1, "Top");
+
+        geoSetDomainName(0, "Bottom");
+        geoSetDomainName(1, "Right");
+        geoSetDomainName(2, "Top");
+        geoSetDomainName(3, "Left");
+
         geoMeshWrite("../../Processing/data/mesh_example.txt", discretType);
     }
     else
@@ -77,7 +83,7 @@ int main(int argc, char *argv[])
 
     femProblem *theProblem;
     double gx = 0.0;
-    double gy = -9.81;
+    double gy = 0.0;
 
     if (exampleUsage == TRUE)
     {
@@ -85,9 +91,17 @@ int main(int argc, char *argv[])
         double nu_example = 0.3;
         double rho_example = 7.85e3;
         theProblem = femElasticityCreate(theGeometry, E_example, nu_example, rho_example, gx, gy, theCase, discretType);
-        femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e3, NAN);
+        // femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
+        // femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
+        // femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e3, NAN);
+
+        femElasticityAddBoundaryCondition(theProblem, "Left", DIRICHLET_XY, 0.0, 0.0);
+        // double I = 0.0;
+        // double L = theGeometry->LxPlate;
+        // double E = theProblem->E;
+        double w = 1e3;
+
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -w, NAN);
 
         femElasticityPrint(theProblem);
         femElasticityWrite(theProblem, "../../Processing/data/problem_example.txt");
