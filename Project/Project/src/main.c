@@ -77,8 +77,8 @@ int main(int argc, char *argv[])
     femProblem *theProblem;
     if (exampleUForm_Usage == TRUE)
     {
-        geoMeshRead("../../Rapport/data/mesh_example.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType, TRUE);
+        geoMeshRead("../../Rapport/data/miguel_mesh.txt", discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/miguel_pb.txt", renumType, discretType, TRUE);
     }
     else if (exampleBeam_Usage == TRUE)
     {
