@@ -65,7 +65,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
     }
 }
 
-void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
+void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR, int currAnim)
 {
     femSolver *theSolver     = theProblem->solver;
     femIntegration *theRule  = theProblem->ruleEdge;
@@ -76,9 +76,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
 
     int nLocal  = theSpace->n;
     int *number = theNodes->number;
-
-    printf("nLocal = %d\n", nLocal);
-
+    
     double xLoc, x[nLocal], y[nLocal], phi[nLocal], tx, ty, nx, ny, norm_n, norm_t;
     int iBnd, iElem, iInteg, iEdge, i, j, map[nLocal], mapU[nLocal];
 
@@ -114,9 +112,11 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
             double length = sqrt(dx * dx + dy * dy);
             double jac = length / 2.0;
 
-            //Adapt the force (for animation)
-            if(femIsPositionAnimated(0)){
-                value = adaptForceWithPosition(value, 100, 50, x[0]); // !!! we need to modify the number of frame if changed in main.c !
+            double finalValue = value;
+            if (femIsPositionAnimated(0))
+            {
+                finalValue = adaptForceWithPosition(value, x[0], currAnim, 50);
+                finalValue += adaptForceWithPositionReversed(value, x[0], currAnim, 50);
             }
 
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
@@ -135,7 +135,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                 {
                     if (type == NEUMANN_X || type == NEUMANN_Y)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * weightedJac; }
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * finalValue * weightedJac; }
                     }
                     else if (type == NEUMANN_N)
                     {
@@ -145,8 +145,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         nx /= norm_n; ny /= norm_n;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value * nx * weightedJac;
-                            B[mapU[i] + 1] += phi[i] * value * ny * weightedJac;
+                            B[mapU[i]] += phi[i] * finalValue * nx * weightedJac;
+                            B[mapU[i] + 1] += phi[i] * finalValue * ny * weightedJac;
                         }
                     }
                     else if (type == NEUMANN_T)
@@ -156,8 +156,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         tx /= norm_t; ty /= norm_t;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value * tx * weightedJac;
-                            B[mapU[i] + 1] += phi[i] * value * ty * weightedJac;
+                            B[mapU[i]] += phi[i] * finalValue * tx * weightedJac;
+                            B[mapU[i] + 1] += phi[i] * finalValue * ty * weightedJac;
                         }
                     }
                 }
@@ -165,7 +165,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                 {
                     if (type == NEUMANN_X || type == NEUMANN_Y)
                     {
-                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * value * weightedJac * xLoc; }
+                        for (i = 0; i < theSpace->n; i++) { B[mapU[i]] += phi[i] * finalValue * weightedJac * xLoc; }
                     }
                     else if (type == NEUMANN_N)
                     {
@@ -175,8 +175,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         nx /= norm_n; ny /= norm_n;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value * nx * weightedJac * xLoc;
-                            B[mapU[i] + 1] += phi[i] * value * ny * weightedJac * xLoc;
+                            B[mapU[i]] += phi[i] * finalValue * nx * weightedJac * xLoc;
+                            B[mapU[i] + 1] += phi[i] * finalValue * ny * weightedJac * xLoc;
                         }
                     }
                     else if (type == NEUMANN_T)
@@ -186,8 +186,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                         tx /= norm_t; ty /= norm_t;
                         for (i = 0; i < theSpace->n; i++)
                         {
-                            B[mapU[i]] += phi[i] * value * tx * weightedJac * xLoc;
-                            B[mapU[i] + 1] += phi[i] * value * ty * weightedJac * xLoc;
+                            B[mapU[i]] += phi[i] * finalValue * tx * weightedJac * xLoc;
+                            B[mapU[i] + 1] += phi[i] * finalValue * ty * weightedJac * xLoc;
                         }
                     }
                 }
@@ -267,12 +267,12 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
     }
 }
 
-double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR)
+double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR, int currAnim)
 {
     femSolver *theSolver = theProblem->solver;
     femSolverInit(theSolver);
     femElasticityAssembleElements(theProblem);
-    femElasticityAssembleNeumann(theProblem, FACTOR);
+    femElasticityAssembleNeumann(theProblem, FACTOR, currAnim);
     femElasticityApplyDirichlet(theProblem, FACTOR);
 
     double *soluce = femSolverEliminate(theSolver);

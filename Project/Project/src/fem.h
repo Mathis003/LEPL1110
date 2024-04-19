@@ -284,7 +284,7 @@ void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 void femElasticityAssembleElements(femProblem *theProblem);
 void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR);
-double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR);
+double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR, int currAnim);
 double *femElasticityForces(femProblem *theProblem);
 
 void femElasticityPrint(femProblem *theProblem);
@@ -330,6 +330,7 @@ void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue 
 Queue *rcm(femMesh *theMesh, int nNodes);
 
 int femIsPositionAnimated(int getOrSet);
-double adaptForceWithPosition(double force, double factor, int nAnim, double node_position);
+double adaptForceWithPosition(double force, double node_position, int currAnim, int nTotalAnim);
+double adaptForceWithPositionReversed(double force, double node_position, int currAnim, int nTotalAnim);
 
 #endif // _FEM_H_

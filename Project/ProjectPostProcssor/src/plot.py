@@ -90,9 +90,10 @@ def generate_frame(i):
     else:
         nameSolution = "../../Rapport/data/animations/UV_simplified_{}.txt".format(i + 1)
 
+    print(nameSolution)
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
-    factor = 1e4
+    factor = 1e3
 
     plt.clf()
     cb = mesh.plotfield(uv_norm, uv * factor, cmap="turbo")
@@ -147,7 +148,7 @@ if __name__ == "__main__":
         print("Generating animation...")
         NB_IMAGES = 50
         fig, ax = plt.subplots()
-        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=2)
+        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
         if exampleUse: plt.title('Elastic Deformation')
         else : plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
         plt.show()

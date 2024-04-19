@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
             printf("Solving the system...\n"); 
             start = clock();    
         }
-        double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0);
+        double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0, NAN);
         int nNodes = theGeometry->theNodes->nNodes;
 
         if( showRunTime == TRUE) { printf("Run time: %f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC); }
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        if(animationPosition == TRUE)
+        if (animationPosition == TRUE)
         {
             femIsPositionAnimated(1); // We activate the animation position mode (yeah it's ugly)
         }
@@ -144,11 +144,9 @@ int main(int argc, char *argv[])
 
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
-            if(animationPosition == TRUE){
-                theSoluce = femElasticitySolve(theProblem, renumType, 60);
-            } else {
-                theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i);
-            }
+            if (animationPosition == TRUE) { theSoluce = femElasticitySolve(theProblem, renumType, 60, i); }
+            else                           { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, NAN); }
+
             nNodes = theGeometry->theNodes->nNodes;
             if (exampleUForm_Usage == TRUE)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
             else if (exampleBeam_Usage == TRUE) { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
