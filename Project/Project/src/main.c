@@ -19,7 +19,7 @@
 femElementType elementType  = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
 femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
 femSolverType typeSolver    = FEM_BAND;  // FEM_FULL or FEM_BAND
-femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
+femRenumType renumType      = FEM_NO;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
 
 
 /* FINAL PATH */
@@ -77,23 +77,27 @@ int main(int argc, char *argv[])
     femProblem *theProblem;
     if (exampleUForm_Usage == TRUE)
     {
-        geoMeshRead("../../Rapport/data/miguel_mesh.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/miguel_pb.txt", renumType, discretType, TRUE);
+        geoMeshRead("../../Rapport/data/miguel_mesh.txt", discretType); // ../../Rapport/data/mesh_example.txt
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/miguel_pb.txt", renumType, discretType);
     }
     else if (exampleBeam_Usage == TRUE)
     {
         geoMeshRead("../../Rapport/data/mesh_beam.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_beam.txt", renumType, discretType, TRUE);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_beam.txt", renumType, discretType);
     }
     else if (bridgeSimplified == TRUE)
     {
         geoMeshRead("../../Rapport/data/mesh_simplified.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_simplified.txt", renumType, discretType, TRUE);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_simplified.txt", renumType, discretType);
     }
     else
     {
         geoMeshRead("../data/mesh.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType, TRUE);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType);
     }
     
     femElasticityPrint(theProblem);
@@ -106,6 +110,7 @@ int main(int argc, char *argv[])
             printf("Solving the system...\n"); 
             start = clock();    
         }
+
         double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0);
         int nNodes = theGeometry->theNodes->nNodes;
 
