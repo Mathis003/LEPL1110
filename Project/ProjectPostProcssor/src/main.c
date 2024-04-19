@@ -12,9 +12,10 @@
 
 #include <getopt.h>
 
-#include "fem.h"
-#include "glfem.h"
+#include "../../Project/src/fem.h"
 #include "../../Project/src/homework.c"
+
+#include "../../ProjectPreProcessor/src/glfem.h"
 
 femElementType elementType  = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
 femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
@@ -464,10 +465,12 @@ int main(int argc, char *argv[])
     // Deal with the options arguments
     int opt;
     int resultVisualizer = TRUE;
-    int exampleUsage     = FALSE;
-    int animation        = FALSE;
-    int plot             = TRUE;
-    while ((opt = getopt(argc, argv, "areph")) != -1)
+    int example_UForm = FALSE;
+    int example_beam  = FALSE;
+    int example_simplified = FALSE;
+    int animation = FALSE;
+    int plot      = TRUE;
+    while ((opt = getopt(argc, argv, "arubsph")) != -1)
     {
         switch (opt)
         {
@@ -476,14 +479,20 @@ int main(int argc, char *argv[])
             case 'r':
                 resultVisualizer = FALSE;
                 break;
-            case 'e':
-                exampleUsage = TRUE;
+            case 'u':
+                example_UForm = TRUE;
+                break;
+            case 'b':
+                example_beam = TRUE;
+                break;
+            case 's':
+                example_simplified = TRUE;
                 break;
             case 'p':
                 plot = FALSE;
                 break;
             case 'h':
-                printf("Usage: %s [-r] [-e] [-h]\n", argv[0]);
+                printf("Usage: %s [-r] [-u] [-b] [-s] [-h]\n", argv[0]);
                 printf("Options:\n");
                 printf("  -r : Disable the result visualizer\n");
                 printf("  -e : Start the program with the example mesh\n");
@@ -491,7 +500,7 @@ int main(int argc, char *argv[])
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-r] [-e] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-r] [-u] [-b] [-s] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -515,19 +524,41 @@ int main(int argc, char *argv[])
     double *theSoluce;
     femProblem *theProblem;
 
-    if (exampleUsage == TRUE)
+    if (example_UForm == TRUE)
     {
         geoMeshRead("../../Rapport/data/mesh_example.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType, TRUE);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_example.txt");
         femElasticityPrint(theProblem);
     }
+    else if (example_beam)
+    {
+        geoMeshRead("../../Rapport/data/mesh_beam.txt", discretType);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_beam.txt", renumType, discretType);
+        theSoluce = theProblem->soluce;
+        n = theGeometry->theNodes->nNodes;
+        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_beam.txt");
+        femElasticityPrint(theProblem);
+    }
+    else if (example_simplified)
+    {
+        geoMeshRead("../../Rapport/data/mesh_simplified.txt", discretType);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_simplified.txt", renumType, discretType);
+        theSoluce = theProblem->soluce;
+        n = theGeometry->theNodes->nNodes;
+        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_simplified.txt");
+        femElasticityPrint(theProblem);
+    }
     else
     {
         geoMeshRead("../../Rapport/data/mesh.txt", discretType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType, TRUE);
+        femMeshRenumber(theGeometry->theElements, renumType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV.txt");
@@ -554,23 +585,27 @@ int main(int argc, char *argv[])
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+    // femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
 
-    double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
+    // double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
     
-    FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
-    if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
-    fclose(file);
-    
+    // FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
+    // if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    // for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
+    // fclose(file);
+
+    double *vonMises = NULL;
+
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 
     /*     Creation du champ de la norme du deplacement */
     /****************************************************/
 
     double deformationFactor;
-    if (exampleUsage == TRUE) { deformationFactor = 1e5; } // To change the deformation factor
-    else                      { deformationFactor = 1e4; } // To change the deformation factor
+    if (example_UForm == TRUE)           { deformationFactor = 1e5; } // To change the deformation factor
+    else if (example_beam == TRUE)       { deformationFactor = 1e5; } // To change the deformation factor
+    else if (example_simplified == TRUE) { deformationFactor = 1e5; } // To change the deformation factor
+    else                                 { deformationFactor = 1e4; } // To change the deformation factor
 
     double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
     if (normDisplacement == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
@@ -616,8 +651,9 @@ int main(int argc, char *argv[])
     if (plot == TRUE)
     {
         char command[100] = "python3 ../src/plot.py";
-        if (exampleUsage == TRUE) { strcat(command, " -e"); }
-        if (animation == TRUE)    { strcat(command, " -a"); }
+        // TODO Add the options to the command
+        if (example_UForm == TRUE) { strcat(command, " -e"); }
+        if (animation == TRUE)     { strcat(command, " -a"); }
         printf(" ==== Command : %s \n", command);
         system(command);
     }

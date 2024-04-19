@@ -10,7 +10,8 @@
 *
 */
 
-#include "fem.h"
+#include "../../Project/src/fem.h"
+#include "gmsh.h"
 #include "glfem.h"
 
 #include <getopt.h>
@@ -18,7 +19,6 @@
 femElementType elementType  = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
 femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
 femElasticCase theCase      = PLANAR_STRESS; // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
-femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
 
 int main(int argc, char *argv[])
 {

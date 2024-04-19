@@ -1,4 +1,5 @@
-#include "fem.h"
+#include "../../Project/src/fem.h"
+#include "gmsh.h"
 
 /**********************************/
 /********* Gmsh functions *********/
