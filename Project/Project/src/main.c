@@ -77,9 +77,9 @@ int main(int argc, char *argv[])
     femProblem *theProblem;
     if (exampleUForm_Usage == TRUE)
     {
-        geoMeshRead("../../Rapport/data/mesh_example.txt", discretType);
+        geoMeshRead("../../Rapport/data_example/mesh.txt", discretType);
         femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data_example/problem_SideTop_NeumannT.txt", renumType, discretType);
     }
     else if (exampleBeam_Usage == TRUE)
     {
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 
         if( showRunTime == TRUE) { printf("Run time: %f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC); }
 
-        if (exampleUForm_Usage == TRUE)     { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_example.txt"); }
+        if (exampleUForm_Usage == TRUE)     { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_TEST.txt"); }
         else if (exampleBeam_Usage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_beam.txt"); }
         else if (bridgeSimplified == TRUE)  { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_simplified.txt"); }
         else                                { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); } // ../data/UV.txt

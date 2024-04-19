@@ -526,12 +526,12 @@ int main(int argc, char *argv[])
 
     if (example_UForm == TRUE)
     {
-        geoMeshRead("../../Rapport/data/mesh_example.txt", discretType);
+        geoMeshRead("../../Rapport/data_example/mesh.txt", discretType);
         femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data_example/problem_SideTop_NeumannT.txt", renumType, discretType);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_example.txt");
+        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_TEST.txt");
         femElasticityPrint(theProblem);
     }
     else if (example_beam)

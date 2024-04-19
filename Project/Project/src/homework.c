@@ -77,6 +77,8 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
     int nLocal  = theSpace->n;
     int *number = theNodes->number;
 
+    printf("nLocal = %d\n", nLocal);
+
     double xLoc, x[nLocal], y[nLocal], phi[nLocal], tx, ty, nx, ny, norm_n, norm_t;
     int iBnd, iElem, iInteg, iEdge, i, j, map[nLocal], mapU[nLocal];
 
@@ -122,7 +124,7 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
                 femDiscretePhi(theSpace, xsi, phi);
 
                 xLoc = 0.0;
-                for (j = 0; i < theSpace->n; i++) { xLoc += phi[j] * x[j]; }
+                for (i = 0; i < theSpace->n; i++) { xLoc += phi[i] * x[i]; }
 
                 if (theProblem->planarStrainStress == PLANAR_STRAIN || theProblem->planarStrainStress == PLANAR_STRESS)
                 {

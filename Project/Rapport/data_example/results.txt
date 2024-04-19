@@ -1,0 +1,15 @@
+Results on basic quad mesh
+
+problem_GravityOnly				:3.0681682e-06
+problem_GravityOnly_Axisym			:3.4447363e-06
+problem_GravityOnly_Bottom_DirichletNT		:3.0681682e-06
+problem_GravityOnly_DirichletN_Symmetry		:3.0681682e-06
+problem_GravityOnly_DirichletN_Symmetry_Axisym	:3.4447363e-06
+problem_SideTop_DirichletN			:2.0038576e-06
+problem_SideTop_DirichletT			:5.5927315e-07
+problem_SideTop_DirichletX			:2.0038576e-06
+problem_SideTop_DirichletY			:5.5927315e-07
+problem_Top_NeumannN				:3.8621310e-06
+problem_Top_NeumannN_Axisym			:4.3327508e-06
+problem_Top_NeumannY				:3.8621310e-06
+problem_Top_NeumannY_Axisym			:4.3327508e-06
