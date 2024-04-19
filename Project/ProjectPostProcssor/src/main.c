@@ -518,8 +518,7 @@ int main(int argc, char *argv[])
     if (exampleUsage == TRUE)
     {
         geoMeshRead("../../Rapport/data/mesh_example.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_example.txt", renumType, discretType, TRUE);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_example.txt");
@@ -528,8 +527,7 @@ int main(int argc, char *argv[])
     else
     {
         geoMeshRead("../../Rapport/data/mesh.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType, TRUE);
         theSoluce = theProblem->soluce;
         n = theGeometry->theNodes->nNodes;
         femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV.txt");
@@ -556,16 +554,14 @@ int main(int argc, char *argv[])
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    // femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
 
-    // double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
+    double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
     
-    // FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
-    // if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    // for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
-    // fclose(file);
-    
-    double *vonMises = NULL;
+    FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
+    if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
+    fclose(file);
     
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 

@@ -1233,7 +1233,7 @@ void femElasticityWrite(femProblem *theProblem, const char *filename)
     fclose(file);
 }
 
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType)
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType, int activateRenum)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -1278,7 +1278,7 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
     else if (typeSolver == FEM_BAND)
     {
-        // Renumbering already done in the Project main before calling this function
+        if (activateRenum) { femMeshRenumber(theGeometry->theElements, renumType); }
         int band = femMeshComputeBand(theGeometry->theElements);
         theProblem->solver = femSolverBandCreate(size, band);
     }
@@ -1556,7 +1556,7 @@ void geoMeshWrite(const char *filename, femDiscreteType dType)
 
     femNodes *theNodes = theGeometry.theNodes;
     fprintf(file, "Number of nodes %d \n", theNodes->nNodes);
-    for (int i = 0; i < theNodes->nNodes; i++) { fprintf(file, "%6d : %14.7e %14.7e \n", i, theNodes->X[i], theNodes->Y[i]); }
+    for (int i = 0; i < theNodes->nNodes; i++) { fprintf(file, "%6d : %6d %14.7e %14.7e \n", i, theNodes->number[i], theNodes->X[i], theNodes->Y[i]); }
 
     femMesh *theEdges = theGeometry.theEdges;
     fprintf(file, "Number of edges %d \n", theEdges->nElem);
@@ -1616,8 +1616,8 @@ void geoMeshWrite(const char *filename, femDiscreteType dType)
         {
             fprintf(file, "%6d", theDomain->elem[i]);
             if ((i + 1) != theDomain->nElem && (i + 1) % 10 == 0)  { fprintf(file, "\n"); }
+            fprintf(file, "\n");
         }
-        fprintf(file, "\n");
     }
     fclose(file);
 }

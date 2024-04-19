@@ -265,26 +265,33 @@ void femDiscreteDphi(femDiscrete *mySpace, double xsi, double *dphidxsi);
 /* Geometry */
 /************/
 
-int geoGetDomain(char *name);
 femGeometry *geoGetGeometry(void);
-void geoMeshRead(const char *filename, femDiscreteType dType);
+double geoSize(double x, double y);
 void geoFree(void);
+void geoSetSizeCallback(double (*geoSize)(double x, double y));
+void geoMeshPrint(void);
+void geoMeshWrite(const char *filename, femDiscreteType dType);
+void geoMeshRead(const char *filename, femDiscreteType dType);
+void geoSetDomainName(int iDomain, char *name);
+int geoGetDomain(char *name);
 
 /************************/
 /* Elasticity functions */
 /************************/
 
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType);
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femDiscreteType dType);
+void femElasticityFree(femProblem *theProblem);
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2);
 void femElasticityAssembleElements(femProblem *theProblem);
-void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR);
 void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR);
 double *femElasticitySolve(femProblem *theProblem, femRenumType renumType, double FACTOR);
 double *femElasticityForces(femProblem *theProblem);
-void femElasticitySigma(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY);
-double *femElasticityVonMises(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY, int nNodes);
-void femElasticityFree(femProblem *theProblem);
+
 void femElasticityPrint(femProblem *theProblem);
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType, int activateRenum);
+void femElasticityWrite(femProblem *theProbconst, const char *filename);
+
+void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename);
 int femSolutiondRead(int allocated_size, double *value, const char *filename);
 
 /***********/

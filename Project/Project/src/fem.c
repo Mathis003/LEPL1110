@@ -970,6 +970,64 @@ void femDiscretePrint(femDiscrete *mySpace)
 /******* Elasticity functions *******/
 /************************************/
 
+femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, double rho, double gx, double gy, femElasticCase iCase, femDiscreteType dType)
+{
+    femProblem *theProblem = (femProblem *) malloc(sizeof(femProblem));
+    if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    theProblem->E = E;
+    theProblem->nu = nu;
+    theProblem->gx = gx;
+    theProblem->gy = gy;
+    theProblem->rho = rho;
+
+    if (iCase == PLANAR_STRESS)
+    {
+        theProblem->A = E / (1 - nu * nu);
+        theProblem->B = E * nu / (1 - nu * nu);
+        theProblem->C = E / (2 * (1 + nu));
+    }
+    else if (iCase == PLANAR_STRAIN || iCase == AXISYM)
+    {
+        theProblem->A = E * (1 - nu) / ((1 + nu) * (1 - 2 * nu));
+        theProblem->B = E * nu / ((1 + nu) * (1 - 2 * nu));
+        theProblem->C = E / (2 * (1 + nu));
+    }
+
+    theProblem->planarStrainStress  = iCase;
+    theProblem->nBoundaryConditions = 0;
+    theProblem->conditions = NULL;
+
+    int nNodes = theGeometry->theNodes->nNodes;
+    int size = 2 * nNodes;
+    theProblem->constrainedNodes = (femConstrainedNode *) malloc(nNodes * sizeof(femConstrainedNode));
+    if (theProblem->constrainedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    for (int i = 0; i < nNodes; i++)
+    {
+        theProblem->constrainedNodes[i].type   = UNDEFINED;
+        theProblem->constrainedNodes[i].nx     = NAN;
+        theProblem->constrainedNodes[i].ny     = NAN;
+        theProblem->constrainedNodes[i].value2 = NAN;
+        theProblem->constrainedNodes[i].value2 = NAN;
+    }
+
+    theProblem->geometry = theGeometry;
+    if (theGeometry->theElements->nLocalNode == 3)
+    {
+        theProblem->space = femDiscreteCreate(FEM_TRIANGLE, dType);
+        theProblem->rule  = femIntegrationCreate(3, FEM_TRIANGLE);
+    }
+    else if (theGeometry->theElements->nLocalNode == 4)
+    {
+        theProblem->space = femDiscreteCreate(FEM_QUAD, dType);
+        theProblem->rule  = femIntegrationCreate(4, FEM_QUAD);
+    }
+    theProblem->spaceEdge = femDiscreteCreate(FEM_EDGE, dType);
+    theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
+    theProblem->solver    = femSolverCreate(size);
+
+    return theProblem;
+}
+
 void femElasticityFree(femProblem *theProblem)
 {
     femSolverFree(theProblem->solver);
@@ -986,17 +1044,6 @@ void femElasticityFree(femProblem *theProblem)
     theProblem->constrainedNodes = NULL;
     free(theProblem);
     theProblem = NULL;
-}
-
-int geoGetDomain(char *name)
-{
-    int nDomains = theGeometry.nDomains;
-    for (int iDomain = 0; iDomain < nDomains; iDomain++)
-    {
-        femDomain *theDomain = theGeometry.theDomains[iDomain];
-        if (strncasecmp(name, theDomain->name, MAXNAME) == 0) { return iDomain; }
-    }
-    return -1;
 }
 
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2)
@@ -1146,7 +1193,47 @@ void femElasticityPrint(femProblem *theProblem)
     printf(" ======================================================================================= \n\n");
 }
 
-femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType)
+void femElasticityWrite(femProblem *theProblem, const char *filename)
+{
+    FILE *file = fopen(filename, "w");
+    if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+
+    if (theProblem->planarStrainStress == PLANAR_STRESS)      { fprintf(file, "Type of problem    :  Planar stresses  \n"); }
+    else if (theProblem->planarStrainStress == PLANAR_STRAIN) { fprintf(file, "Type of problem    :  Planar strains \n"); }
+    else if (theProblem->planarStrainStress == AXISYM)        { fprintf(file, "Type of problem    :  Axi-symetric problem \n"); }
+    else                                                      { fprintf(file, "Type of problem    :  Undefined  \n"); }
+
+    fprintf(file, "Young modulus      : %14.7e  \n", theProblem->E);
+    fprintf(file, "Poisson ratio      : %14.7e  \n", theProblem->nu);
+    fprintf(file, "Mass density       : %14.7e  \n", theProblem->rho);
+    fprintf(file, "Gravity-X          : %14.7e  \n", theProblem->gx);
+    fprintf(file, "Gravity-Y          : %14.7e  \n", theProblem->gy);
+
+    for (int i = 0; i < theProblem->nBoundaryConditions; i++)
+    {
+        femBoundaryCondition *theCondition = theProblem->conditions[i];
+        double value1 = theCondition->value1;
+        double value2 = theCondition->value2;
+        fprintf(file, "Boundary condition : ");
+
+        if (theCondition->type == DIRICHLET_X)       { fprintf(file, " Dirichlet-X        = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == DIRICHLET_Y)  { fprintf(file, " Dirichlet-Y        = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == DIRICHLET_XY) { fprintf(file, " Dirichlet-XY       = %14.7e, %14.7e ", value1, value2); }
+        else if (theCondition->type == DIRICHLET_N)  { fprintf(file, " Dirichlet-N        = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == DIRICHLET_T)  { fprintf(file, " Dirichlet-T        = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == DIRICHLET_NT) { fprintf(file, " Dirichlet-NT       = %14.7e, %14.7e ", value1, value2); }
+        else if (theCondition->type == NEUMANN_X)    { fprintf(file, " Neumann-X          = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == NEUMANN_Y)    { fprintf(file, " Neumann-Y          = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == NEUMANN_N)    { fprintf(file, " Neumann-N          = %14.7e, %14.7e ", value1, NAN); }
+        else if (theCondition->type == NEUMANN_T)    { fprintf(file, " Neumann-T          = %14.7e, %14.7e ", value1, NAN); }
+        else                                         { fprintf(file, " Undefined          = %14.7e, %14.7e ", NAN, NAN); }
+    
+        fprintf(file, ": %s\n", theCondition->domain->name);
+    }
+    fclose(file);
+}
+
+femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver, const char *filename, femRenumType renumType, femDiscreteType dType, int activateRenum)
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
@@ -1191,6 +1278,7 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     if (typeSolver == FEM_FULL) { theProblem->solver = femSolverFullCreate(size); }
     else if (typeSolver == FEM_BAND)
     {
+        if (activateRenum) { femMeshRenumber(theGeometry->theElements, renumType); }
         int band = femMeshComputeBand(theGeometry->theElements);
         theProblem->solver = femSolverBandCreate(size, band);
     }
@@ -1256,6 +1344,92 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     return theProblem;
 }
 
+// void femSystemWrite(femSolver *theSolver, const char *filename)
+// {
+//     int size = theSolver->size;
+//     FILE *file = fopen(filename, "w");
+//     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+//     fprintf(file, "Size %d\n", size);
+//     for (int i = 0; i < size; i++)
+//     {
+//         int start = (theSolver->type == FEM_FULL) ? 0 : i;
+//         int end;
+//         if (theSolver->type == FEM_FULL) { end = size; }
+//         else
+//         {
+//             end = i + ((femBandSystem *)(theSolver->solver))->band;
+//             if (end > size) { end = size; }
+//         }
+
+//         for (int j = start; j < end; j++)
+//         {
+//             fprintf(file, "%.18le\t", femSolverGet(theSolver, i, j));
+//         }
+//         fprintf(file, "\n");
+//     }
+//     for (int i = 0; i < size; i++) { fprintf(file, "%.18le\t", femSolverGetB(theSolver, i)); }
+// }
+
+// femSolver *femBandSystemRead(const char *filename)
+// {
+//     FILE *file = fopen(filename, "r");
+//     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+
+//     int size;
+//     ErrorScan(fscanf(file, "Size %d\n", &size));
+    
+//     femGeometry *theGeometry = geoGetGeometry();
+//     int band = femMeshComputeBand(theGeometry->theElements);
+//     femSolver *theSolver = femSolverBandCreate(size, band);
+//     femBandSystem *theSystem = theSolver->solver;
+//     double **A = theSystem->A;
+//     double *B  = theSystem->B;
+
+//     for (int i = 0; i < size; i++)
+//     {
+//         for (int j = i; j < i + band; j++) { fscanf(file, "%le\t", &(A[i][j])); }
+//         fscanf(file, "\n");
+//     }
+//     for (int i = 0; i < size; i++) { fscanf(file, "%le\t", &(B[i])); }
+
+//     fclose(file);
+//     return theSolver;
+// }
+
+// femSolver *femFullSystemRead(const char *filename)
+// {
+//     FILE *file = fopen(filename, "r");
+//     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+
+//     int size;
+//     ErrorScan(fscanf(file, "Size %d\n", &size));
+    
+//     femSolver *theSolver = femSolverFullCreate(size);
+//     femFullSystem *theSystem = theSolver->solver;
+//     double **A = theSystem->A;
+//     double *B  = theSystem->B;
+
+//     for (int i = 0; i < size; i++)
+//     {
+//         for (int j = 0; j < size; j++) { fscanf(file, "%le\t", &(A[i][j])); }
+//         fscanf(file, "\n");
+//     }
+//     for (int i = 0; i < size; i++) { fscanf(file, "%le\t", &(B[i])); }
+
+//     fclose(file);
+//     return theSolver;
+// }
+
+// femSolver *femSolverRead(femSolverType solverType, const char *filename)
+// {
+//     switch (solverType)
+//     {
+//         case FEM_FULL: return femFullSystemRead(filename);
+//         case FEM_BAND: return femBandSystemRead(filename);
+//         default: Error("Unknown solver type"); return NULL;
+//     }
+// }
+
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename)
 {
     FILE *file = fopen(filename, "w");
@@ -1270,12 +1444,35 @@ void femSolutionWrite(int nNodes, int nfields, double *data, const char *filenam
     fclose(file);
 }
 
+int femSolutiondRead(int allocated_size, double *value, const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+    int nNodes, nFields;
+    ErrorScan(fscanf(file, "Size %d,%d\n", &nNodes, &nFields));
+    if (nNodes * nFields > allocated_size)
+    {
+        printf("Error: allocated size is %d, but the solution file has %d nodes and %d fields", allocated_size, nNodes, nFields);
+        Error("The allocated size is too small for femSolutiondRead");
+    }
+    for (int i = 0; i < nNodes; i++)
+    {
+        for (int j = 0; j < nFields; j++) { ErrorScan(fscanf(file, "%le,", &value[i * nFields + j])); }
+        ErrorScan(fscanf(file, "\n"));
+    }
+    printf("Reading solution of shape (%d,%d)\n", nNodes, nFields);
+    fclose(file);
+    return nNodes * nFields;
+}
+
 
 /**********************************/
 /******* Geometry functions *******/
 /**********************************/
 
 femGeometry *geoGetGeometry(void) { return &theGeometry; }
+
+void geoSetSizeCallback(double (*geoSize)(double x, double y)) { theGeometry.geoSize = geoSize; }
 
 void geoFree(void)
 {
@@ -1304,6 +1501,127 @@ void geoFree(void)
     free(theGeometry.theDomains);
 }
 
+void geoMeshPrint(void)
+{
+    femNodes *theNodes = theGeometry.theNodes;
+    if (theNodes != NULL)
+    {
+        printf("Number of nodes %d \n", theNodes->nNodes);
+        for (int i = 0; i < theNodes->nNodes; i++) { printf("%6d : %6d : %14.7e %14.7e \n", i, theNodes->number[i], theNodes->X[i], theNodes->Y[i]); }
+    }
+    femMesh *theEdges = theGeometry.theEdges;
+    if (theEdges != NULL)
+    {
+        printf("Number of edges %d \n", theEdges->nElem);
+        int *elem = theEdges->elem;
+        for (int i = 0; i < theEdges->nElem; i++) { printf("%6d : %6d %6d \n", i, elem[2 * i], elem[2 * i + 1]); }
+    }
+    femMesh *theElements = theGeometry.theElements;
+    if (theElements != NULL)
+    {
+        if (theElements->nLocalNode == 3)
+        {
+            printf("Number of triangles %d \n", theElements->nElem);
+            int *elem = theElements->elem;
+            for (int i = 0; i < theElements->nElem; i++) { printf("%6d : %6d %6d %6d\n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
+        }
+        else if (theElements->nLocalNode == 4)
+        {
+            printf("Number of quads %d \n", theElements->nElem);
+            int *elem = theElements->elem;
+            for (int i = 0; i < theElements->nElem; i++) { printf("%6d : %6d %6d %6d %6d\n", i, elem[4 * i], elem[4 * i + 1], elem[4 * i + 2], elem[4 * i + 3]); }
+        }
+    }
+    int nDomains = theGeometry.nDomains;
+    printf("Number of domains %d\n", nDomains);
+    for (int iDomain = 0; iDomain < nDomains; iDomain++)
+    {
+        femDomain *theDomain = theGeometry.theDomains[iDomain];
+        printf("  Domain : %6d \n", iDomain);
+        printf("  Name : %s\n", theDomain->name);
+        printf("  Number of elements : %6d\n", theDomain->nElem);
+        for (int i = 0; i < theDomain->nElem; i++)
+        {
+            printf("%6d", theDomain->elem[i]);
+            if ((i + 1) != theDomain->nElem && (i + 1) % 10 == 0) { printf("\n"); }
+        }
+        printf("\n");
+    }
+}
+
+void geoMeshWrite(const char *filename, femDiscreteType dType)
+{
+    FILE *file = fopen(filename, "w");
+    if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
+
+    femNodes *theNodes = theGeometry.theNodes;
+    fprintf(file, "Number of nodes %d \n", theNodes->nNodes);
+    for (int i = 0; i < theNodes->nNodes; i++) { fprintf(file, "%6d : %6d %14.7e %14.7e \n", i, theNodes->number[i], theNodes->X[i], theNodes->Y[i]); }
+
+    femMesh *theEdges = theGeometry.theEdges;
+    fprintf(file, "Number of edges %d \n", theEdges->nElem);
+    int *elem = theEdges->elem;
+    if (dType == FEM_DISCRETE_TYPE_LINEAR)
+    {
+        theEdges->nLocalNode = 2;
+        for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %6d %6d \n", i, elem[2 * i], elem[2 * i + 1]); }
+    }
+    else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+    {
+        theEdges->nLocalNode = 3;
+        for (int i = 0; i < theEdges->nElem; i++) { fprintf(file, "%6d : %10d %10d %10d \n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
+    }
+
+    femMesh *theElements = theGeometry.theElements;
+    int nLocalNodeTrig = 3;
+    int nLocalNodeQuad = 4;
+    if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { nLocalNodeTrig = 6; nLocalNodeQuad = 9; }
+
+    if (theElements->nLocalNode == nLocalNodeTrig)
+    {
+        fprintf(file, "Number of triangles %d \n", theElements->nElem);
+        elem = theElements->elem;
+        if (dType == FEM_DISCRETE_TYPE_LINEAR)
+        {
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d\n", i, elem[3 * i], elem[3 * i + 1], elem[3 * i + 2]); }
+        }
+        else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+        {
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d %6d %6d\n", i, elem[6 * i], elem[6 * i + 1], elem[6 * i + 2], elem[6 * i + 3], elem[6 * i + 4], elem[6 * i + 5]); }
+        }
+    }
+    else if (theElements->nLocalNode == nLocalNodeQuad)
+    {
+        fprintf(file, "Number of quads %d \n", theElements->nElem);
+        elem = theElements->elem;
+        if (dType == FEM_DISCRETE_TYPE_LINEAR)
+        {
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d\n", i, elem[4 * i], elem[4 * i + 1], elem[4 * i + 2], elem[4 * i + 3]); }
+        }
+        else if (dType == FEM_DISCRETE_TYPE_QUADRATIC)
+        {
+            for (int i = 0; i < theElements->nElem; i++) { fprintf(file, "%6d : %6d %6d %6d %6d %6d %6d %6d %6d %6d\n", i, elem[9 * i], elem[9 * i + 1], elem[9 * i + 2], elem[9 * i + 3], elem[9 * i + 4], elem[9 * i + 5], elem[9 * i + 6], elem[9 * i + 7], elem[9 * i + 8]); }
+        }
+    }
+
+    int nDomains = theGeometry.nDomains;
+    fprintf(file, "Number of domains %d\n", nDomains);
+    for (int iDomain = 0; iDomain < nDomains; iDomain++)
+    {
+        femDomain *theDomain = theGeometry.theDomains[iDomain];
+        fprintf(file, "  Domain : %6d \n", iDomain);
+        fprintf(file, "  Name : %s\n", theDomain->name);
+        fprintf(file, "  Number of elements : %6d\n", theDomain->nElem);
+        for (int i = 0; i < theDomain->nElem; i++)
+        {
+            fprintf(file, "%6d", theDomain->elem[i]);
+            if ((i + 1) != theDomain->nElem && (i + 1) % 10 == 0)  { fprintf(file, "\n"); }
+            fprintf(file, "\n");
+        }
+    }
+    fclose(file);
+}
+
 void geoMeshRead(const char *filename, femDiscreteType dType)
 {
     FILE *file = fopen(filename, "r");
@@ -1321,7 +1639,7 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->number = malloc(sizeof(int) * theNodes->nNodes);
     if (theNodes->number == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    for (int i = 0; i < theNodes->nNodes; i++) { ErrorScan(fscanf(file, "%d : %le %le \n", &theNodes->number[i], &theNodes->X[i], &theNodes->Y[i])); }
+    for (int i = 0; i < theNodes->nNodes; i++) { ErrorScan(fscanf(file, "%d : %d %le %le \n", &trash, &theNodes->number[i], &theNodes->X[i], &theNodes->Y[i])); }
 
     femMesh *theEdges = malloc(sizeof(femMesh));
     if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
@@ -1389,6 +1707,118 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
         }
     }
     fclose(file);
+}
+
+void geoSetDomainName(int iDomain, char *name)
+{
+    if (iDomain >= theGeometry.nDomains || iDomain < 0) { Error("Illegal domain number"); }
+    if (geoGetDomain(name) != -1) { Error("Cannot use the same name for two domains"); }
+    sprintf(theGeometry.theDomains[iDomain]->name, "%s", name);
+}
+
+int geoGetDomain(char *name)
+{
+    int nDomains = theGeometry.nDomains;
+    for (int iDomain = 0; iDomain < nDomains; iDomain++)
+    {
+        femDomain *theDomain = theGeometry.theDomains[iDomain];
+        if (strncasecmp(name, theDomain->name, MAXNAME) == 0) { return iDomain; }
+    }
+    return -1;
+}
+
+
+/*********************************/
+/******* General functions *******/
+/*********************************/
+
+double femElasticityIntegrate(femProblem *theProblem, double (*f)(double x, double y))
+{
+    femIntegration *theRule     = theProblem->rule;
+    femGeometry    *theGeometry = theProblem->geometry;
+    femNodes       *theNodes    = theGeometry->theNodes;
+    femMesh        *theMesh     = theGeometry->theElements;
+    femDiscrete    *theSpace    = theProblem->space;
+
+    int nLocalNode = theSpace->n;
+    double x[nLocalNode] ,y[nLocalNode], phi[nLocalNode], dphidxsi[nLocalNode], dphideta[nLocalNode], dphidx[nLocalNode], dphidy[nLocalNode];
+    int iElem, iInteg, i, map[nLocalNode];
+    int nLocal = theMesh->nLocalNode;
+    double value = 0.0;
+
+    for (iElem = 0; iElem < theMesh->nElem; iElem++)
+    {
+        for (i = 0; i < nLocal; i++)
+        {
+            map[i] = theMesh->elem[iElem * nLocal + i];
+            x[i]   = theNodes->X[map[i]];
+            y[i]   = theNodes->Y[map[i]];
+        }
+        for (iInteg = 0; iInteg < theRule->n; iInteg++)
+        { 
+            double xsi    = theRule->xsi[iInteg];
+            double eta    = theRule->eta[iInteg];
+            double weight = theRule->weight[iInteg];
+
+            femDiscretePhi2(theProblem->space,xsi,eta,phi);
+            femDiscreteDphi2(theSpace,xsi,eta,dphidxsi,dphideta);
+
+            double dxdxsi = 0.0; double dxdeta = 0.0;
+            double dydxsi = 0.0; double dydeta = 0.0;
+            for (i = 0; i < theSpace->n; i++)
+            {  
+                dxdxsi += x[i] * dphidxsi[i];       
+                dxdeta += x[i] * dphideta[i];   
+                dydxsi += y[i] * dphidxsi[i];   
+                dydeta += y[i] * dphideta[i];
+            }
+
+            double jac = fabs(dxdxsi * dydeta - dxdeta * dydxsi);
+            double weightedJac = jac * weight;
+
+            for (i = 0; i < theProblem->space->n; i++) { value += phi[i] * f(x[i], y[i]) * weightedJac; }
+        }
+    }
+    return value;
+}
+
+double femMin(double *x, int n)
+{
+    double myMin = x[0];
+    for (int i = 1; i < n; i++) { myMin = fmin(myMin, x[i]); }
+    return myMin;
+}
+
+double femMax(double *x, int n)
+{
+    double myMax = x[0];
+    for (int i = 1; i < n; i++) { myMax = fmax(myMax, x[i]); }
+    return myMax;
+}
+
+void femError(char *text, int line, char *file)
+{
+    printf("\n-------------------------------------------------------------------------------- ");
+    printf("\n  Error in | %s:%d | at line %d : \n  %s\n", file, line, line, text);
+    printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
+    exit(69);
+}
+
+void femErrorScan(int test, int line, char *file)
+{
+    if (test >= 0) { return; }
+
+    printf("\n-------------------------------------------------------------------------------- ");
+    printf("\n  Error in fscanf or fgets in %s:%d at line %d : \n", file, line, line);
+    printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
+    exit(69);
+}
+
+void femWarning(char *text, int line, char *file)
+{
+    printf("\n-------------------------------------------------------------------------------- ");
+    printf("\n  Warning in %s:%d at line %d : \n  %s\n", file, line, line, text);
+    printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
 }
 
 /***************************/
@@ -1667,33 +2097,4 @@ Queue *rcm(femMesh *theMesh, int nNodes)
 	free(Q); Q = NULL;
 
 	return R;
-}
-
-/***********/
-/* General */
-/***********/
-
-void femError(char *text, int line, char *file)
-{
-    printf("\n-------------------------------------------------------------------------------- ");
-    printf("\n  Error in | %s:%d | at line %d : \n  %s\n", file, line, line, text);
-    printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
-    exit(69);
-}
-
-void femErrorScan(int test, int line, char *file)
-{
-    if (test >= 0) { return; }
-
-    printf("\n-------------------------------------------------------------------------------- ");
-    printf("\n  Error in fscanf or fgets in %s:%d at line %d : \n", file, line, line);
-    printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
-    exit(69);
-}
-
-void femWarning(char *text, int line, char *file)
-{
-    printf("\n-------------------------------------------------------------------------------- ");
-    printf("\n  Warning in %s:%d at line %d : \n  %s\n", file, line, line, text);
-    printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
 }
