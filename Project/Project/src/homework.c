@@ -49,12 +49,7 @@ void femElasticityAssembleElements(femProblem *theProblem)
             }
 
             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
-            if (jac < 0.0) { 
-                printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); 
-                printf("Value of the jacobien : %f\n", jac);
-            } else {
-                printf("Ok, positive jacobian\n");
-            }
+            if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
             jac = fabs(jac);
 
             for (i = 0; i < theSpace->n; i++)
