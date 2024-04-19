@@ -22,8 +22,6 @@ class Mesh:
                 line = f.readline()
                 parts = [s.strip() for s in line.split(':')]
                 part_coord = parts[1].split()
-                # renum_number = int(part_coord[0])
-                part_coord.remove(part_coord[0])
                 self.nodes[i] = [float(val.strip()) for val in part_coord]
 
             line = f.readline()
@@ -102,6 +100,7 @@ if __name__ == "__main__":
     nameMesh = "../../Rapport/data/mesh_beam.txt"
     mesh = Mesh(nameMesh)
 
+    print(mesh)
     nameSolution = "../../Rapport/data/UV_beam.txt"
 
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
@@ -116,3 +115,4 @@ if __name__ == "__main__":
     plt.title('Elastic Deformation of Beam under\nForce Density on Both Decks')
     # plt.savefig("../../Rapport/data/elasticityBeam.pdf", bbox_inches='tight')
     plt.show()
+# %%

@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
     }
     else
     {
-        geoMeshRead("../data/mesh.txt", discretType);
+        geoMeshRead("../../Rapport/data/mesh_miguel.txt", discretType); // "../data/mesh.txt
         femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType);
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_miguel.txt", renumType, discretType); // ../data/problem.txt
     }
     
     femElasticityPrint(theProblem);
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
         if (exampleUForm_Usage == TRUE)     { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_example.txt"); }
         else if (exampleBeam_Usage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_beam.txt"); }
         else if (bridgeSimplified == TRUE)  { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_simplified.txt"); }
-        else                                { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); }
+        else                                { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_miguel.txt"); } // ../data/UV.txt
         femElasticityFree(theProblem);
         geoFree();
         return EXIT_SUCCESS;
