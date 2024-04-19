@@ -114,6 +114,11 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR)
             double length = sqrt(dx * dx + dy * dy);
             double jac = length / 2.0;
 
+            //Adapt the force (for animation)
+            if(femIsPositionAnimated(0)){
+                value = adaptForceWithPosition(value, 100, 50, x[0]); // !!! we need to modify the number of frame if changed in main.c !
+            }
+
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
                 double xsi    = theRule->xsi[iInteg];

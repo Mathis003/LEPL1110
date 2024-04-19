@@ -36,8 +36,9 @@ int main(int argc, char *argv[])
     int exampleUForm_Usage = FALSE;
     int exampleBeam_Usage = FALSE;
     int animation     = FALSE;
+    int animationPosition = FALSE;
     int showRunTime = FALSE;
-    while ((opt = getopt(argc, argv, "subtah")) != -1)
+    while ((opt = getopt(argc, argv, "subtahx")) != -1)
     {
         switch (opt)
         {
@@ -55,6 +56,9 @@ int main(int argc, char *argv[])
                 break;
             case 'a':
                 animation = TRUE;
+            case 'x':
+                animationPosition = TRUE;
+                animation = TRUE;
                 break;
             case 'h':
                 printf("Usage: %s [-s] [-u] [-b] [-t] [-a] [-h]\n", argv[0]);
@@ -62,6 +66,7 @@ int main(int argc, char *argv[])
                 printf("  -s : Start the program with the bridge without stay cables and pylon\n");
                 printf("  -u : Start the program with the U mesh\n");
                 printf("  -b : Start the program with the beam mesh\n");
+                printf("  -x : Start the program with the animation of the position\n");
                 printf("  -t : Time the program execution\n");
                 printf("  -a : Launch the program 50 times to create an animation in ProjectPostProcessor\n");
                 printf("  -h : Display this help message\n");
@@ -95,9 +100,9 @@ int main(int argc, char *argv[])
     }
     else
     {
-        geoMeshRead("../data/mesh.txt", discretType); // "../data/mesh.txt
+        geoMeshRead("../../Rapport/data/mesh.txt", discretType); // "../data/mesh.txt
         femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../data/problem.txt", renumType, discretType); // ../data/problem.txt
+        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType); // ../data/problem.txt
     }
     
     femElasticityPrint(theProblem);
@@ -125,6 +130,11 @@ int main(int argc, char *argv[])
     }
     else
     {
+        if(animationPosition == TRUE)
+        {
+            femIsPositionAnimated(1); // We activate the animation position mode (yeah it's ugly)
+        }
+
         const int NB_IMAGES_ANIMATION = 50;
         double FACTOR = 1.0 / NB_IMAGES_ANIMATION;
         double *theSoluce;
@@ -134,11 +144,16 @@ int main(int argc, char *argv[])
 
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
-            theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i);
+            if(animationPosition == TRUE){
+                theSoluce = femElasticitySolve(theProblem, renumType, 60);
+            } else {
+                theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i);
+            }
             nNodes = theGeometry->theNodes->nNodes;
             if (exampleUForm_Usage == TRUE)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
             else if (exampleBeam_Usage == TRUE) { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
             else if (bridgeSimplified == TRUE)  { sprintf(filename, "../../Rapport/data/animations/UV_simplified_%d.txt", i); }
+            else if(animationPosition == TRUE)   { sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i); }
             else                                { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }         
             femSolutionWrite(nNodes, 2, theSoluce, filename);
         }

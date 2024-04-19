@@ -329,4 +329,7 @@ int *createAdjacencyMatrix(femMesh *mesh);
 void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue *Q, int element_idx);
 Queue *rcm(femMesh *theMesh, int nNodes);
 
+int femIsPositionAnimated(int getOrSet);
+double adaptForceWithPosition(double force, double factor, int nAnim, double node_position);
+
 #endif // _FEM_H_

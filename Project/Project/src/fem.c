@@ -2120,3 +2120,34 @@ Queue *rcm(femMesh *theMesh, int nNodes)
 
 	return R;
 }
+
+
+// FOR ANIMATION ONLY !!
+
+/**
+ * @brief Appeler getOrSet à 1 pour activer l'animation avec la position des véhicules
+ * 
+ * @param getOrSet 
+ * @return int 
+ */
+int femIsPositionAnimated(int getOrSet){
+    static int activated = 0;
+    if(getOrSet == 0) { return activated; }
+    else { activated = getOrSet; return activated; }
+}
+
+double adaptForceWithPosition(double force, double factor, int nAnim, double node_position){
+    static int step = 0;
+    double bridge_length = 32.0;
+    double vehicule_lenght = 4.0;
+    double x = vehicule_lenght/2 + step * (bridge_length - vehicule_lenght) / (nAnim-1);
+    double position = -32.0 + x;
+    step++;
+
+    if(x - vehicule_lenght/2 < node_position && node_position < x + vehicule_lenght/2){
+        return force * factor;
+    } else {
+        return force*0.0;
+    }
+}
+

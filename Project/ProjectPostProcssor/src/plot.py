@@ -88,7 +88,7 @@ def generate_frame(i):
     if exampleUse:
         nameSolution = "../../Rapport/data/animations/UV_example_{}.txt".format(i + 1)
     else:
-        nameSolution = "../../Rapport/data/animations/UV_{}.txt".format(i + 1)
+        nameSolution = "../../Rapport/data/animations/UV_simplified_{}.txt".format(i + 1)
 
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     nameMesh = ""
     if exampleUse: nameMesh = "../../Rapport/data/mesh_example.txt"
-    else : nameMesh = "../../Rapport/data/mesh.txt"
+    else : nameMesh = "../../Rapport/data/mesh_simplified.txt"
     mesh = Mesh(nameMesh)
 
     nameSolution = ""

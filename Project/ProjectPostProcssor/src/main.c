@@ -469,6 +469,7 @@ int main(int argc, char *argv[])
     int example_beam  = FALSE;
     int example_simplified = FALSE;
     int animation = FALSE;
+    int animationPosition = FALSE;
     int plot      = TRUE;
     while ((opt = getopt(argc, argv, "arubsph")) != -1)
     {
@@ -490,6 +491,8 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 plot = FALSE;
+            case 'x':
+                animationPosition = TRUE;
                 break;
             case 'h':
                 printf("Usage: %s [-r] [-u] [-b] [-s] [-h]\n", argv[0]);
@@ -497,6 +500,7 @@ int main(int argc, char *argv[])
                 printf("  -r : Disable the result visualizer\n");
                 printf("  -e : Start the program with the example mesh\n");
                 printf("  -p : Disable the plot\n");
+                printf("  -x : Start the program with the animation of the position\n")
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
@@ -585,7 +589,7 @@ int main(int argc, char *argv[])
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    // femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
 
     // double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
     
