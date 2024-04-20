@@ -195,7 +195,7 @@ if __name__ == "__main__":
         print("Generating animation...")
         NB_IMAGES = 50
         fig, ax = plt.subplots()
-        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
+        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=50)
 
         if exampleUForm_Use: plt.title('Elastic Deformation')
         elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')

@@ -120,12 +120,9 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR, int cur
             finalValue = value;
             if (currAnim > 0)
             {
-                printf("currAnim: %d\n", currAnim);
                 finalValue = adaptForceForMotionCar(value, x[0], currAnim, 50);
-                finalValue += adaptForceForMotionCarReversed(value, x[0], currAnim, 50);
+                // finalValue += adaptForceForMotionCarReversed(value, x[0], currAnim, 50);
             }
-            printf("finalValue: %f\n", finalValue);
-
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
                 xsi    = theRule->xsi[iInteg];

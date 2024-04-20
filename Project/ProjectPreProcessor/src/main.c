@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     {
         femElasticityAddBoundaryCondition(theProblem, "Symmetry", DIRICHLET_XY, 0.0, 0.0);
         femElasticityAddBoundaryCondition(theProblem, "Bottom", DIRICHLET_XY, 0.0, 0.0);
-        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e3, NAN);
+        femElasticityAddBoundaryCondition(theProblem, "Top", NEUMANN_Y, -1e2, NAN);
         femElasticityWrite(theProblem, "../../Rapport/data/problem_example.txt");
     }
     else if (exampleBeam_Example)

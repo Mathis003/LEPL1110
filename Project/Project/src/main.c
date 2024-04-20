@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
             femSolverInit(theProblem->solver);
+            
             if (animationPosition) { theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i); }
             else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, -1); }
 
