@@ -8,8 +8,8 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # GLFW
-add_subdirectory(glfw)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/glfw/include)
+add_subdirectory(../../ProjectPreProcessor/glfw)
+include_directories(../../ProjectPreProcessor/glfw/include)
 
 # link the aforementioned libraries
 add_executable(${EXEC_NAME} ../../Project/src/fem.c ../../ProjectPreProcessor/src/glfem.c src/main.c)

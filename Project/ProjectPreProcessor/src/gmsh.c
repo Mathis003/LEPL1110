@@ -41,22 +41,21 @@ void geoMeshImport(femDiscreteType discreteType)
 
     size_t nNode, n, m, *node;
     double *xyz, *trash;
-    //gmshModelMeshRenumberNodes(&ierr); ErrorGmsh(ierr);
     gmshModelMeshGetNodes(&node, &nNode, &xyz, &n, &trash, &m, -1, -1, 0, 0, &ierr); ErrorGmsh(ierr);
 
-    femNodes *theNodes = malloc(sizeof(femNodes));
+    femNodes *theNodes = (femNodes *) malloc(sizeof(femNodes));
     if (theNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theNodes->nNodes = nNode;
-    theNodes->X = malloc(sizeof(double) * (theNodes->nNodes));
+    theNodes->X = (double *) malloc(sizeof(double) * (theNodes->nNodes));
+    theNodes->Y = (double *) malloc(sizeof(double) * (theNodes->nNodes));
     if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    theNodes->Y = malloc(sizeof(double) * (theNodes->nNodes));
     if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theNodes->nNodes; i++)
     {
         theNodes->X[i] = xyz[3 * node[i] - 3];
         theNodes->Y[i] = xyz[3 * node[i] - 2];
     }
-    theNodes->number = malloc(sizeof(int) * (theNodes->nNodes));
+    theNodes->number = (int *) malloc(sizeof(int) * (theNodes->nNodes));
     if (theNodes->number == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theNodes->nNodes; i++) { theNodes->number[i] = i; }
 
@@ -78,19 +77,16 @@ void geoMeshImport(femDiscreteType discreteType)
     ErrorGmsh(ierr);
     if (nElem != 0)
     {
-        femMesh *theElements = malloc(sizeof(femMesh));
+        femMesh *theElements = (femMesh *) malloc(sizeof(femMesh));
         if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theElements->nLocalNode = localNode;
         theElements->nodes = theNodes;
         theElements->nElem = nElem;
-        theElements->elem = malloc(sizeof(int) * localNode * theElements->nElem);
+        theElements->elem = (int *) malloc(sizeof(int) * localNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; i++)
         {
-            for (int j = 0; j < localNode; j++)
-            {
-                theElements->elem[localNode * i + j] = node[localNode * i + j] - 1;
-            }
+            for (int j = 0; j < localNode; j++) { theElements->elem[localNode * i + j] = node[localNode * i + j] - 1; }
         }
         theGeometry.theElements = theElements;
         gmshFree(node);
@@ -108,21 +104,18 @@ void geoMeshImport(femDiscreteType discreteType)
 
     if (nElem != 0)
     {
-        femMesh *theElements = malloc(sizeof(femMesh));
+        femMesh *theElements = (femMesh *) malloc(sizeof(femMesh));
         if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
         theElements->nLocalNode = 4;
         if (discreteType == FEM_DISCRETE_TYPE_QUADRATIC) { theElements->nLocalNode = 9; }
         theElements->nodes = theNodes;
         theElements->nElem = nElem;
-        theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
+        theElements->elem = (int *) malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; i++)
         {
-            for (int j = 0; j < theElements->nLocalNode; j++)
-            {
-                theElements->elem[theElements->nLocalNode * i + j] = node[theElements->nLocalNode * i + j] - 1;
-            }
+            for (int j = 0; j < theElements->nLocalNode; j++) { theElements->elem[theElements->nLocalNode * i + j] = node[theElements->nLocalNode * i + j] - 1; }
         }        
         theGeometry.theElements = theElements;
         gmshFree(node);
@@ -132,18 +125,15 @@ void geoMeshImport(femDiscreteType discreteType)
 
     // Compute node renumbering
     femMesh *theElements = theGeometry.theElements;
-    int *connectedNodes = calloc(theNodes->nNodes, sizeof(int));
+    int *connectedNodes = (int *) calloc(theNodes->nNodes, sizeof(int));
     if (connectedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
     for (int iElem = 0; iElem < theElements->nElem; iElem++)
     {
-        for (int i = 0; i < theElements->nLocalNode; i++)
-        {
-            connectedNodes[theElements->elem[iElem * theElements->nLocalNode + i]] = 1;
-        }
+        for (int i = 0; i < theElements->nLocalNode; i++) { connectedNodes[theElements->elem[iElem * theElements->nLocalNode + i]] = 1; }
     }
 
-    int *nodeRenumber = malloc(theNodes->nNodes * sizeof(int));
+    int *nodeRenumber = (int *) malloc(theNodes->nNodes * sizeof(int));
     if (nodeRenumber == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     int countNodes = 0;
     for (int i = 0; i < theNodes->nNodes; i++)
@@ -160,19 +150,16 @@ void geoMeshImport(femDiscreteType discreteType)
         theNodes->Y[nodeRenumber[i]] = theNodes->Y[i];
     }
     theNodes->nNodes = countNodes;
-    theNodes->X = realloc(theNodes->X, sizeof(double) * (theNodes->nNodes));
+    theNodes->X = (double *) realloc(theNodes->X, sizeof(double) * (theNodes->nNodes));
+    theNodes->Y = (double *) realloc(theNodes->Y, sizeof(double) * (theNodes->nNodes));
     if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    theNodes->Y = realloc(theNodes->Y, sizeof(double) * (theNodes->nNodes));
     if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
     // Renumbering elements
     int nLocalNode = theElements->nLocalNode;
     for (int i = 0; i < theElements->nElem; i++)
     {
-        for (int j = 0; j < nLocalNode; j++)
-        {
-            theElements->elem[nLocalNode * i + j] = nodeRenumber[theElements->elem[nLocalNode * i + j]];
-        }
+        for (int j = 0; j < nLocalNode; j++) { theElements->elem[nLocalNode * i + j] = nodeRenumber[theElements->elem[nLocalNode * i + j]]; }
     }
 
     elementType = 1;
@@ -181,17 +168,17 @@ void geoMeshImport(femDiscreteType discreteType)
     gmshModelMeshGetElementsByType(elementType, &elem, &nElem, &node, &nNode, -1, 0, 1, &ierr);
     ErrorGmsh(ierr);
 
-    femMesh *theEdges = malloc(sizeof(femMesh));
+    femMesh *theEdges = (femMesh *) malloc(sizeof(femMesh));
     if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theEdges->nLocalNode = localNode;
     theEdges->nElem = nElem;
     theEdges->nodes = theNodes;
-    theEdges->elem = malloc(sizeof(int) * localNode * theEdges->nElem);
+    theEdges->elem  = (int *) malloc(sizeof(int) * localNode * theEdges->nElem);
     if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     int countEdges = 0;
-    int *connectedEdges = calloc(nElem, sizeof(int));
+    int *connectedEdges = (int *) calloc(nElem, sizeof(int));
+    int *edgeRenumber   = (int *) malloc(nElem * sizeof(int));
     if (connectedEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    int *edgeRenumber = malloc(nElem * sizeof(int));
     if (edgeRenumber == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
 
     for (int i = 0; i < nElem; i++)
@@ -209,7 +196,7 @@ void geoMeshImport(femDiscreteType discreteType)
     }
 
     theEdges->nElem = countEdges;
-    theEdges->elem = realloc(theEdges->elem, sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
+    theEdges->elem = (int *) realloc(theEdges->elem, sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
     if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     int shiftEdges = elem[0];
@@ -224,7 +211,7 @@ void geoMeshImport(femDiscreteType discreteType)
     gmshModelGetEntities(&dimTags, &n, 1, &ierr);
     ErrorGmsh(ierr);
     theGeometry.nDomains = n / 2;
-    theGeometry.theDomains = malloc(sizeof(femDomain *) * n / 2);
+    theGeometry.theDomains = (femDomain **) malloc(sizeof(femDomain *) * n / 2);
     if (theGeometry.theDomains == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     printf("Geo     : Importing %d entities \n", theGeometry.nDomains);
 
@@ -232,7 +219,7 @@ void geoMeshImport(femDiscreteType discreteType)
     {
         int dim = dimTags[2 * i + 0];
         int tag = dimTags[2 * i + 1];
-        femDomain *theDomain = malloc(sizeof(femDomain));
+        femDomain *theDomain =(femDomain *) malloc(sizeof(femDomain));
         if (theDomain == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theGeometry.theDomains[i] = theDomain;
         theDomain->mesh = theEdges;
@@ -263,29 +250,29 @@ void geoMeshImport(femDiscreteType discreteType)
     }
     gmshFree(dimTags);
 
-    free(connectedNodes);
-    free(nodeRenumber);
-    free(connectedEdges);
-    free(edgeRenumber);
+    free(connectedNodes); connectedNodes = NULL;
+    free(nodeRenumber); nodeRenumber = NULL;
+    free(connectedEdges); connectedEdges = NULL;
+    free(edgeRenumber); edgeRenumber = NULL;
 
     // Filter out empty domains
     int countDomains = 0;
     for (int i = 0; i < theGeometry.nDomains; i++)
     {
         if (theGeometry.theDomains[i]->nElem != 0) { theGeometry.theDomains[countDomains] = theGeometry.theDomains[i]; countDomains++; }
-        else { free(theGeometry.theDomains[i]->elem); free(theGeometry.theDomains[i]); theGeometry.theDomains[i] = NULL; }
+        else { free(theGeometry.theDomains[i]->elem); theGeometry.theDomains[i]->elem = NULL; free(theGeometry.theDomains[i]); theGeometry.theDomains[i] = NULL; }
     }
     theGeometry.nDomains = countDomains;
 
     return;
 }
 
-void femErrorGmsh(int ierr, int line, char *file)                                  
+void femErrorGmsh(int ierr, int line, char *file)
 { 
     if (ierr == 0) { return; }
     printf("\n-------------------------------------------------------------------------------- ");
     printf("\n  Error in %s at line %d : \n  error code returned by gmsh %d\n", file, line, ierr);
     printf("--------------------------------------------------------------------- Yek Yek !! \n\n");
-    gmshFinalize(NULL);                                        
-    exit(69);                                                 
+    gmshFinalize(NULL);
+    exit(69);
 }

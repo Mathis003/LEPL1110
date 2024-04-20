@@ -21,7 +21,7 @@ The processor requires the following library:
 
 - [CMake](https://cmake.org/)
 
-## Build
+## Build Instructions
 
 To build the processor, use the following command:
 

@@ -17,27 +17,26 @@
 #include <getopt.h>
 
 femElementType elementType  = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
-femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
+femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC     // Not used yet
 femElasticCase theCase      = PLANAR_STRESS; // PLANAR_STRESS or PLANAR_STRAIN or AXISYM (PLANAR_STRESS for our bridge problem)
 
 int main(int argc, char *argv[])
 {
-    // Deal with the options arguments
     int opt;
-    int meshVisualizer = TRUE;
-    int exampleBeam_Example = FALSE;
+    int meshVisualizer       = TRUE;
+    int exampleBeam_Example  = FALSE;
     int exampleUForm_Example = FALSE;
-    int beam_mesh      = FALSE;
-    int bridgeSimplified = FALSE;
-    while ((opt = getopt(argc, argv, "smubh")) != -1)
+    int beam_mesh            = FALSE;
+    int bridgeSimplified     = FALSE;
+    while ((opt = getopt(argc, argv, "msubh")) != -1)
     {
         switch (opt)
         {
-            case 's':
-                bridgeSimplified = TRUE;
-                break;
             case 'm':
                 meshVisualizer = FALSE;
+                break;
+            case 's':
+                bridgeSimplified = TRUE;
                 break;
             case 'u':
                 exampleUForm_Example = TRUE;
@@ -46,16 +45,16 @@ int main(int argc, char *argv[])
                 exampleBeam_Example = TRUE;
                 break;
             case 'h':
-                printf("Usage: %s [-s] [-m] [-u] [-b] [-h]\n", argv[0]);
+                printf("Usage: %s [-m] [-s] [-u] [-b] [-h]\n", argv[0]);
                 printf("Options:\n");
+                printf("  -m : Disable the mesh visualizer\n");
                 printf("  -s : Start the program with the bridge without stay cables and pylon\n");
                 printf("  -u : Start the program with the example mesh\n");
-                printf("  -m : Disable the mesh visualizer\n");
                 printf("  -b : Start the program with the beam mesh\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-s] [-m] [-u] [-b] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-m] [-s] [-u] [-b] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -134,13 +133,9 @@ int main(int argc, char *argv[])
     }
     else if (bridgeSimplified == TRUE)
     {
-        /* For steel */
         E = 200.e9;
         nu = 0.3;
         rho = 7.85e3;
-        // double E_reinforced_concrete = 35e9;
-        // double nu_reinforced_concrete = 0.2;
-        // double rho_reinforced_concrete = 2.5e3;
         theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, theCase, discretType);
         createBoundaryConditions(theProblem, bridgeSimplified);
         femElasticityPrint(theProblem);
@@ -149,13 +144,9 @@ int main(int argc, char *argv[])
     }
     else
     {
-        /* For steel */
         E = 200.e9;
         nu = 0.3;
         rho = 7.85e3;
-        // double E_reinforced_concrete = 35e9;
-        // double nu_reinforced_concrete = 0.2;
-        // double rho_reinforced_concrete = 2.5e3;
         theProblem = femElasticityCreate(theGeometry, E, nu, rho, gx, gy, theCase, discretType);
         createBoundaryConditions(theProblem, bridgeSimplified);
         femElasticityPrint(theProblem);

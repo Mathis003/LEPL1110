@@ -1,6 +1,16 @@
 #ifndef _GMSH_H_
 #define _GMSH_H_
 
+/*
+Note:
+The gmsh.h file is used to define the functions that are used to generate the mesh using Gmsh.
+The functions are used to :
+    * generate the mesh for the bridge, U example, and beam example.
+    * set the domains' names and create the boundary conditions.
+    * initialize and finalize the geometry.
+    * import the mesh and generate the mesh.
+*/
+
 #include "../../Project/src/fem.h"
 
 #include "gmshc.h"

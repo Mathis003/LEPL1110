@@ -118,10 +118,7 @@ double *getMaterialProperties(char *material)
     return properties;
 }
 
-char *getMaterials(double x, double y)
-{
-    return (isSubRoadWay(x, y) == TRUE || isRoadWay(x, y) == TRUE || isStayCables(x, y) == TRUE) ? "steel" : "reinforced_concrete";
-}
+char *getMaterials(double x, double y) { return (isSubRoadWay(x, y) == TRUE || isRoadWay(x, y) == TRUE || isStayCables(x, y) == TRUE) ? "steel" : "reinforced_concrete"; }
 
 
 /********************************************/
@@ -378,15 +375,15 @@ void geoMeshGenerate(femDiscreteType discreteType, int bridgeSimplified)
     int ierr;
     int idBridge, idSubRoadWay;
 
-    int *idWindows    = malloc(4 * sizeof(int));
-    int *idPiles      = malloc(10 * sizeof(int));
-    int *idPillars    = malloc(4 * sizeof(int));
-    int *idArcs       = malloc(5 * sizeof(int));
-    int *idPylons     = malloc(6 * sizeof(int));
-    int *idTopBall    = malloc(2 * sizeof(int));
-    int *idStayCables = malloc(36 * sizeof(int));
-    double *positionStayCablesX = malloc(36 * sizeof(double));
-    double *positionStayCablesY = malloc(36 * sizeof(double));
+    int *idWindows    = (int *) malloc(4 * sizeof(int));
+    int *idPiles      = (int *) malloc(10 * sizeof(int));
+    int *idPillars    = (int *) malloc(4 * sizeof(int));
+    int *idArcs       = (int *) malloc(5 * sizeof(int));
+    int *idPylons     = (int *) malloc(6 * sizeof(int));
+    int *idTopBall    = (int *) malloc(2 * sizeof(int));
+    int *idStayCables = (int *) malloc(36 * sizeof(int));
+    double *positionStayCablesX = (int *) malloc(36 * sizeof(double));
+    double *positionStayCablesY = (int *) malloc(36 * sizeof(double));
 
     if (idWindows == NULL)           { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
     if (idPiles == NULL)             { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
@@ -710,14 +707,16 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
         double value2;
     } domainBoundaryMapping_t;
 
+    const double length_camion = 16.5;
+    const double width_camion = 2.55;
+    const double mass_camion = 32000.0;
+    const double mass_pedestrian = 70.0;
+
     if (bridgeSimplified == TRUE)
     {
-        double length_camion = 16.5;
-        double width_camion = 2.55;
-        int nb_camion = 2;
-        double mass_camion = 32000.0;
-        int nb_pedestrian = 1;
-        double mass_pedestrian = 70.0;
+        // Define constants
+        const int nb_camion = 2;
+        const int nb_pedestrian = 1;
 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
 
@@ -756,12 +755,8 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
     }
     else
     {
-        double length_camion = 16.5;
-        double width_camion = 2.55;
         int nb_camion = 100;
-        double mass_camion = 32000.0;
         int nb_pedestrian = 1;
-        double mass_pedestrian = 70.0;
 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
         double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
@@ -850,25 +845,15 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
             {"STAYCABLES R D 7", DIRICHLET_T, 0.0, NAN},
             {"STAYCABLES R D 8", DIRICHLET_T, 0.0, NAN},
             {"STAYCABLES R D 9", DIRICHLET_T, 0.0, NAN},
-            // {"PYLON 1 L 1", NEUMANN_X, windForce, NAN},
-            // {"PYLON 1 L 2", NEUMANN_X, windForce, NAN},
-            // {"PYLON 1 L 3", NEUMANN_X, windForce, NAN},
-            // {"PYLON 1 L 4", NEUMANN_X, windForce, NAN},
-            // {"PYLON 1 L 5", NEUMANN_X, windForce, NAN},
             {"PYLON 1 R 1", NEUMANN_X, 0.0, NAN},
             {"PYLON 1 R 2", NEUMANN_X, 0.0, NAN},
             {"PYLON 1 R 3", NEUMANN_X, 0.0, NAN},
             {"PYLON 1 R 4", NEUMANN_X, 0.0, NAN},
             {"PYLON 1 R 5", NEUMANN_X, 0.0, NAN},
-            // {"PYLON 2 L 1", NEUMANN_X, windForce, NAN},
-            // {"PYLON 2 L 2", NEUMANN_X, windForce, NAN},
-            // {"PYLON 2 L 3", NEUMANN_X, windForce, NAN},
-            // {"PYLON 2 L 4", NEUMANN_X, windForce, NAN},
             {"PYLON 2 R 1", NEUMANN_X, 0.0, NAN},
             {"PYLON 2 R 2", NEUMANN_X, 0.0, NAN},
             {"PYLON 2 R 3", NEUMANN_X, 0.0, NAN},
             {"PYLON 2 R 4", NEUMANN_X, 0.0, NAN},
-            // {"PYLON 3 L 1", NEUMANN_X, windForce, NAN},
             {"PYLON 3 R 1", NEUMANN_X, 0.0, NAN},
             {"PYLON 1 U L", NEUMANN_X, 0.0, NAN},
             {"PYLON 1 U R", NEUMANN_X, 0.0, NAN},
@@ -955,7 +940,6 @@ double geoSizeSubRoadWay(double x, double y)
     double h_max = theGeometry->defaultSize;
     double h_min = h_max / 10;
 
-    // if ((x >= 0.1 -theGeometry->rxLongArc - theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc) || (x >= 0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - 2 * theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - theGeometry->widthPillars)) { return 0.7 * h_max; }
     if ((y <= theGeometry->heightPillars + 0.1) && ((x >= 0.1 -theGeometry->rxLongArc - theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc) || (x >= 0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - 2 * theGeometry->widthPillars && x <= -0.1 -theGeometry->rxLongArc - 2 * theGeometry->rxArc - theGeometry->widthPillars))) { return 0.7 * h_max; }
 
     double d_Vertical_U  = getVerticalDistance(y, theGeometry->heightPillars + theGeometry->heightSubRoadWay);
@@ -1075,7 +1059,7 @@ double geoSizeBridge(double x, double y)
     double b = theGeometry->ryLongArc;
     double xEllipse = getX_Ellipse(a, b, xc, yc, x, y);
     double yEllipse = yc + sqrt(b * b * (1 - ((xEllipse - xc) * (xEllipse - xc)) / (a * a)));
-    double rELlipse  = getEuclidianDistance(xEllipse, yEllipse, xc, yc);
+    double rELlipse = getEuclidianDistance(xEllipse, yEllipse, xc, yc);
     double d_EuclArc = getEuclidianDistance(x, y, xc, yc);
 
     double h4 = (d_EuclArc < rELlipse) ? h_min : hermiteInterpolation(d_EuclArc - rELlipse, h_max, h_min, d_interp_Arcs);
@@ -1084,18 +1068,18 @@ double geoSizeBridge(double x, double y)
     b = theGeometry->ryArc;
 
     xc = - theGeometry->rxLongArc - theGeometry->widthPillars - theGeometry->rxArc;
-    xEllipse = getX_Ellipse(a, b, xc, yc, x, y);
-    yEllipse = yc + sqrt(b * b * (1 - ((xEllipse - xc) * (xEllipse - xc)) / (a * a)));
+    xEllipse  = getX_Ellipse(a, b, xc, yc, x, y);
+    yEllipse  = yc + sqrt(b * b * (1 - ((xEllipse - xc) * (xEllipse - xc)) / (a * a)));
     rELlipse  = getEuclidianDistance(xEllipse, yEllipse, xc, yc);
     d_EuclArc = getEuclidianDistance(x, y, xc, yc);
 
     double h5 = (d_EuclArc < rELlipse) ? h_min : hermiteInterpolation(d_EuclArc - rELlipse, h_max, h_min, d_interp_Arcs);
 
     xc = - theGeometry->widthSpanBridge / 2;
-    xEllipse = getX_Ellipse(a, b, xc, yc, x, y);
-    yEllipse = yc + sqrt(b * b * (1 - ((xEllipse - xc) * (xEllipse - xc)) / (a * a)));
-    rELlipse   = getEuclidianDistance(xEllipse, yEllipse, xc, yc);
-    d_EuclArc  = getEuclidianDistance(x, y, xc, yc);
+    xEllipse  = getX_Ellipse(a, b, xc, yc, x, y);
+    yEllipse  = yc + sqrt(b * b * (1 - ((xEllipse - xc) * (xEllipse - xc)) / (a * a)));
+    rELlipse  = getEuclidianDistance(xEllipse, yEllipse, xc, yc);
+    d_EuclArc = getEuclidianDistance(x, y, xc, yc);
 
     double h6 = (d_EuclArc < rELlipse) ? h_min : hermiteInterpolation(d_EuclArc - rELlipse, h_max, h_min, d_interp_Arcs);
 
@@ -1173,8 +1157,6 @@ void geoMeshGenerate_UForm(femDiscreteType discreteType)
 
     cutElement(rect, disk);
     cutElement(rect, slit);
-
-    // gmshModelOccRotate(rect, 2, w / 2, h / 2, 0.0, 0.0, 0.0, 1.0, 90.0, &ierr);
 
     gmshModelOccSynchronize(&ierr);
 
