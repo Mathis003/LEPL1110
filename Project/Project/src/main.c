@@ -21,12 +21,6 @@ femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LIN
 femSolverType typeSolver    = FEM_BAND;  // FEM_FULL or FEM_BAND
 femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
 
-/* FINAL PATH */
-
-/* "../data/mesh.txt" */
-/* "../data/problem.txt" */
-/* ""../data/UV.txt" */
-
 int main(int argc, char *argv[])
 {
     int opt;
@@ -88,7 +82,7 @@ int main(int argc, char *argv[])
     if      (bridgeSimplified_Usage) { meshPath = "../../Rapport/data/mesh_simplified.txt"; problemPath = "../../Rapport/data/problem_simplified.txt";  solutionPath = "../../Rapport/data/UV_simplified.txt"; }
     else if (exampleBeam_Usage)      { meshPath = "../../Rapport/data/mesh_beam.txt";       problemPath = "../../Rapport/data/problem_beam.txt";        solutionPath = "../../Rapport/data/UV_beam.txt"; }
     else if (exampleUForm_Usage)     { meshPath = "../../Rapport/data/mesh_example.txt";    problemPath = "../../Rapport/data/problem_example.txt";     solutionPath = "../../Rapport/data/UV_example.txt"; }
-    else                             { meshPath = "../../Rapport/data/mesh.txt";            problemPath = "../../Rapport/data/problem.txt";             solutionPath = "../../Rapport/data/UV.txt"; }
+    else                             { meshPath = "../data/mesh.txt"; problemPath = "../data/problem.txt"; solutionPath = "../data/UV.txt"; }
     
     geoMeshRead(meshPath, discretType);
     femMeshRenumber(theGeometry->theElements, renumType); // Renumbering the mesh nodes
