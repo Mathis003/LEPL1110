@@ -1,17 +1,23 @@
-# LEPL1110 course (UCLouvain) Finite Elements : Processor
+# Finite Elements Processor
 
 ## Authors
 
-- **Student:** [Mathis Delsart]
-- **Student:** [Adrien Antonutti]
+- **Student:** Mathis Delsart
+- **Student:** Adrien Antonutti
+
+## Course Info
+
+- **Course:** LEPL1110
+- **Institution:** UCLouvain
 
 ## Description
 
-This repository contains the processor for the LEPL1110 course at UCLouvain on Finite Elements. The processor is used for solving problems related to linear plane elasticity.
+This folder contains the processor for the LEPL1110 course at UCLouvain on Finite Elements.
+The processor is used for solving problems related to linear elasticity.
 
 ## Requirements
 
-The processor requires the following libraries:
+The processor requires the following library:
 
 - [CMake](https://cmake.org/)
 
