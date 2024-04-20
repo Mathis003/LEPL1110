@@ -1,7 +1,4 @@
 #%%
-
-## Code venant de https://github.com/MiguelDLC/femtools/blob/main/validate.py ##
-
 import os
 import zipfile
 import shutil
@@ -9,10 +6,21 @@ import subprocess
 import requests
 from sys import platform
 
+group = input("Group number ? >> ");
+login1 = input("Login of the first student ? >> ")
+login2 = input("Login of the second student ? >> ")
+lsgroup = "%03d" % int(group)
+login1 = login1.lower()
+login2 = login2.lower()
+idname = "group" + lsgroup + '-' + login1 + '-' + login2
+print("Your file name must be : " + idname)
+
 # Configuration A MODIFIER PAR L'ETUDIANT !!!
 # =============================================
-project_path = "group001-mdelsart-aantonutti.zip"
-rapport_path = "group001-mdelsart-aantonutti-rapport.zip"
+# project_path = "group001-vlegat-jfremacle.zip"
+# rapport_path = "group001-vlegat-jfremacle-rapport.zip"
+project_path = idname + ".zip"
+rapport_path = idname + "-rapport.zip"
 Windows_TDM = (platform == "win32")  # True if using Windows + TDM-GCC, False otherwise
 # =============================================
 
@@ -65,16 +73,26 @@ if os.path.exists('./tmp-rapport'):
 
 illegal = 0
 penalty = 0
+os.makedirs('./tmp-rapport')
 with zipfile.ZipFile(rapport_path, 'r') as zip:
     for file in zip.namelist():
+        nstrip = 0
+        if file.startswith(project_fname[:-4]):
+            nstrip = len(project_fname[:-4]) + 1
         if any(i in file for i in all_illegal):
             print(f"WARNING ERROR : illegal file : {file}")
             illegal += 1; penalty += 10
             continue
-        zip.extract(file, path='./tmp-rapport/')
+        print(file)
+        if file.endswith('/'):
+            os.makedirs('./tmp-rapport/' + file[nstrip:], exist_ok=True)
+            continue
+        with zip.open(file) as zf, open('./tmp-rapport/' + file[nstrip:], 'wb') as f:
+            shutil.copyfileobj(zf, f)
 
 if not os.path.exists('./Validated'):
     os.makedirs('./Validated')
+
 with zipfile.ZipFile(f"./Validated/{rapport_fname}", 'w', zipfile.ZIP_DEFLATED) as new_zip:
     print("Creating new zip file with files")
     for root, dirs, files in os.walk('./tmp-rapport'):
@@ -85,26 +103,33 @@ with zipfile.ZipFile(f"./Validated/{rapport_fname}", 'w', zipfile.ZIP_DEFLATED) 
 if os.path.exists('./tmp'):
     shutil.rmtree('./tmp')
 
+os.makedirs('./tmp')
 with zipfile.ZipFile(project_path, 'r') as zip:
     for file in zip.namelist():
-        if not file.startswith('Project/'):
-            print(f"WARNING ERROR : illegal file : {file}")
+        nstrip = 0
+        if file.startswith(project_fname[:-4]):
+            nstrip = len(project_fname[:-4]) + 1
+        if not (file.startswith('Project/') or file.startswith(project_fname[:-4])):
+            # print(f"WARNING ERROR : illegal file : {file}")
             illegal += 1; penalty += 1
             continue
-        if not any(file.endswith(ext) for ext in project_allow):
-            print(f"WARNING ERROR : illegal file : {file}")
+        if not any(file.endswith(ext) for ext in project_allow) and '.' in file:
+            # print(f"WARNING ERROR : illegal file : {file}")
             illegal += 1; penalty += 1
             continue
         if any(i in file for i in all_illegal):
-            print(f"WARNING ERROR : illegal file : {file}")
+            # print(f"WARNING ERROR : illegal file : {file}")
             illegal += 1; penalty += 10
             continue
         if any(i in file for i in project_illegal):
-            print(f"WARNING ERROR : illegal file : {file}")
+            # print(f"WARNING ERROR : illegal file : {file}")
             illegal += 1; penalty += 1
             continue
-        zip.extract(file, path='./tmp/')
-
+        if file.endswith('/'):
+            os.makedirs('./tmp/' + file[nstrip:], exist_ok=True)
+            continue
+        with zip.open(file) as zf, open('./tmp/' + file[nstrip:], 'wb') as f:
+            shutil.copyfileobj(zf, f)
 
 # %% Project compilation
 if os.path.exists('./tmp-compil'):
