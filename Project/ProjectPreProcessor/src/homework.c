@@ -717,8 +717,11 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
         // Define constants
         const int nb_camion = 2;
         const int nb_pedestrian = 1;
-
+        double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
+
+        weightCamionDensityBridge = 1250 * 9.81 / 4.0;
+        weightPedestrianDensityBridge = 9.81 * 70.0;
 
         domainBoundaryMapping_t mapping[] = {
             {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
@@ -727,14 +730,14 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
             {"PILAR R 2", DIRICHLET_XY, 0.0, 0.0},
             {"PILAR D 2", DIRICHLET_XY, 0.0, 0.0},
             {"PILAR L 2", DIRICHLET_XY, 0.0, 0.0},
-            // {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
-            // {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 1", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 2", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 3", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 4", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 5", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 6", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 7", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
+            {"SUB ROADWAY U 8", NEUMANN_Y, -weightPedestrianDensityBridge, NAN},
             // {"SUB ROADWAY D 1", NEUMANN_Y, 0.0, NAN},
             // {"SUB ROADWAY D 2", NEUMANN_Y, 0.0, NAN},
             // {"SUB ROADWAY D 3", NEUMANN_Y, 0.0, NAN},
@@ -755,11 +758,14 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
     }
     else
     {
-        int nb_camion = 2;
+        int nb_camion = 2 * 30;
         int nb_pedestrian = 1;
 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
-        double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
+        double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2;
+
+        weightCamionDensityBridge = 1250 * 9.81 / 4.0;
+        weightPedestrianDensityBridge = 9.81 * 70.0;
 
         domainBoundaryMapping_t mapping[] = {
             {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},

@@ -86,7 +86,7 @@ def generate_frame(i):
     
     nameSolution = ""
     if animation_position: nameSolution = "../../Rapport/data/animations/UV_animation_position_{}.txt".format(i + 1)
-    if exampleUForm_Use:   nameSolution = "../../Rapport/data/animations/UV_example_{}.txt".format(i + 1)
+    elif exampleUForm_Use: nameSolution = "../../Rapport/data/animations/UV_example_{}.txt".format(i + 1)
     elif beamUse:          nameSolution = "../../Rapport/data/animations/UV_beam_{}.txt".format(i + 1)
     elif simplifiedUse:    nameSolution = "../../Rapport/data/animations/UV_simplified_{}.txt".format(i + 1)
     else :                 nameSolution = "../../Rapport/data/animations/UV_{}.txt".format(i + 1)
@@ -100,17 +100,16 @@ def generate_frame(i):
     elif simplifiedUse:     deformationFactor = 1e4
     else:                   deformationFactor = 1e4
 
+    deformationFactor = 1e7
     plt.clf()
     cb = mesh.plotfield(uv_norm, uv * deformationFactor, cmap="turbo")
 
     plt.colorbar(cb)
 
-    print(uv)
-
-    # if exampleUForm_Use: plt.title('Elastic Deformation')
-    # elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
-    # elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
-    # else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+    if exampleUForm_Use: plt.title('Elastic Deformation')
+    elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
+    elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
+    else :               plt.title('Elastic Deformation of Bridge under\nHuge Force Density on Decks')
     
     mesh.plot(uv * deformationFactor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
@@ -195,7 +194,7 @@ if __name__ == "__main__":
         print("Generating animation...")
         NB_IMAGES = 50
         fig, ax = plt.subplots()
-        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=50)
+        animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=100)
 
         if exampleUForm_Use: plt.title('Elastic Deformation')
         elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
