@@ -1,6 +1,13 @@
 #ifndef _FEM_H_
 #define _FEM_H_
 
+/*
+* Note:
+* This header file is used to define the functions and structures used in the project.
+* The functions are defined in the fem.c file.
+* These functions are used in the Pronect/ folder but also in the ProjectPreProcessor and the ProjectPostProcessor/ folder.
+*/
+
 /* Import */
 
 #include <stdio.h>
@@ -23,11 +30,11 @@
 /* Enumerations */
 
 typedef enum { DIRICHLET_X, DIRICHLET_Y, DIRICHLET_XY, DIRICHLET_N, DIRICHLET_T, DIRICHLET_NT, NEUMANN_X, NEUMANN_Y, NEUMANN_N, NEUMANN_T, UNDEFINED=-1} femBoundaryType;
-typedef enum { FEM_TRIANGLE, FEM_QUAD, FEM_EDGE } femElementType;
-typedef enum { PLANAR_STRESS, PLANAR_STRAIN, AXISYM } femElasticCase;
-typedef enum {FEM_FULL,FEM_BAND} femSolverType;
-typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM,FEM_RCMK} femRenumType;
 typedef enum {FEM_DISCRETE_TYPE_LINEAR, FEM_DISCRETE_TYPE_QUADRATIC} femDiscreteType;
+typedef enum { PLANAR_STRESS, PLANAR_STRAIN, AXISYM } femElasticCase;
+typedef enum { FEM_TRIANGLE, FEM_QUAD, FEM_EDGE } femElementType;
+typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM,FEM_RCMK} femRenumType;
+typedef enum {FEM_FULL,FEM_BAND} femSolverType;
 
 /* Structures */
 
@@ -79,10 +86,10 @@ typedef struct {
     double defaultSize;
     
     double (*geoSize)(double x, double y);
-    double * (*getMaterialProperties)(char *material);
-    char * (*getMaterials)(double x, double y);
+    double * (*getMaterialProperties)(char *material); // Not used yet
+    char * (*getMaterials)(double x, double y); // Not used yet
 
-    // For the example
+    // For the example only (beam or U form)
     double LxPlate, LyPlate;
 
     femElementType elementType;
@@ -157,7 +164,7 @@ typedef struct Queue
 
 /* Variables */
 
-extern double *positionMeshNodes; // To renumber the mesh nodes
+extern double *positionMeshNodes;
 extern femGeometry theGeometry;
 
 /* Functions declaration */
@@ -313,7 +320,7 @@ int comparPositionNode(const void *a, const void *b);
 void femMeshRenumber(femMesh *theMesh, femRenumType renumType);
 
 void swap(int *a, int *b);
-void reverse_array(int *adj, int n);
+void reverse_array(int *array, int n);
 
 Queue *createQueue(int maxCapacity);
 void enqueue(Queue *Q, int element);
@@ -329,8 +336,11 @@ int *createAdjacencyMatrix(femMesh *mesh);
 void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue *Q, int element_idx);
 Queue *rcm(femMesh *theMesh, int nNodes);
 
-int femIsPositionAnimated(int getOrSet);
-double adaptForceWithPosition(double force, double node_position, int currAnim, int nTotalAnim);
-double adaptForceWithPositionReversed(double force, double node_position, int currAnim, int nTotalAnim);
+/***********************/
+/* Animation functions */
+/***********************/
+
+double adaptForceForMotionCar(double force, double node_position, int currAnim, int nTotalAnim);
+double adaptForceForMotionCarReversed(double force, double node_position, int currAnim, int nTotalAnim);
 
 #endif // _FEM_H_

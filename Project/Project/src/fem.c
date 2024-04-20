@@ -1,6 +1,6 @@
 #include "fem.h"
 
-/* Variable (needed for linux compilation) */
+/* Variable (needed for Linux compilation) */
 
 femGeometry theGeometry;
 
@@ -11,44 +11,44 @@ femGeometry theGeometry;
 /* Full System */
 femFullSystem *femFullSystemCreate(int size)
 {
-    femFullSystem *system = malloc(sizeof(femFullSystem));
-    if (system == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    femFullSystemAlloc(system, size);
-    femFullSystemInit(system, size);
-    return system;
+    femFullSystem *mySystem = (femFullSystem *) malloc(sizeof(femFullSystem));
+    if (mySystem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    femFullSystemAlloc(mySystem, size);
+    femFullSystemInit(mySystem, size);
+    return mySystem;
 }
 
-void femFullSystemFree(femFullSystem *system)
+void femFullSystemFree(femFullSystem *mySystem)
 {   
-    free(system->A); system->A = NULL;
-    free(system->B); system->B = NULL;
-    free(system); system = NULL;
+    free(mySystem->A); mySystem->A = NULL;
+    free(mySystem->B); mySystem->B = NULL;
+    free(mySystem);    mySystem = NULL;
 }
 
-void femFullSystemAlloc(femFullSystem *system, int size)
+void femFullSystemAlloc(femFullSystem *mySystem, int size)
 {
-    double *elem = malloc(sizeof(double) * size * (size + 1));
+    double *elem = (double *) malloc(sizeof(double) * size * (size + 1));
     if (elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    system->A = malloc(sizeof(double *) * size);
-    if (system->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    system->B = elem;
-    system->A[0] = elem + size;
-    for (int i = 1; i < size; i++) { system->A[i] = system->A[i - 1] + size; }
+    mySystem->A = (double **) malloc(sizeof(double *) * size);
+    if (mySystem->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    mySystem->B = elem;
+    mySystem->A[0] = elem + size;
+    for (int i = 1; i < size; i++) { mySystem->A[i] = mySystem->A[i - 1] + size; }
 }
 
-void femFullSystemInit(femFullSystem *system, int size)
+void femFullSystemInit(femFullSystem *mySystem, int size)
 {
-    for (int i = 0; i < size * (size + 1); i++) { system->B[i] = 0; }
+    for (int i = 0; i < size * (size + 1); i++) { mySystem->B[i] = 0; }
 }
 
 double femFullSystemGetA_Entry(femFullSystem *mySystem, int myRow, int myCol) { return mySystem->A[myRow][myCol]; }
 
 double femFullSystemGetB_Entry(femFullSystem *mySystem, int myRow) { return mySystem->B[myRow]; }
 
-void femFullSystemAssemble(femFullSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
+void femFullSystemAssemble(femFullSystem *mySystem, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
-    double **A = system->A;
-    double *B  = system->B;
+    double **A = mySystem->A;
+    double *B  = mySystem->B;
     double a   = theProblem->A;
     double b   = theProblem->B;
     double c   = theProblem->C;
@@ -104,10 +104,10 @@ void femFullSystemConstrainXY(femFullSystem *mySystem, int myNode, double myValu
     B[myNode] = myValue;
 }
 
-void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size)
+void femFullSystemConstrainNT(femFullSystem *mySystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size)
 {
-    double **A = theSystem->A;
-    double *B  = theSystem->B;
+    double **A = mySystem->A;
+    double *B  = mySystem->B;
 
     double a_vect2_vect2 = vect2_x * (vect2_x * A[Ux][Ux] + vect2_y * A[Uy][Ux]) + vect2_y * (vect2_x * A[Ux][Uy] + vect2_y * A[Uy][Uy]);
     double a_vect2_vect1 = vect1_x * (vect2_x * A[Ux][Ux] + vect2_y * A[Uy][Ux]) + vect1_y * (vect2_x * A[Ux][Uy] + vect2_y * A[Uy][Uy]);
@@ -115,10 +115,10 @@ void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double v
 
     for (int i = 0; i < size; i++)
     {
-        double lx = femFullSystemGetA_Entry(theSystem, Ux, i);
-        double ly = femFullSystemGetA_Entry(theSystem, Uy, i);
-        double cx = femFullSystemGetA_Entry(theSystem, i, Ux);
-        double cy = femFullSystemGetA_Entry(theSystem, i, Uy);
+        double lx = A[Ux][i];
+        double ly = A[Uy][i];
+        double cx = A[i][Ux];
+        double cy = A[i][Uy];
 
         double c_vect1 = vect1_x * cx + vect1_y * cy;
         B[i] -= myValue * c_vect1;
@@ -141,13 +141,13 @@ void femFullSystemConstrainNT(femFullSystem *theSystem, double vect1_x, double v
     B[Uy] = vect1_y * myValue + vect2_y * (b_vect2 - myValue * a_vect2_vect1);
 }
 
-double *femFullSystemEliminate(femFullSystem *system, int size)
+double *femFullSystemEliminate(femFullSystem *mySystem, int size)
 {
     double **A, *B, factor;
     int i, j, k;
 
-    A = system->A;
-    B = system->B;
+    A = mySystem->A;
+    B = mySystem->B;
 
     /* Gauss elimination */
     for (k = 0; k < size; k++)
@@ -169,7 +169,7 @@ double *femFullSystemEliminate(femFullSystem *system, int size)
         B[i] = (B[i] - factor) / A[i][i];
     }
 
-    return system->B;
+    return B;
 }
 
 void femFullSystemGetResidual(femFullSystem *mySystem, int size, double *residuals, double *theSoluce)
@@ -182,21 +182,18 @@ void femFullSystemGetResidual(femFullSystem *mySystem, int size, double *residua
 
     for (i = 0; i < size; i++)
     {
-        for (j = 0; j < size; j++)
-        {
-            residuals[i] += A[i][j] * theSoluce[j];
-        }
+        for (j = 0; j < size; j++) { residuals[i] += A[i][j] * theSoluce[j]; }
         residuals[i] -= B[i];
     }
 }
 
-void femFullSystemPrint(femFullSystem *system, int size)
+void femFullSystemPrint(femFullSystem *mySystem, int size)
 {
     double **A, *B;
     int i, j;
 
-    A = system->A;
-    B = system->B;
+    A = mySystem->A;
+    B = mySystem->B;
 
     for (i = 0; i < size; i++)
     {
@@ -209,47 +206,47 @@ void femFullSystemPrint(femFullSystem *system, int size)
     }
 }
 
-void femFullSystemPrintInfos(femFullSystem *system, int size)
+void femFullSystemPrintInfos(femFullSystem *mySystem, int size)
 {
     printf(" \n");
     printf("    Full Gaussian elimination \n");
     printf("    Storage informations \n");
-    printf("    Matrix size      : %8d\n",size);
-    printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (size + 1));     
+    printf("    Matrix size      : %8d\n", size);
+    printf("    Bytes required   : %8d\n", (int) sizeof(double) * size * (size + 1));     
 }
 
 
 /* Band System */
 femBandSystem *femBandSystemCreate(int size, int band)
 {
-    femBandSystem *system = malloc(sizeof(femBandSystem));
-    if (system == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    femBandSystemAlloc(system, size, band);
-    femBandSystemInit(system, size);
-    return system;
+    femBandSystem *mySystem = (femBandSystem *) malloc(sizeof(femBandSystem));
+    if (mySystem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
+    femBandSystemAlloc(mySystem, size, band);
+    femBandSystemInit(mySystem, size);
+    return mySystem;
 }
 
-void femBandSystemAlloc(femBandSystem *system, int size, int band)
+void femBandSystemAlloc(femBandSystem *mySystem, int size, int band)
 {   
-    system->B = malloc(sizeof(double) * size * (band + 1));
-    if (system->B == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    system->A = malloc(sizeof(double *) * size);
-    if (system->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }     
-    system->band = band;
-    system->A[0] = system->B + size;
-    for (int i = 1 ; i < size ; i++) { system->A[i] = system->A[i-1] + band - 1; }
+    mySystem->B = (double *) malloc(sizeof(double) * size * (band + 1));
+    if (mySystem->B == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    mySystem->A = (double **) malloc(sizeof(double *) * size);
+    if (mySystem->A == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }     
+    mySystem->band = band;
+    mySystem->A[0] = mySystem->B + size;
+    for (int i = 1 ; i < size ; i++) { mySystem->A[i] = mySystem->A[i-1] + band - 1; }
 }
 
-void femBandSystemInit(femBandSystem *system, int size)
+void femBandSystemInit(femBandSystem *mySystem, int size)
 {
-    for (int i = 0 ; i < size * (system->band + 1) ; i++) { system->B[i] = 0; }
+    for (int i = 0 ; i < size * (mySystem->band + 1) ; i++) { mySystem->B[i] = 0; }
 }
 
-void femBandSystemFree(femBandSystem *system)
+void femBandSystemFree(femBandSystem *mySystem)
 {
-    free(system->B);
-    free(system->A); 
-    free(system);
+    free(mySystem->B); mySystem->B = NULL;
+    free(mySystem->A); mySystem->A = NULL;
+    free(mySystem);    mySystem = NULL;
 }
 
 void femBandSystemGetResidual(femBandSystem *mySystem, int size, double *residuals, double *theSoluce)
@@ -274,14 +271,14 @@ void femBandSystemGetResidual(femBandSystem *mySystem, int size, double *residua
     }
 }
 
-void femBandSystemPrint(femBandSystem *system, int size)
+void femBandSystemPrint(femBandSystem *mySystem, int size)
 {
     double  **A, *B;
     int band;
 
-    A    = system->A;
-    B    = system->B;
-    band = system->band;
+    A    = mySystem->A;
+    B    = mySystem->B;
+    band = mySystem->band;
 
     for (int i = 0; i < size; i++)
     {
@@ -294,15 +291,15 @@ void femBandSystemPrint(femBandSystem *system, int size)
     }
 }
 
-void femBandSystemPrintInfos(femBandSystem *system, int size)
+void femBandSystemPrintInfos(femBandSystem *mySystem, int size)
 {
-    int band = system->band;
+    int band = mySystem->band;
     printf(" \n");
     printf("    Banded Gaussian elimination \n");
     printf("    Storage informations \n");
-    printf("    Matrix size      : %8d\n",size);
-    printf("    Matrix band      : %8d\n",band);
-    printf("    Bytes required   : %8d\n",(int) sizeof(double) * size * (band + 1));
+    printf("    Matrix size      : %8d\n", size);
+    printf("    Matrix band      : %8d\n", band);
+    printf("    Bytes required   : %8d\n", (int) sizeof(double) * size * (band + 1));
 }
 
 int isInBand(int band, int myRow, int myCol) { return myCol >= myRow && myCol < myRow + band; }
@@ -311,14 +308,14 @@ double femBandSystemGetA_Entry(femBandSystem *mySystem, int myRow, int myCol) { 
 
 double femBandSystemGetB_Entry(femBandSystem *mySystem, int myRow) { return mySystem->B[myRow]; }
 
-void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
+void femBandSystemAssemble(femBandSystem *mySystem, femProblem *theProblem, int *mapX, int *mapY, double *phi, double *dphidx, double *dphidy, double weightedJac, double xLoc, int nLoc)
 {
     double **A, *B, a, b, c, rho, gx, gy;
     int band, i, j;
 
-    A    = system->A;
-    B    = system->B;
-    band = system->band;
+    A     = mySystem->A;
+    B     = mySystem->B;
+    band  = mySystem->band;
     a     = theProblem->A;
     b     = theProblem->B;
     c     = theProblem->C;
@@ -359,18 +356,18 @@ void femBandSystemAssemble(femBandSystem *system, femProblem *theProblem, int *m
     else { Error("Unexpected problem type"); }
 }
 
-void femBandSystemConstrainXY(femBandSystem *system, int myNode, double myValue, int size)
+void femBandSystemConstrainXY(femBandSystem *mySystem, int myNode, double myValue, int size)
 {
     double **A, *B, A_entry;
     int i, band;
 
-    A = system->A;
-    B = system->B;
-    band = system->band;
+    A = mySystem->A;
+    B = mySystem->B;
+    band = mySystem->band;
 
     for (i = 0; i < size; i++)
     {
-        A_entry = (myNode >= i) ? femBandSystemGetA_Entry(system, i, myNode) : femBandSystemGetA_Entry(system, myNode, i);
+        A_entry = (myNode >= i) ? femBandSystemGetA_Entry(mySystem, i, myNode) : femBandSystemGetA_Entry(mySystem, myNode, i);
         if (A_entry != 0.0)
         {
             B[i] -= myValue * A_entry;
@@ -379,26 +376,23 @@ void femBandSystemConstrainXY(femBandSystem *system, int myNode, double myValue,
     }
     for (int i = 0; i < size; i++)
     {
-        if (femBandSystemGetA_Entry(system, myNode, i) != 0.0)
-        { 
-            A[myNode][i] = 0.0;
-        }
+        if (femBandSystemGetA_Entry(mySystem, myNode, i) != 0.0) { A[myNode][i] = 0.0; }
     }
     
     A[myNode][myNode] = 1.0;
     B[myNode] = myValue;
 }
 
-void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size)
+void femBandSystemConstrainNT(femBandSystem *mySystem, double vect1_x, double vect1_y, double vect2_x, double vect2_y, double myValue, int Ux, int Uy, int size)
 {
-    double **A = theSystem->A;
-    double *B  = theSystem->B;
-    int band   = theSystem->band;
+    double **A = mySystem->A;
+    double *B  = mySystem->B;
+    int band   = mySystem->band;
 
-    double A_Ux_Uy = femBandSystemGetA_Entry(theSystem, Ux, Uy);
+    double A_Ux_Uy = femBandSystemGetA_Entry(mySystem, Ux, Uy);
     double A_Uy_Ux = A_Ux_Uy;
-    double A_Ux_Ux = femBandSystemGetA_Entry(theSystem, Ux, Ux);
-    double A_Uy_Uy = femBandSystemGetA_Entry(theSystem, Uy, Uy);
+    double A_Ux_Ux = femBandSystemGetA_Entry(mySystem, Ux, Ux);
+    double A_Uy_Uy = femBandSystemGetA_Entry(mySystem, Uy, Uy);
 
     double a_vect2_vect2 = vect2_x * (vect2_x * A_Ux_Ux + vect2_y * A_Uy_Ux) + vect2_y * (vect2_x * A_Ux_Uy + vect2_y * A_Uy_Uy);
     double a_vect2_vect1 = vect1_x * (vect2_x * A_Ux_Ux + vect2_y * A_Uy_Ux) + vect1_y * (vect2_x * A_Ux_Uy + vect2_y * A_Uy_Uy);
@@ -406,12 +400,12 @@ void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double v
 
     for (int i = 0; i < size; i++)
     {
-        double lx = (i >= Ux) ? femBandSystemGetA_Entry(theSystem, Ux, i) : femBandSystemGetA_Entry(theSystem, i, Ux);
-        double ly = (i >= Uy) ? femBandSystemGetA_Entry(theSystem, Uy, i) : femBandSystemGetA_Entry(theSystem, i, Uy);
+        double lx = (i >= Ux) ? femBandSystemGetA_Entry(mySystem, Ux, i) : femBandSystemGetA_Entry(mySystem, i, Ux);
+        double ly = (i >= Uy) ? femBandSystemGetA_Entry(mySystem, Uy, i) : femBandSystemGetA_Entry(mySystem, i, Uy);
         double l_vect2 = vect2_x * lx + vect2_y * ly;
 
-        double cx = (Ux >= i) ? femBandSystemGetA_Entry(theSystem, i, Ux) : femBandSystemGetA_Entry(theSystem, Ux, i);
-        double cy = (Uy >= i) ? femBandSystemGetA_Entry(theSystem, i, Uy) : femBandSystemGetA_Entry(theSystem, Uy, i);
+        double cx = (Ux >= i) ? femBandSystemGetA_Entry(mySystem, i, Ux) : femBandSystemGetA_Entry(mySystem, Ux, i);
+        double cy = (Uy >= i) ? femBandSystemGetA_Entry(mySystem, i, Uy) : femBandSystemGetA_Entry(mySystem, Uy, i);
         double c_vect2 = vect2_x * cx + vect2_y * cy;
 
         double c_vect1 = vect1_x * cx + vect1_y * cy;
@@ -431,13 +425,13 @@ void femBandSystemConstrainNT(femBandSystem *theSystem, double vect1_x, double v
     B[Uy] = vect1_y * myValue + vect2_y * (b_vect2 - myValue * a_vect2_vect1);
 }
 
-double *femBandSystemEliminate(femBandSystem *system, int size)
+double *femBandSystemEliminate(femBandSystem *mySystem, int size)
 {
     double **A, *B, factor;
     int i, j, k, jend, band;
-    A = system->A;
-    B = system->B;
-    band = system->band;
+    A = mySystem->A;
+    B = mySystem->B;
+    band = mySystem->band;
 
     /* Gauss elimination */
     for (k = 0; k < size; k++)
@@ -460,20 +454,20 @@ double *femBandSystemEliminate(femBandSystem *system, int size)
         for (j = i + 1 ; j < jend; j++) { factor += A[i][j] * B[j]; }
         B[i] = ( B[i] - factor) / A[i][i];
     }
-    return system->B;
+    return B;
 }
 
 int femMeshComputeBand(femMesh *theMesh)
 {
-    int maxNum, minNum, nodeNum, elemNum;
-    int band = 0;
+    int iElem, j, maxNum, minNum, nodeNum, elemNum, band;
+    band = 0;
 
-    for (int iElem = 0; iElem < theMesh->nElem; iElem++)
+    for (iElem = 0; iElem < theMesh->nElem; iElem++)
     {   
         maxNum = INT_MIN;
         minNum = INT_MAX;
 
-        for (int j = 0; j < theMesh->nLocalNode; j++)
+        for (j = 0; j < theMesh->nLocalNode; j++)
         {
             elemNum = theMesh->elem[iElem * theMesh->nLocalNode + j];
             nodeNum = theMesh->nodes->number[elemNum];
@@ -491,7 +485,7 @@ int femMeshComputeBand(femMesh *theMesh)
 
 femSolver *femSolverCreate(int size)
 {
-    femSolver *solver = malloc(sizeof(femSolver));
+    femSolver *solver = (femSolver *) malloc(sizeof(femSolver));
     if (solver == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     solver->size = size;
     if (solver == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
@@ -500,17 +494,17 @@ femSolver *femSolverCreate(int size)
 
 femSolver *femSolverFullCreate(int size)
 {
-    femSolver *mySolver = femSolverCreate(size);
+    femSolver *mySolver = (femSolver *) femSolverCreate(size);
     mySolver->type = FEM_FULL;
-    mySolver->solver = (femSolver *) femFullSystemCreate(size);
+    mySolver->solver = (femFullSystem *) femFullSystemCreate(size);
     return mySolver;
 }
 
 femSolver *femSolverBandCreate(int size, int band)
 {
-    femSolver *mySolver = femSolverCreate(size);
+    femSolver *mySolver = (femSolver *) femSolverCreate(size);
     mySolver->type = FEM_BAND;
-    mySolver->solver = (femSolver *) femBandSystemCreate(size, band);
+    mySolver->solver = (femBandSystem *) femBandSystemCreate(size, band);
     return mySolver;
 }
 
@@ -518,11 +512,11 @@ void femSolverFree(femSolver *mySolver)
 {
     switch (mySolver->type)
     {
-        case FEM_FULL : femFullSystemFree((femFullSystem *)mySolver->solver); break;
-        case FEM_BAND : femBandSystemFree((femBandSystem *)mySolver->solver); break;
+        case FEM_FULL : femFullSystemFree((femFullSystem *) mySolver->solver); break;
+        case FEM_BAND : femBandSystemFree((femBandSystem *) mySolver->solver); break;
         default :       Error("Unexpected solver type");
     }
-    free(mySolver);
+    free(mySolver); mySolver = NULL;
 }
 
 void femSolverInit(femSolver *mySolver)
@@ -538,7 +532,7 @@ void femSolverInit(femSolver *mySolver)
 double femSolverGetA_Entry(femSolver *mySolver, int myRow, int myCol)
 {
     switch (mySolver->type)
-    {  
+    {
         case FEM_FULL : return femFullSystemGetA_Entry((femFullSystem *) mySolver->solver, myRow, myCol); break;
         case FEM_BAND : return femBandSystemGetA_Entry((femBandSystem *) mySolver->solver, myRow, myCol); break;
         default :       Error("Unexpected solver type");
@@ -668,7 +662,7 @@ void femSolverGetResidual(femSolver *mySolver, double *residuals, double *theSol
 
 femIntegration *femIntegrationCreate(int n, femElementType type)
 {
-    femIntegration *theRule = malloc(sizeof(femIntegration));
+    femIntegration *theRule = (femIntegration *) malloc(sizeof(femIntegration));
     if (theRule == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     if (type == FEM_QUAD && n == 4)
     {
@@ -684,17 +678,18 @@ femIntegration *femIntegrationCreate(int n, femElementType type)
         theRule->eta    = _gaussTri3Eta;
         theRule->weight = _gaussTri3Weight;
     }
-    else if (type == FEM_EDGE && n == 2) {
+    else if (type == FEM_EDGE && n == 2)
+    {
         theRule->n      = 2;
         theRule->xsi    = _gaussEdge2Xsi;
         theRule->eta    = NULL;
         theRule->weight = _gaussEdge2Weight;
-        }
+    }
     else { Error("Cannot create such an integration rule !"); }
     return theRule;
 }
 
-void femIntegrationFree(femIntegration *theRule) { free(theRule); }
+void femIntegrationFree(femIntegration *theRule) { free(theRule); theRule = NULL; }
 
 /***** Quad with 4 nodes *****/
 void _q1c0_x_linear(double *xsi, double *eta)
@@ -881,7 +876,7 @@ void _e1c0_dphidx_quadratic(double xsi, double *dphidxsi)
 
 femDiscrete *femDiscreteCreate(femElementType type, femDiscreteType dType)
 {
-    femDiscrete *theSpace = malloc(sizeof(femDiscrete));
+    femDiscrete *theSpace = (femDiscrete *) malloc(sizeof(femDiscrete));
     if (theSpace == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
 
     if (type == FEM_TRIANGLE && dType == FEM_DISCRETE_TYPE_LINEAR)
@@ -930,7 +925,7 @@ femDiscrete *femDiscreteCreate(femElementType type, femDiscreteType dType)
     return theSpace;
 }
 
-void femDiscreteFree(femDiscrete *theSpace) { free(theSpace); }
+void femDiscreteFree(femDiscrete *theSpace) { free(theSpace); theSpace = NULL; }
 
 void femDiscreteXsi2(femDiscrete *mySpace, double *xsi, double *eta) { mySpace->x2(xsi, eta); }
 
@@ -974,10 +969,10 @@ femProblem *femElasticityCreate(femGeometry *theGeometry, double E, double nu, d
 {
     femProblem *theProblem = (femProblem *) malloc(sizeof(femProblem));
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    theProblem->E = E;
-    theProblem->nu = nu;
-    theProblem->gx = gx;
-    theProblem->gy = gy;
+    theProblem->E   = E;
+    theProblem->nu  = nu;
+    theProblem->gx  = gx;
+    theProblem->gy  = gy;
     theProblem->rho = rho;
 
     if (iCase == PLANAR_STRESS)
@@ -1032,18 +1027,15 @@ void femElasticityFree(femProblem *theProblem)
 {
     femSolverFree(theProblem->solver);
     femIntegrationFree(theProblem->rule);
+    femIntegrationFree(theProblem->ruleEdge);
     femDiscreteFree(theProblem->space);
+    femDiscreteFree(theProblem->spaceEdge);
     for (int i = 0; i < theProblem->nBoundaryConditions; i++) { free(theProblem->conditions[i]); theProblem->conditions[i] = NULL; }
-    free(theProblem->conditions);
-    theProblem->conditions = NULL;
-    free(theProblem->soluce);
-    theProblem->soluce = NULL;
-    free(theProblem->residuals);
-    theProblem->residuals = NULL;
-    free(theProblem->constrainedNodes);
-    theProblem->constrainedNodes = NULL;
-    free(theProblem);
-    theProblem = NULL;
+    free(theProblem->conditions); theProblem->conditions = NULL;
+    free(theProblem->soluce); theProblem->soluce = NULL;
+    free(theProblem->residuals); theProblem->residuals = NULL;
+    free(theProblem->constrainedNodes); theProblem->constrainedNodes = NULL;
+    free(theProblem); theProblem = NULL;
 }
 
 void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value1, double value2)
@@ -1059,7 +1051,7 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
     theBoundary->domain = theProblem->geometry->theDomains[iDomain];
     theBoundary->value1 = value1;
     theBoundary->value2 = value2;
-    theBoundary->type = type;
+    theBoundary->type   = type;
     theProblem->nBoundaryConditions++;
     int nBoundaryConditions = theProblem->nBoundaryConditions;
 
@@ -1088,11 +1080,11 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
         int *elem = theDomain->elem;
         int nElem = theDomain->nElem;
         femConstrainedNode constrainedNode;
-        constrainedNode.type = type;
+        constrainedNode.type   = type;
         constrainedNode.value1 = value1;
         constrainedNode.value2 = value2;
-        constrainedNode.nx = NAN;
-        constrainedNode.ny = NAN;
+        constrainedNode.nx     = NAN;
+        constrainedNode.ny     = NAN;
         if (type == DIRICHLET_X || type == DIRICHLET_Y || type == DIRICHLET_XY)
         {
             for (int iElem = 0; iElem < nElem; iElem++)
@@ -1109,17 +1101,15 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
             // Need to compute normals
             int nNodes = theNodes->nNodes;
             double *NX = (double *) malloc(nNodes * sizeof(double));
-            if (NX == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
             double *NY = (double *) malloc(nNodes * sizeof(double));
+            if (NX == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
             if (NY == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
             for (int iElem = 0; iElem < nElem; iElem++)
             {
                 int node0 = theDomain->mesh->elem[2 * elem[iElem] + 0];
                 int node1 = theDomain->mesh->elem[2 * elem[iElem] + 1];
-                NX[node0] = 0;
-                NY[node0] = 0;
-                NX[node1] = 0;
-                NY[node1] = 0;
+                NX[node0] = 0; NY[node0] = 0;
+                NX[node1] = 0; NY[node1] = 0;
             }
             for (int iElem = 0; iElem < nElem; iElem++)
             {
@@ -1129,10 +1119,8 @@ void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain,
                 double ty = theNodes->Y[node1] - theNodes->Y[node0];
                 double nx = ty;
                 double ny = -tx;
-                NX[node0] += nx;
-                NY[node0] += ny;
-                NX[node1] += nx;
-                NY[node1] += ny;
+                NX[node0] += nx; NY[node0] += ny;
+                NX[node1] += nx; NY[node1] += ny;
             }
 
             for (int iElem = 0; iElem < nElem; iElem++)
@@ -1168,7 +1156,7 @@ void femElasticityPrint(femProblem *theProblem)
     printf("   Gravity-X       gx  = %14.7e [m/s2]\n", theProblem->gx);
     printf("   Gravity-Y       gy  = %14.7e [m/s2]\n", theProblem->gy);
 
-    if (theProblem->planarStrainStress == PLANAR_STRAIN)      { printf("   Planar strains formulation \n"); }
+    if      (theProblem->planarStrainStress == PLANAR_STRAIN) { printf("   Planar strains formulation \n"); }
     else if (theProblem->planarStrainStress == PLANAR_STRESS) { printf("   Planar stresses formulation \n"); }
     else if (theProblem->planarStrainStress == AXISYM)        { printf("   Axisymmetric formulation \n"); }
 
@@ -1237,20 +1225,20 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
 {
     FILE *file = fopen(filename, "r");
     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
-    femProblem *theProblem = malloc(sizeof(femProblem));
+    femProblem *theProblem = (femProblem *) malloc(sizeof(femProblem));
     if (theProblem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     theProblem->nBoundaryConditions = 0;
     theProblem->conditions = NULL;
 
     int nNodes = theGeometry->theNodes->nNodes;
     int size = 2 * nNodes;
-    theProblem->soluce = malloc(size * sizeof(double));
-    if (theProblem->soluce == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
-    theProblem->residuals = malloc(size * sizeof(double));
+    theProblem->soluce    = (double *) malloc(size * sizeof(double));
+    theProblem->residuals = (double *) malloc(size * sizeof(double));
+    if (theProblem->soluce == NULL)    { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     if (theProblem->residuals == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     for (int i = 0; i < size; i++) { theProblem->soluce[i] = 0.0; theProblem->residuals[i] = 0.0; }
 
-    theProblem->constrainedNodes = malloc(nNodes * sizeof(femConstrainedNode));
+    theProblem->constrainedNodes = (femConstrainedNode *) malloc(nNodes * sizeof(femConstrainedNode));
     if (theProblem->constrainedNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return NULL; }
     for (int i = 0; i < nNodes; i++)
     {
@@ -1262,15 +1250,15 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     }
 
     theProblem->geometry = theGeometry;
-    if ((theGeometry->theElements->nLocalNode == 3) || (theGeometry->theElements->nLocalNode == 6))
+    if (theGeometry->theElements->nLocalNode == 3 || theGeometry->theElements->nLocalNode == 6)
     {
         theProblem->space = femDiscreteCreate(FEM_TRIANGLE, dType);
-        theProblem->rule = femIntegrationCreate(3, FEM_TRIANGLE);
+        theProblem->rule  = femIntegrationCreate(3, FEM_TRIANGLE);
     }
     else if (theGeometry->theElements->nLocalNode == 4 || theGeometry->theElements->nLocalNode == 9)
     {
         theProblem->space = femDiscreteCreate(FEM_QUAD, dType);
-        theProblem->rule = femIntegrationCreate(4, FEM_QUAD);
+        theProblem->rule  = femIntegrationCreate(4, FEM_QUAD);
     }
     theProblem->spaceEdge = femDiscreteCreate(FEM_EDGE, dType);
     theProblem->ruleEdge  = femIntegrationCreate(2, FEM_EDGE); 
@@ -1295,18 +1283,18 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
         if (strncasecmp(theLine, "Type of problem     ", 19) == 0)
         {
             ErrorScan(fscanf(file, ":  %[^\n]s \n", (char *)&theArgument));
-            if (strncasecmp(theArgument, "Planar stresses", 13) == 0)           { theProblem->planarStrainStress = PLANAR_STRESS; }
+            if (strncasecmp(theArgument, "Planar stresses", 13) == 0)      { theProblem->planarStrainStress = PLANAR_STRESS; }
             if (strncasecmp(theArgument, "Planar strains", 13) == 0)       { theProblem->planarStrainStress = PLANAR_STRAIN; }
             if (strncasecmp(theArgument, "Axi-symetric problem", 13) == 0) { theProblem->planarStrainStress = AXISYM; }
         }
-        if (strncasecmp(theLine, "Young modulus       ", 19) == 0)     { ErrorScan(fscanf(file, ":  %le\n", &theProblem->E)); }
+        if (strncasecmp(theLine, "Young modulus       ", 19) == 0) { ErrorScan(fscanf(file, ":  %le\n", &theProblem->E)); }
         if (strncasecmp(theLine, "Poisson ratio       ", 19) == 0) { ErrorScan(fscanf(file, ":  %le\n", &theProblem->nu)); }
         if (strncasecmp(theLine, "Mass density        ", 19) == 0) { ErrorScan(fscanf(file, ":  %le\n", &theProblem->rho)); }
         if (strncasecmp(theLine, "Gravity-X           ", 19) == 0) { ErrorScan(fscanf(file, ":  %le\n", &theProblem->gx)); }
         if (strncasecmp(theLine, "Gravity-Y           ", 19) == 0) { ErrorScan(fscanf(file, ":  %le\n", &theProblem->gy)); }
         if (strncasecmp(theLine, "Boundary condition  ", 19) == 0)
         {
-            ErrorScan(fscanf(file, ":  %19s = %le, %le : %[^\n]s\n", (char *)&theArgument, &value1, &value2, (char *)&theDomain));
+            ErrorScan(fscanf(file, ":  %19s = %le, %le : %[^\n]s\n", (char *) &theArgument, &value1, &value2, (char *) &theDomain));
             if (strncasecmp(theArgument, "Dirichlet-X", 19) == 0)  { typeCondition = DIRICHLET_X; }
             if (strncasecmp(theArgument, "Dirichlet-Y", 19) == 0)  { typeCondition = DIRICHLET_Y; }
             if (strncasecmp(theArgument, "Dirichlet-XY", 19) == 0) { typeCondition = DIRICHLET_XY; }
@@ -1323,7 +1311,7 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     }
 
     int iCase = theProblem->planarStrainStress;
-    double E = theProblem->E;
+    double E  = theProblem->E;
     double nu = theProblem->nu;
 
     if (iCase == PLANAR_STRESS)
@@ -1342,92 +1330,6 @@ femProblem *femElasticityRead(femGeometry *theGeometry, femSolverType typeSolver
     fclose(file);
     return theProblem;
 }
-
-// void femSystemWrite(femSolver *theSolver, const char *filename)
-// {
-//     int size = theSolver->size;
-//     FILE *file = fopen(filename, "w");
-//     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
-//     fprintf(file, "Size %d\n", size);
-//     for (int i = 0; i < size; i++)
-//     {
-//         int start = (theSolver->type == FEM_FULL) ? 0 : i;
-//         int end;
-//         if (theSolver->type == FEM_FULL) { end = size; }
-//         else
-//         {
-//             end = i + ((femBandSystem *)(theSolver->solver))->band;
-//             if (end > size) { end = size; }
-//         }
-
-//         for (int j = start; j < end; j++)
-//         {
-//             fprintf(file, "%.18le\t", femSolverGet(theSolver, i, j));
-//         }
-//         fprintf(file, "\n");
-//     }
-//     for (int i = 0; i < size; i++) { fprintf(file, "%.18le\t", femSolverGetB(theSolver, i)); }
-// }
-
-// femSolver *femBandSystemRead(const char *filename)
-// {
-//     FILE *file = fopen(filename, "r");
-//     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
-
-//     int size;
-//     ErrorScan(fscanf(file, "Size %d\n", &size));
-    
-//     femGeometry *theGeometry = geoGetGeometry();
-//     int band = femMeshComputeBand(theGeometry->theElements);
-//     femSolver *theSolver = femSolverBandCreate(size, band);
-//     femBandSystem *theSystem = theSolver->solver;
-//     double **A = theSystem->A;
-//     double *B  = theSystem->B;
-
-//     for (int i = 0; i < size; i++)
-//     {
-//         for (int j = i; j < i + band; j++) { fscanf(file, "%le\t", &(A[i][j])); }
-//         fscanf(file, "\n");
-//     }
-//     for (int i = 0; i < size; i++) { fscanf(file, "%le\t", &(B[i])); }
-
-//     fclose(file);
-//     return theSolver;
-// }
-
-// femSolver *femFullSystemRead(const char *filename)
-// {
-//     FILE *file = fopen(filename, "r");
-//     if (!file) { printf("Error at %s:%d\nUnable to open file %s\n", __FILE__, __LINE__, filename); exit(-1); }
-
-//     int size;
-//     ErrorScan(fscanf(file, "Size %d\n", &size));
-    
-//     femSolver *theSolver = femSolverFullCreate(size);
-//     femFullSystem *theSystem = theSolver->solver;
-//     double **A = theSystem->A;
-//     double *B  = theSystem->B;
-
-//     for (int i = 0; i < size; i++)
-//     {
-//         for (int j = 0; j < size; j++) { fscanf(file, "%le\t", &(A[i][j])); }
-//         fscanf(file, "\n");
-//     }
-//     for (int i = 0; i < size; i++) { fscanf(file, "%le\t", &(B[i])); }
-
-//     fclose(file);
-//     return theSolver;
-// }
-
-// femSolver *femSolverRead(femSolverType solverType, const char *filename)
-// {
-//     switch (solverType)
-//     {
-//         case FEM_FULL: return femFullSystemRead(filename);
-//         case FEM_BAND: return femBandSystemRead(filename);
-//         default: Error("Unknown solver type"); return NULL;
-//     }
-// }
 
 void femSolutionWrite(int nNodes, int nfields, double *data, const char *filename)
 {
@@ -1477,27 +1379,27 @@ void geoFree(void)
 {
     if (theGeometry.theNodes)
     {
-        free(theGeometry.theNodes->X);
-        free(theGeometry.theNodes->Y);
-        free(theGeometry.theNodes->number);
-        free(theGeometry.theNodes);
+        free(theGeometry.theNodes->X); theGeometry.theNodes->X = NULL;
+        free(theGeometry.theNodes->Y); theGeometry.theNodes->Y = NULL;
+        free(theGeometry.theNodes->number); theGeometry.theNodes->number = NULL;
+        free(theGeometry.theNodes); theGeometry.theNodes = NULL;
     }
     if (theGeometry.theElements)
     {
-        free(theGeometry.theElements->elem);
-        free(theGeometry.theElements);
+        free(theGeometry.theElements->elem); theGeometry.theElements->elem = NULL;
+        free(theGeometry.theElements); theGeometry.theElements = NULL;
     }
     if (theGeometry.theEdges)
     {
-        free(theGeometry.theEdges->elem);
-        free(theGeometry.theEdges);
+        free(theGeometry.theEdges->elem); theGeometry.theEdges->elem = NULL;
+        free(theGeometry.theEdges); theGeometry.theEdges = NULL;
     }
     for (int i = 0; i < theGeometry.nDomains; i++)
     {
-        free(theGeometry.theDomains[i]->elem);
-        free(theGeometry.theDomains[i]);
+        free(theGeometry.theDomains[i]->elem); theGeometry.theDomains[i]->elem = NULL;
+        free(theGeometry.theDomains[i]); theGeometry.theDomains[i] = NULL;
     }
-    free(theGeometry.theDomains);
+    free(theGeometry.theDomains); theGeometry.theDomains = NULL;
 }
 
 void geoMeshPrint(void)
@@ -1628,26 +1530,26 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
 
     int trash, *elem;
 
-    femNodes *theNodes = malloc(sizeof(femNodes));
+    femNodes *theNodes = (femNodes *) malloc(sizeof(femNodes));
     if (theNodes == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theNodes = theNodes;
     ErrorScan(fscanf(file, "Number of nodes %d \n", &theNodes->nNodes));
-    theNodes->X = malloc(sizeof(double) * (theNodes->nNodes));
-    if (theNodes->X == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    theNodes->Y = malloc(sizeof(double) * (theNodes->nNodes));
-    if (theNodes->Y == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
-    theNodes->number = malloc(sizeof(int) * theNodes->nNodes);
+    theNodes->X      = (double *) malloc(sizeof(double) * (theNodes->nNodes));
+    theNodes->Y      = (double *) malloc(sizeof(double) * (theNodes->nNodes));
+    theNodes->number = (int *) malloc(sizeof(int) * theNodes->nNodes);
+    if (theNodes->X == NULL)      { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
+    if (theNodes->Y == NULL)      { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     if (theNodes->number == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theNodes->nNodes; i++) { ErrorScan(fscanf(file, "%d : %le %le \n", &trash, &theNodes->X[i], &theNodes->Y[i])); }
 
-    femMesh *theEdges = malloc(sizeof(femMesh));
+    femMesh *theEdges = (femMesh *) malloc(sizeof(femMesh));
     if (theEdges == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theEdges = theEdges;
     theEdges->nLocalNode = 2;
     if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { theEdges->nLocalNode = 3; }
     theEdges->nodes = theNodes;
     ErrorScan(fscanf(file, "Number of edges %d \n", &theEdges->nElem));
-    theEdges->elem = malloc(sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
+    theEdges->elem = (int *) malloc(sizeof(int) * theEdges->nLocalNode * theEdges->nElem);
     if (theEdges->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int i = 0; i < theEdges->nElem; ++i)
     {
@@ -1662,7 +1564,7 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
         }
     }
 
-    femMesh *theElements = malloc(sizeof(femMesh));
+    femMesh *theElements = (femMesh *) malloc(sizeof(femMesh));
     if (theElements == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     theGeometry.theElements = theElements;
     theElements->nodes = theNodes;
@@ -1672,7 +1574,7 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     {
         theElements->nLocalNode = 3;
         if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { theElements->nLocalNode = 6; }
-        theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
+        theElements->elem = (int *) malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
@@ -1691,7 +1593,7 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
     {
         theElements->nLocalNode = 4;
         if (dType == FEM_DISCRETE_TYPE_QUADRATIC) { theElements->nLocalNode = 9; }
-        theElements->elem = malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
+        theElements->elem = (int *) malloc(sizeof(int) * theElements->nLocalNode * theElements->nElem);
         if (theElements->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theElements->nElem; ++i)
         {
@@ -1709,18 +1611,18 @@ void geoMeshRead(const char *filename, femDiscreteType dType)
 
     ErrorScan(fscanf(file, "Number of domains %d\n", &theGeometry.nDomains));
     int nDomains = theGeometry.nDomains;
-    theGeometry.theDomains = malloc(sizeof(femDomain *) * nDomains);
+    theGeometry.theDomains = (femDomain **) malloc(sizeof(femDomain *) * nDomains);
     if (theGeometry.theDomains == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
     for (int iDomain = 0; iDomain < nDomains; iDomain++)
     {
-        femDomain *theDomain = malloc(sizeof(femDomain));
+        femDomain *theDomain = (femDomain *) malloc(sizeof(femDomain));
         if (theDomain == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         theGeometry.theDomains[iDomain] = theDomain;
         theDomain->mesh = theEdges;
         ErrorScan(fscanf(file, "  Domain : %6d \n", &trash));
         ErrorScan(fscanf(file, "  Name : %[^\n]s \n", (char *)&theDomain->name));
         ErrorScan(fscanf(file, "  Number of elements : %6d\n", &theDomain->nElem));
-        theDomain->elem = malloc(sizeof(int) * 2 * theDomain->nElem);
+        theDomain->elem = (int *) malloc(sizeof(int) * 2 * theDomain->nElem);
         if (theDomain->elem == NULL) { Error("Memory allocation error\n"); exit(EXIT_FAILURE); return; }
         for (int i = 0; i < theDomain->nElem; i++)
         {
@@ -1870,18 +1772,15 @@ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
     {
         Queue *rcm_queue = rcm(theMesh, nNodes);
         memcpy(mapper, rcm_queue->elements, nNodes * sizeof(int));
-        free(rcm_queue->elements);
-        rcm_queue->elements = NULL;
-        free(rcm_queue);
-        rcm_queue = NULL;
+        free(rcm_queue->elements); rcm_queue->elements = NULL;
+        free(rcm_queue); rcm_queue = NULL;
     }
     else if (renumType == FEM_XNUM) { positionMeshNodes = theMesh->nodes->X; qsort(mapper, nNodes, sizeof(int), comparPositionNode); }
     else if (renumType == FEM_YNUM) { positionMeshNodes = theMesh->nodes->Y; qsort(mapper, nNodes, sizeof(int), comparPositionNode); }
     else { Error("Unknown renumbering type\n"); exit(EXIT_FAILURE); return; }
 
     for (int i = 0; i < nNodes; i++) { theMesh->nodes->number[mapper[i]] = i; }
-    free(mapper);
-    mapper = NULL;
+    free(mapper); mapper = NULL;
 }
 
 /*
@@ -1897,12 +1796,9 @@ void swap(int *a, int *b)
 	*b = t;
 }
 
-void reverse_array(int *adj, int n)
+void reverse_array(int *array, int n)
 {
-	for (int i = 0; i < n / 2; i++)
-    {
-        swap(&adj[i], &adj[n - i - 1]);
-    }
+	for (int i = 0; i < n / 2; i++) { swap(&array[i], &array[n - i - 1]); }
 }
 
 /*
@@ -1971,11 +1867,7 @@ int partition(int arr1[], int arr2[], int low, int high)
 
 	for (int j = low; j <= high - 1; j++)
 	{
-		if (arr2[arr1[j]] < pivot)
-		{
-			i++;
-			swap(&arr1[i], &arr1[j]);
-		}
+		if (arr2[arr1[j]] < pivot) { i++; swap(&arr1[i], &arr1[j]); }
 	}
 	swap(&arr1[i + 1], &arr1[high]);
 	return i + 1;
@@ -2028,7 +1920,7 @@ void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue 
 {
 	int nb_neigh = degrees[idxElem];
 	int *neighbors = (int *) malloc(nb_neigh * sizeof(int));
-	if (neighbors == NULL) { Error("Memory allocation for 'neighbors' failed\n\n"); exit(1); }
+	if (neighbors == NULL) { Error("Memory allocation for 'neighbors' failed\n\n"); exit(EXIT_FAILURE); return; }
 
 	int count = 0;
 	for (int i = 0; i < n; i++)
@@ -2051,8 +1943,7 @@ void add_neighbors_to_queue(int *adj, int n, int *degrees, int *inserted, Queue 
 		}
     }
 
-	free(neighbors);
-    neighbors = NULL;
+	free(neighbors); neighbors = NULL;
 }
 
 Queue *rcm(femMesh *theMesh, int nNodes)
@@ -2061,13 +1952,12 @@ Queue *rcm(femMesh *theMesh, int nNodes)
 	Queue *R = createQueue(nNodes);
 
 	int *degrees  = (int *) malloc(nNodes * sizeof(int));
-    if (degrees == NULL) { Error("Memory allocation for 'degrees' failed\n\n"); exit(1); }
-
 	int *inserted = (int *) malloc(nNodes * sizeof(int));
-    if (inserted == NULL) { Error("Memory allocation for 'inserted' failed\n\n"); exit(1); }
-
     int *adj = createAdjacencyMatrix(theMesh);
-    if (adj == NULL) { Error("Memory allocation for 'adj' failed\n\n"); exit(1); }
+
+    if (degrees == NULL)  { Error("Memory allocation for 'degrees' failed\n\n"); exit(EXIT_FAILURE); return; }
+    if (inserted == NULL) { Error("Memory allocation for 'inserted' failed\n\n"); exit(EXIT_FAILURE); return; }
+    if (adj == NULL)      { Error("Memory allocation for 'adj' failed\n\n"); exit(EXIT_FAILURE); return; }
 
 	for (int i = 0; i < nNodes; i++) { inserted[i] = 0; R->elements[i] = -1; }
 
@@ -2121,38 +2011,34 @@ Queue *rcm(femMesh *theMesh, int nNodes)
 	return R;
 }
 
+/***********************/
+/* Animation functions */
+/***********************/
 
-int femIsPositionAnimated(int getOrSet)
+double adaptForceForMotionCar(double force, double node_position, int currAnim, int nTotalAnim)
 {
-    static int activated = 0;
-    if (getOrSet == 0) { return activated; }
-    else { activated = getOrSet; return activated; }
-}
-
-double adaptForceWithPosition(double force, double node_position, int currAnim, int nTotalAnim)
-{
-    double bridge_length = 32.0;
+    double bridge_length   = 32.0;
     double vehicule_lenght = 4.0;
     double x = vehicule_lenght / 2 + currAnim * (bridge_length - vehicule_lenght) / (nTotalAnim - 1);
-    double position = -32.0 + x;
 
-    double left_pos_x  = x - vehicule_lenght / 2 - bridge_length;
-    double right_pos_x = x + vehicule_lenght / 2 - bridge_length;
+    // Shift of "- bridge_length" because the geometry is centered at 0 and the left side of the bridge is at -32
+    double position    = x - bridge_length;
+    double left_pos_x  = position - vehicule_lenght / 2;
+    double right_pos_x = position + vehicule_lenght / 2;
 
-    if (left_pos_x <= node_position && node_position <= right_pos_x) { return force; }
-    else { return 0.0; }
+    return (left_pos_x <= node_position && node_position <= right_pos_x) ? force : 0.0;
 }
 
-double adaptForceWithPositionReversed(double force, double node_position, int currAnim, int nTotalAnim)
+double adaptForceForMotionCarReversed(double force, double node_position, int currAnim, int nTotalAnim)
 {
     double bridge_length = 32.0;
     double camionnette_length = 6.0;
     double x = bridge_length - (camionnette_length / 2 + currAnim * (bridge_length - camionnette_length) / (nTotalAnim - 1));
-    double position = x - 32.0;
 
-    double left_pos_x  = x - camionnette_length / 2 - bridge_length;
-    double right_pos_x = x + camionnette_length / 2 - bridge_length;
+    // Shift of "- bridge_length" because the geometry is centered at 0 and the left side of the bridge is at -32
+    double position    = x - bridge_length;
+    double left_pos_x  = position - camionnette_length / 2;
+    double right_pos_x = position + camionnette_length / 2;
 
-    if (left_pos_x <= node_position && node_position <= right_pos_x) { return force; }
-    else { return 0.0; }
+    return (left_pos_x <= node_position && node_position <= right_pos_x) ? force : 0.0;
 }

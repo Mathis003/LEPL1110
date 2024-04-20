@@ -16,6 +16,5 @@ if (NOT WIN32)
     target_link_libraries(${EXEC_NAME} PUBLIC ${MATH_LIBRARY})
 endif()
 
-
 # add a custom target so we can do make run directly
 add_custom_target(run COMMAND ${EXEC_NAME} DEPENDS ${EXEC_NAME} COMMENT "./${EXEC_NAME}")

@@ -17,7 +17,7 @@
 #include <time.h>
 
 femElementType elementType  = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
-femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
+femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC (FEM_DISCRETE_TYPE_QUADRATIC not implemented yet)
 femSolverType typeSolver    = FEM_BAND;  // FEM_FULL or FEM_BAND
 femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
 
@@ -30,20 +30,19 @@ femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FE
 
 int main(int argc, char *argv[])
 {
-    // Deal with the options arguments
     int opt;
-    int bridgeSimplified = FALSE;
+    int bridgeSimplified_Usage   = FALSE;
     int exampleUForm_Usage = FALSE;
-    int exampleBeam_Usage = FALSE;
-    int animation     = FALSE;
-    int animationPosition = FALSE;
-    int showRunTime = FALSE;
-    while ((opt = getopt(argc, argv, "subtahx")) != -1)
+    int exampleBeam_Usage  = FALSE;
+    int animation          = FALSE;
+    int animationPosition  = FALSE;
+    int showRunTime        = FALSE;
+    while ((opt = getopt(argc, argv, "subtaxh")) != -1)
     {
         switch (opt)
         {
             case 's':
-                bridgeSimplified = TRUE;
+                bridgeSimplified_Usage = TRUE;
                 break;
             case 'u':
                 exampleUForm_Usage = TRUE;
@@ -61,103 +60,78 @@ int main(int argc, char *argv[])
                 animation = TRUE;
                 break;
             case 'h':
-                printf("Usage: %s [-s] [-u] [-b] [-t] [-a] [-h]\n", argv[0]);
+                printf("Usage: %s [-s] [-u] [-b] [-t] [-a] [-x] [-h]\n", argv[0]);
                 printf("Options:\n");
                 printf("  -s : Start the program with the bridge without stay cables and pylon\n");
-                printf("  -u : Start the program with the U mesh\n");
+                printf("  -u : Start the program with the U example mesh\n");
                 printf("  -b : Start the program with the beam mesh\n");
-                printf("  -x : Start the program with the animation of the position\n");
                 printf("  -t : Time the program execution\n");
-                printf("  -a : Launch the program 50 times to create an animation in ProjectPostProcessor\n");
+                printf("  -a : Launch the program 50 times to create an animation of bridge's deformation (in ProjectPostProcessor)\n");
+                printf("  -x : Launch the program 50 times to create an animation of car's movement (in ProjectPostProcessor)\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-s] [-u] [-b] [-t] [-a] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-s] [-u] [-b] [-t] [-a] [-x] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
 
     femGeometry *theGeometry = geoGetGeometry();
-    
     femProblem *theProblem;
-    if (exampleUForm_Usage == TRUE)
-    {
-        geoMeshRead("../../Rapport/data_example/mesh.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data_example/problem_SideTop_NeumannT.txt", renumType, discretType);
-    }
-    else if (exampleBeam_Usage == TRUE)
-    {
-        geoMeshRead("../../Rapport/data/mesh_beam.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_beam.txt", renumType, discretType);
-    }
-    else if (bridgeSimplified == TRUE)
-    {
-        geoMeshRead("../../Rapport/data/mesh_simplified.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_simplified.txt", renumType, discretType);
-    }
-    else
-    {
-        geoMeshRead("../../Rapport/data/mesh.txt", discretType); // "../data/mesh.txt
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType); // ../data/problem.txt
-    }
-    
-    femElasticityPrint(theProblem);
 
+    char *meshPath;
+    char *problemPath;
+    char *solutionPath;
+
+    if      (exampleBeam_Usage)      { meshPath = "../../Rapport/data/mesh_beam.txt";       problemPath = "../../Rapport/data/problem_beam.txt";        solutionPath = "../../Rapport/data/UV_beam.txt"; }
+    else if (exampleUForm_Usage)     { meshPath = "../../Rapport/data/mesh_example.txt";    problemPath = "../../Rapport/data/problem_example.txt";     solutionPath = "../../Rapport/data/UV_example.txt"; }
+    else if (bridgeSimplified_Usage) { meshPath = "../../Rapport/data/mesh_simplified.txt"; problemPath = "../../Rapport/data/problem_simplified.txt";  solutionPath = "../../Rapport/data/UV_simplified.txt"; }
+    else                             { meshPath = "../../Rapport/data/mesh.txt";            problemPath = "../../Rapport/data/problem.txt";             solutionPath = "../../Rapport/data/UV.txt"; }
+    
+    geoMeshRead(meshPath, discretType);
+    femMeshRenumber(theGeometry->theElements, renumType); // Renumbering the mesh nodes
+    theProblem = femElasticityRead(theGeometry, typeSolver, problemPath, renumType, discretType);
+    
+    // femElasticityPrint(theProblem);
+
+    int nNodes = theGeometry->theNodes->nNodes;
     if (!animation)
     {
         clock_t start;
-        if (showRunTime == TRUE)
-        { 
-            printf("Solving the system...\n"); 
-            start = clock();    
-        }
+        if (showRunTime) { printf("Solving the system...\n"); start = clock(); }
+
         double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0, NAN);
-        int nNodes = theGeometry->theNodes->nNodes;
 
-        if( showRunTime == TRUE) { printf("Run time: %f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC); }
+        if( showRunTime) { printf("Run time: %f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC); }
 
-        if (exampleUForm_Usage == TRUE)     { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_TEST.txt"); }
-        else if (exampleBeam_Usage == TRUE) { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_beam.txt"); }
-        else if (bridgeSimplified == TRUE)  { femSolutionWrite(nNodes, 2, theSoluce, "../../Rapport/data/UV_simplified.txt"); }
-        else                                { femSolutionWrite(nNodes, 2, theSoluce, "../data/UV.txt"); } // ../data/UV.txt
-        femElasticityFree(theProblem);
-        geoFree();
-        return EXIT_SUCCESS;
+        femSolutionWrite(nNodes, 2, theSoluce, solutionPath);
     }
     else
     {
-        if (animationPosition == TRUE)
-        {
-            femIsPositionAnimated(1); // We activate the animation position mode (yeah it's ugly)
-        }
-
         const int NB_IMAGES_ANIMATION = 50;
-        double FACTOR = 1.0 / NB_IMAGES_ANIMATION;
-        double *theSoluce;
-        int nNodes;
+        double FACTOR, *theSoluce;
         char filename[100];
+        
+        // Factor to increase the load
+        FACTOR = 1.0 / NB_IMAGES_ANIMATION;
+
+        // Create the directory if it doesn't exist
         if (access("../data/animations", F_OK) == -1) { system("mkdir -p ../../Rapport/data/animations"); }
 
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
-            if (animationPosition == TRUE) { theSoluce = femElasticitySolve(theProblem, renumType, 60, i); }
-            else                           { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, NAN); }
+            if (animationPosition) { theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i); }
+            else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, NAN); }
 
-            nNodes = theGeometry->theNodes->nNodes;
-            if (exampleUForm_Usage == TRUE)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
-            else if (exampleBeam_Usage == TRUE) { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
-            else if (bridgeSimplified == TRUE)  { sprintf(filename, "../../Rapport/data/animations/UV_simplified_%d.txt", i); }
-            else if(animationPosition == TRUE)   { sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i); }
-            else                                { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }         
+            if      (exampleUForm_Usage)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
+            else if (exampleBeam_Usage)      { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
+            else if (bridgeSimplified_Usage) { sprintf(filename, "../../Rapport/data/animations/UV_simplified_%d.txt", i); }
+            else if (animationPosition)      { sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i); }
+            else                             { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }         
             femSolutionWrite(nNodes, 2, theSoluce, filename);
         }
-
-        femElasticityFree(theProblem);
-        geoFree();
-        return EXIT_SUCCESS;
     }
+    femElasticityFree(theProblem);
+    geoFree();
+    return EXIT_SUCCESS;
 }
