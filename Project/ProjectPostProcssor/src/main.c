@@ -336,14 +336,20 @@ int main(int argc, char *argv[])
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
 
-    femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+    double *vonMises = NULL;
 
-    double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
-    
-    FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
-    if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
-    fclose(file);
+    // Only for the complete bridge
+    if (example_UForm == FALSE && example_beam == FALSE && example_simplified == FALSE)
+    {
+        femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
+
+        vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
+
+        FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
+        if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+        for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
+        fclose(file);
+    }
 
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 
@@ -351,9 +357,9 @@ int main(int argc, char *argv[])
     /****************************************************/
 
     double deformationFactor;
-    if      (example_UForm == TRUE)      { deformationFactor = 1e5; }
+    if      (example_UForm == TRUE)      { deformationFactor = 1e7; }
     else if (example_beam == TRUE)       { deformationFactor = 1e2; }
-    else if (example_simplified == TRUE) { deformationFactor = 1e5; }
+    else if (example_simplified == TRUE) { deformationFactor = 1e4; }
     else                                 { deformationFactor = 1e4; }
 
     double *normDisplacement = (double *) malloc(nNodes * sizeof(double));
@@ -404,7 +410,7 @@ int main(int argc, char *argv[])
 
         if (animation) { strcat(command, " -a"); }
 
-        if      (example_UForm)      { strcat(command, " -e"); }
+        if      (example_UForm)      { strcat(command, " -u"); }
         else if (example_beam)       { strcat(command, " -b"); }
         else if (example_simplified) { strcat(command, " -s"); }
         

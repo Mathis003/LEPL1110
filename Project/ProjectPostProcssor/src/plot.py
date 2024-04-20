@@ -92,10 +92,15 @@ def generate_frame(i):
     
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
-    factor = 1e3
+    
+    deformationFactor = 1
+    if   exampleUForm_Use:  deformationFactor = 1e7
+    elif beamUse:           deformationFactor = 1e2
+    elif simplifiedUse:     deformationFactor = 1e4
+    else:                   deformationFactor = 1e4
 
     plt.clf()
-    cb = mesh.plotfield(uv_norm, uv * factor, cmap="turbo")
+    cb = mesh.plotfield(uv_norm, uv * deformationFactor, cmap="turbo")
 
     plt.colorbar(cb)
 
@@ -104,7 +109,7 @@ def generate_frame(i):
     elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
     else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
     
-    mesh.plot(uv * factor, lw=0.2, c="k")
+    mesh.plot(uv * deformationFactor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
     plt.grid(alpha=0.2)
 
@@ -154,11 +159,16 @@ if __name__ == "__main__":
 
         uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
         uv_norm = np.linalg.norm(uv, axis=1)
-        factor = 2e4
 
-        cb = mesh.plotfield(uv_norm, uv*factor, cmap="turbo")
+        deformationFactor = 1
+        if   exampleUForm_Use:  deformationFactor = 1e7
+        elif beamUse:           deformationFactor = 1e2
+        elif simplifiedUse:     deformationFactor = 1e4
+        else:                   deformationFactor = 1e4
+
+        cb = mesh.plotfield(uv_norm, uv * deformationFactor, cmap="turbo")
         plt.colorbar(cb)
-        mesh.plot(uv*factor, lw=0.2, c="k")
+        mesh.plot(uv * deformationFactor, lw=0.2, c="k")
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
 
