@@ -13,7 +13,7 @@ include_directories(../../ProjectPreProcessor/glfw/include)
 
 # link the aforementioned libraries
 add_executable(${EXEC_NAME} ../../Project/src/fem.c ../../ProjectPreProcessor/src/glfem.c src/main.c)
-target_link_libraries(${EXEC_NAME} glfw ${OPENGL_gl_LIBRARY})
+target_link_libraries(${EXEC_NAME} ../../ProjectPreProcessor/glfw ${OPENGL_gl_LIBRARY})
 
 if(APPLE)
     target_compile_options(${EXEC_NAME} PRIVATE "-Wdeprecated-declarations")

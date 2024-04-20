@@ -12,7 +12,7 @@ band_rcmk_order = size / rcmk_order_ratio
 average_band_ratios = [np.mean(no_order_ratio), np.mean(x_order_ratio), np.mean(y_order_ratio), np.mean(rcmk_order_ratio)]
 reorder_labels      = ['No reordering', 'X reordering', 'Y reordering', 'RCMK reordering']
 
-# Complexité des solveurs (et des renumérotation) a un facteur près
+# Solvers complexity and band size complexity (constant factors are arbitrary)
 complexity_full_solver   = np.power(nodes, 3) / 100000000
 complexity_band_solver   = np.power(nodes, 1.65) / 5000000
 complexity_no_reordering = size / 1.3
