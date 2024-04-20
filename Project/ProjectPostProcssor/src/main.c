@@ -17,8 +17,7 @@
 
 #include "../../ProjectPreProcessor/src/glfem.h"
 
-femElementType elementType  = FEM_TRIANGLE; // FEM_QUAD or FEM_TRIANGLE
-femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC
+femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LINEAR or FEM_DISCRETE_TYPE_QUADRATIC // Not used yet
 femSolverType typeSolver    = FEM_BAND;  // FEM_FULL or FEM_BAND
 femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
 
