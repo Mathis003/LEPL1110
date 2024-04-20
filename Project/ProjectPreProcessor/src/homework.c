@@ -720,9 +720,6 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
         double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2; 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
 
-        weightCamionDensityBridge = 1250 * 9.81 / 4.0;
-        weightPedestrianDensityBridge = 9.81 * 70.0;
-
         domainBoundaryMapping_t mapping[] = {
             {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},
             {"PILAR D 1", DIRICHLET_XY, 0.0, 0.0},
@@ -763,9 +760,6 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
         double weightPedestrianDensityBridge = 9.81 * mass_pedestrian * nb_pedestrian / 0.2;
-
-        weightCamionDensityBridge = 1250 * 9.81 / 4.0;
-        weightPedestrianDensityBridge = 9.81 * 70.0;
 
         domainBoundaryMapping_t mapping[] = {
             {"PILAR R 1", DIRICHLET_XY, 0.0, 0.0},

@@ -123,21 +123,19 @@ int main(int argc, char *argv[])
         {
             femSolverInit(theProblem->solver);
             
-            // if (animationPosition) { theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i); }
-            // else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, -1); }
+            if (animationPosition) { theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i); }
+            else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, -1); }
 
-            // if (animationPosition) { sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i); }
-            // else
-            // {
-            //     if      (exampleUForm_Usage)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
-            //     else if (exampleBeam_Usage)      { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
-            //     else if (bridgeSimplified_Usage) { sprintf(filename, "../../Rapport/data/animations/UV_simplified_%d.txt", i); }
-            //     else                             { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }
-            // }
+            if (animationPosition) { sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i); }
+            else
+            {
+                if      (exampleUForm_Usage)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
+                else if (exampleBeam_Usage)      { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
+                else if (bridgeSimplified_Usage) { sprintf(filename, "../../Rapport/data/animations/UV_simplified_%d.txt", i); }
+                else                             { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }
+            }
 
-            theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i);
-            sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i);
-            
+            theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i);  
             femSolutionWrite(nNodes, 2, theSoluce, filename);
             printf("Solution %d created\n", i);
         }
