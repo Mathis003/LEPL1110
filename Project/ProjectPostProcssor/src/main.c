@@ -24,240 +24,6 @@ femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FE
 
 double constFunct(double x, double y) { return 1.0; }
 
-// void femElasticitySigma(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY)
-// {
-//     femIntegration *theRule  = theProblem->rule;
-//     femDiscrete *theSpace    = theProblem->space;
-//     femGeometry *theGeometry = theProblem->geometry;
-//     femNodes *theNodes       = theGeometry->theNodes;
-//     femMesh *theMesh         = theGeometry->theElements;
-
-//     double *theSoluce = theProblem->soluce;
-    
-//     int nLocal = theSpace->n;
-//     // int *number = theMesh->nodes->number;    
-
-//     double xLoc, x[nLocal], y[nLocal], phi[nLocal], dphidxsi[nLocal], dphideta[nLocal], dphidx[nLocal], dphidy[nLocal], u[nLocal], v[nLocal];
-//     int iElem, iInteg, iEdge, i, map[nLocal], mapX[nLocal], mapY[nLocal];
-    
-//     // Premier systeme pour epsilon_x_x
-//     femSolver *theSolver = femSolverFullCreate(theNodes->nNodes);
-//     double **A = femSolverGetA(theSolver);
-//     double *B  = femSolverGetB(theSolver);
-
-//     for (iElem = 0; iElem < theMesh->nElem; iElem++)
-//     {
-//         for (i = 0; i < theSpace->n; i++)
-//         {
-//             map[i] = theMesh->elem[iElem * nLocal + i];
-//             x[i] = theNodes->X[map[i]];
-//             y[i] = theNodes->Y[map[i]];
-//             u[i] = theSoluce[2 * map[i]];
-//             // map[i] = number[map[i]];
-//         }
-
-//         for (iInteg = 0; iInteg < theRule->n; iInteg++)
-//         {
-//             double xsi    = theRule->xsi[iInteg];
-//             double eta    = theRule->eta[iInteg];
-//             double weight = theRule->weight[iInteg];
-
-//             femDiscretePhi2(theSpace, xsi, eta, phi);
-//             femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
-
-//             double dxdxsi = 0.0; double dydxsi = 0.0;
-//             double dxdeta = 0.0; double dydeta = 0.0;
-//             for (i = 0; i < theSpace->n; i++)
-//             {
-//                 dxdxsi += x[i] * dphidxsi[i];
-//                 dxdeta += x[i] * dphideta[i];
-//                 dydxsi += y[i] * dphidxsi[i];
-//                 dydeta += y[i] * dphideta[i];
-//             }
-
-//             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
-//             if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
-//             jac = fabs(jac);
-
-//             for (i = 0; i < theSpace->n; i++)
-//             {
-//                 dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
-//                 dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
-//             }
-
-//             double weightedJac = jac * weight;
-
-//             for (int i = 0; i < theSpace->n; i++)
-//             {
-//                 for (int j = 0; j < theSpace->n; j++)
-//                 {
-//                     A[map[i]][map[i]] += phi[i] * phi[j] * weightedJac;
-//                 }
-//                 B[map[i]] += phi[i] * u[i] * dphidx[i] * weightedJac;
-//             }
-//         }
-//     }
-
-//     femSolverEliminate(theSolver);
-//     double *epsilon_x_x = (double *) malloc(theSolver->size * sizeof(double));
-//     if (epsilon_x_x == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-//     memcpy(epsilon_x_x, femSolverGetB(theSolver), theSolver->size * sizeof(double));
-
-
-//     // Deuxieme systeme pour epsilon_y_y
-
-//     theSolver = femSolverFullCreate(theNodes->nNodes);
-
-//     for (iElem = 0; iElem < theMesh->nElem; iElem++)
-//     {
-//         for (i = 0; i < theSpace->n; i++)
-//         {
-//             map[i] = theMesh->elem[iElem * nLocal + i];
-//             x[i] = theNodes->X[map[i]];
-//             y[i] = theNodes->Y[map[i]];
-//             v[i] = theProblem->soluce[2 * map[i] + 1];
-//             // map[i] = number[map[i]];
-//         }
-
-//         for (iInteg = 0; iInteg < theRule->n; iInteg++)
-//         {
-//             double xsi    = theRule->xsi[iInteg];
-//             double eta    = theRule->eta[iInteg];
-//             double weight = theRule->weight[iInteg];
-
-//             femDiscretePhi2(theSpace, xsi, eta, phi);
-//             femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
-
-//             double dxdxsi = 0.0; double dydxsi = 0.0;
-//             double dxdeta = 0.0; double dydeta = 0.0;
-
-//             for (i = 0; i < theSpace->n; i++)
-//             {
-//                 dxdxsi += x[i] * dphidxsi[i];
-//                 dxdeta += x[i] * dphideta[i];
-//                 dydxsi += y[i] * dphidxsi[i];
-//                 dydeta += y[i] * dphideta[i];
-//             }
-
-//             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
-//             if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
-//             jac = fabs(jac);
-
-//             for (i = 0; i < theSpace->n; i++)
-//             {
-//                 dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
-//                 dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
-//             }
-
-//             double weightedJac = jac * weight;
-//             double **A = femSolverGetA(theSolver);
-//             double *B = femSolverGetB(theSolver);
-
-//             for (int i = 0; i < theSpace->n; i++)
-//             {
-//                 for (int j = 0; j < theSpace->n; j++)
-//                 {
-//                     A[map[i]][map[i]] += phi[i] * phi[j] * weightedJac;
-//                 }
-//                 B[map[i]] += phi[i] * dphidy[i] * v[i] * weightedJac;
-//             }
-//         }
-//     }
-
-//     femSolverEliminate(theSolver);
-//     double *epsilon_y_y = (double *) malloc(theSolver->size * sizeof(double));
-//     if (epsilon_y_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-//     memcpy(epsilon_y_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
-
-//     for (int i = 0; i < theNodes->nNodes; i++)
-//     {
-//         if (epsilon_y_y[i] != 0.0) { printf("%f\n", epsilon_y_y[i]); }    
-//     }
-
-//     // Troisieme systeme pour epsilon_x_y
-
-//     theSolver = femSolverFullCreate(theNodes->nNodes);
-
-//     for (iElem = 0; iElem < theMesh->nElem; iElem++)
-//     {
-//         for (i = 0; i < theSpace->n; i++)
-//         {
-//             map[i] = theMesh->elem[iElem * nLocal + i];
-//             x[i] = theNodes->X[map[i]];
-//             y[i] = theNodes->Y[map[i]];
-//             u[i] = theProblem->soluce[2 * map[i]];
-//             v[i] = theProblem->soluce[2 * map[i] + 1];
-//             // map[i] = number[map[i]];
-//         }
-
-//         for (iInteg = 0; iInteg < theRule->n; iInteg++)
-//         {
-//             double xsi    = theRule->xsi[iInteg];
-//             double eta    = theRule->eta[iInteg];
-//             double weight = theRule->weight[iInteg];
-
-//             femDiscretePhi2(theSpace, xsi, eta, phi);
-//             femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
-
-//             double dxdxsi = 0.0; double dydxsi = 0.0;
-//             double dxdeta = 0.0; double dydeta = 0.0;
-
-//             for (i = 0; i < theSpace->n; i++)
-//             {
-//                 dxdxsi += x[i] * dphidxsi[i];
-//                 dxdeta += x[i] * dphideta[i];
-//                 dydxsi += y[i] * dphidxsi[i];
-//                 dydeta += y[i] * dphideta[i];
-//             }
-
-//             double jac = dxdxsi * dydeta - dxdeta * dydxsi;
-//             if (jac < 0.0) { printf("Negative jacobian! Your mesh is oriented in reverse. The normals will be wrong\n"); }
-//             jac = fabs(jac);
-
-//             for (i = 0; i < theSpace->n; i++)
-//             {
-//                 dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
-//                 dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
-//             }
-
-//             double weightedJac = jac * weight;
-//             double **A = femSolverGetA(theSolver);
-//             double *B = femSolverGetB(theSolver);
-
-//             for (int i = 0; i < theSpace->n; i++)
-//             {
-//                 for (int j = 0; j < theSpace->n; j++)
-//                 {
-//                     A[map[i]][map[i]] += phi[i] * phi[j] * weightedJac;
-//                 }
-//                 B[map[i]] += phi[i] * (dphidy[i] * u[i] + dphidx[i] * v[i]) * weightedJac / 2.0;
-//             }
-//         }
-//     }
-
-//     femSolverEliminate(theSolver);
-    
-//     double *epsilon_x_y = (double *) malloc(theSolver->size * sizeof(double));
-//     if (epsilon_x_y == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return; }
-//     memcpy(epsilon_x_y, femSolverGetB(theSolver), theSolver->size * sizeof(double));
-
-//     for (int i = 0; i < theNodes->nNodes; i++)
-//     {
-//         if (epsilon_x_y[i] != 0.0) { printf("%f\n", epsilon_x_y[i]); }    
-//     }
-
-//     double a = theProblem->A;
-//     double b = theProblem->B;
-//     double c = theProblem->C;
-
-//     for (int i = 0; i < theSolver->size; i++)
-//     {
-//         sigmaXX[i] = a * epsilon_x_x[i] + b * epsilon_y_y[i];
-//         sigmaXY[i] = 2 * c * epsilon_x_y[i];
-//         sigmaYY[i] = b * epsilon_x_x[i] + a * epsilon_y_y[i];
-//     }
-// }
-
 double *femElasticityVonMises(femProblem *theProblem, double *sigmaXX, double *sigmaYY, double *sigmaXY, int nNodes)
 {
     double *vonMises = (double *) malloc(theProblem->geometry->theNodes->nNodes * sizeof(double));
@@ -265,7 +31,12 @@ double *femElasticityVonMises(femProblem *theProblem, double *sigmaXX, double *s
 
     for (int i = 0; i < nNodes; i++)
     {
-        vonMises[i] = sqrt(sigmaXX[i] * sigmaXX[i] - sigmaXX[i] * sigmaYY[i] + sigmaYY[i] * sigmaYY[i] + 3 * sigmaXY[i] * sigmaXY[i]);
+        double trace = sigmaXX[i] + sigmaYY[i];
+        sigmaXX[i] -= trace / 3.0;
+        sigmaYY[i] -= trace / 3.0;
+        double final_value = sigmaXX[i] * sigmaXX[i] + sigmaYY[i] * sigmaYY[i] + 2 * sigmaXY[i] * sigmaXY[i];
+        final_value = 3.0 * final_value / 2.0;
+        vonMises[i] = sqrt(final_value);
     }
     return vonMises;
 }
@@ -435,10 +206,10 @@ double *femElasticityForces(femProblem *theProblem)
     }
 
     femElasticityAssembleElements(theProblem);
-    femElasticityAssembleNeumann(theProblem, 1.0);
+    femElasticityAssembleNeumann(theProblem, 1.0, -1);
 
     double **A = femSolverGetA(theSolver);
-    double *B = femSolverGetB(theSolver);
+    double *B  = femSolverGetB(theSolver);
 
     femSolverGetResidual(theSolver, residuals, soluce);
 
@@ -462,24 +233,25 @@ double *femElasticityForces(femProblem *theProblem)
 
 int main(int argc, char *argv[])
 {
-    // Deal with the options arguments
     int opt;
-    int resultVisualizer = TRUE;
-    int example_UForm = FALSE;
-    int example_beam  = FALSE;
+    int resultVisualizer   = TRUE;
+    int example_UForm      = FALSE;
+    int example_beam       = FALSE;
     int example_simplified = FALSE;
-    int animation = FALSE;
-    int animationPosition = FALSE;
-    int plot      = TRUE;
-    while ((opt = getopt(argc, argv, "arubsph")) != -1)
+    int animation          = FALSE;
+    int plot               = TRUE;
+    while ((opt = getopt(argc, argv, "rpaubsh")) != -1)
     {
         switch (opt)
         {
-            case 'a':
-                animation = TRUE;
             case 'r':
                 resultVisualizer = FALSE;
                 break;
+            case 'p':
+                plot = FALSE;
+                break;
+            case 'a':
+                animation = TRUE;
             case 'u':
                 example_UForm = TRUE;
                 break;
@@ -489,22 +261,19 @@ int main(int argc, char *argv[])
             case 's':
                 example_simplified = TRUE;
                 break;
-            case 'p':
-                plot = FALSE;
-            case 'x':
-                animationPosition = TRUE;
-                break;
             case 'h':
-                printf("Usage: %s [-r] [-u] [-b] [-s] [-h]\n", argv[0]);
+                printf("Usage: %s [-r] [-p] [-a] [-u] [-b] [-s] [-h]\n", argv[0]);
                 printf("Options:\n");
                 printf("  -r : Disable the result visualizer\n");
-                printf("  -e : Start the program with the example mesh\n");
                 printf("  -p : Disable the plot\n");
-                printf("  -x : Start the program with the animation of the position\n")
+                printf("  -a : Enable the animation\n");
+                printf("  -u : Start the program with the example UForm\n");
+                printf("  -b : Start the program with the example beam\n");
+                printf("  -s : Start the program with the example simplified\n");
                 printf("  -h : Display this help message\n");
                 return EXIT_SUCCESS;
             default:
-                fprintf(stderr, "Usage: %s [-r] [-u] [-b] [-s] [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-r] [-p] [-a] [-u] [-b] [-s] [-h]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -516,6 +285,11 @@ int main(int argc, char *argv[])
     printf("    S : Display the matrix \n");
     printf("    X : Display the horizontal forces \n");
     printf("    Y : Display the vertical forces \n");
+    printf("    U : Display the sigmaXX \n");
+    printf("    I : Display the sigmaYY \n");
+    printf("    O : Display the sigmaXY \n");
+    printf("    P : Display the von Mises \n");
+
     printf("\n\n");
 
     /***************************/
@@ -524,50 +298,21 @@ int main(int argc, char *argv[])
 
     femGeometry *theGeometry = geoGetGeometry();
 
-    int n;
-    double *theSoluce;
-    femProblem *theProblem;
+    char *meshPath;
+    char *problemPath;
+    char *resultPath;
+    if      (example_UForm)      { meshPath = "../../Rapport/data/mesh_example.txt";     problemPath = "../../Rapport/data/problem_example.txt";     resultPath = "../../Rapport/data/UV_example.txt"; }
+    else if (example_beam)       { meshPath = "../../Rapport/data/mesh_beam.txt";        problemPath = "../../Rapport/data/problem_beam.txt";        resultPath = "../../Rapport/data/UV_beam.txt"; }
+    else if (example_simplified) { meshPath = "../../Rapport/data/mesh_simplified.txt";  problemPath = "../../Rapport/data/problem_simplified.txt";  resultPath = "../../Rapport/data/UV_simplified.txt"; }
+    else                         { meshPath = "../../Rapport/data/mesh.txt";             problemPath = "../../Rapport/data/problem.txt";             resultPath = "../../Rapport/data/UV.txt"; }
 
-    if (example_UForm == TRUE)
-    {
-        geoMeshRead("../../Rapport/data_example/mesh.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data_example/problem_SideTop_NeumannT.txt", renumType, discretType);
-        theSoluce = theProblem->soluce;
-        n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_TEST.txt");
-        femElasticityPrint(theProblem);
-    }
-    else if (example_beam)
-    {
-        geoMeshRead("../../Rapport/data/mesh_beam.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_beam.txt", renumType, discretType);
-        theSoluce = theProblem->soluce;
-        n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_beam.txt");
-        femElasticityPrint(theProblem);
-    }
-    else if (example_simplified)
-    {
-        geoMeshRead("../../Rapport/data/mesh_simplified.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem_simplified.txt", renumType, discretType);
-        theSoluce = theProblem->soluce;
-        n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV_simplified.txt");
-        femElasticityPrint(theProblem);
-    }
-    else
-    {
-        geoMeshRead("../../Rapport/data/mesh.txt", discretType);
-        femMeshRenumber(theGeometry->theElements, renumType);
-        theProblem = femElasticityRead(theGeometry, typeSolver, "../../Rapport/data/problem.txt", renumType, discretType);
-        theSoluce = theProblem->soluce;
-        n = theGeometry->theNodes->nNodes;
-        femSolutiondRead(2 * n, theSoluce, "../../Rapport/data/UV.txt");
-        femElasticityPrint(theProblem);
-    }
+    geoMeshRead(meshPath, discretType);
+    femMeshRenumber(theGeometry->theElements, renumType);
+    femProblem *theProblem = femElasticityRead(theGeometry, typeSolver, problemPath, renumType, discretType);
+    double *theSoluce = theProblem->soluce;
+    int n = theGeometry->theNodes->nNodes;
+    femSolutiondRead(2 * n, theSoluce, resultPath);
+    femElasticityPrint(theProblem);
 
     double rho = theProblem->rho;
     double gy = theProblem->gy;
@@ -584,21 +329,21 @@ int main(int argc, char *argv[])
     int nNodes = theNodes->nNodes;
 
     double *sigmaXX = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
-    if (sigmaXX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaYY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
-    if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
+
+    if (sigmaXX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     if (sigmaXY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+
     femElasticitySigma(theProblem, sigmaXX, sigmaYY, sigmaXY);
 
-    // double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
+    double *vonMises = femElasticityVonMises(theProblem, sigmaXX, sigmaYY, sigmaXY, nNodes);
     
-    // FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
-    // if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    // for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
-    // fclose(file);
-
-    double *vonMises = NULL;
+    FILE *file = fopen("../../Rapport/data/maxConstrainBridge.txt", "w");
+    if (file == NULL) { Error("File opening error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
+    for (int i = 0; i < nNodes; i++) { fprintf(file, "%f\n", vonMises[i]); }
+    fclose(file);
 
     /****************************************************/
     /* 3 : Deformation du maillage pour le plot final   */ 
@@ -606,16 +351,17 @@ int main(int argc, char *argv[])
     /****************************************************/
 
     double deformationFactor;
-    if (example_UForm == TRUE)           { deformationFactor = 1e5; } // To change the deformation factor
-    else if (example_beam == TRUE)       { deformationFactor = 1e2; } // To change the deformation factor
-    else if (example_simplified == TRUE) { deformationFactor = 1e5; } // To change the deformation factor
-    else                                 { deformationFactor = 1e4; } // To change the deformation factor
+    if      (example_UForm == TRUE)      { deformationFactor = 1e5; }
+    else if (example_beam == TRUE)       { deformationFactor = 1e2; }
+    else if (example_simplified == TRUE) { deformationFactor = 1e5; }
+    else                                 { deformationFactor = 1e4; }
 
-    double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
+    double *normDisplacement = (double *) malloc(nNodes * sizeof(double));
+    double *forcesX = (double *) malloc(nNodes * sizeof(double));
+    double *forcesY = (double *) malloc(nNodes * sizeof(double));
+
     if (normDisplacement == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    double *forcesX = malloc(theNodes->nNodes * sizeof(double));
     if (forcesX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
-    double *forcesY = malloc(theNodes->nNodes * sizeof(double));
     if (forcesY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
 
     for (int i = 0; i < n; i++)
@@ -638,7 +384,7 @@ int main(int argc, char *argv[])
     /*********************************************/
 
     double theGlobalForce[2] = {0, 0};
-    for (int i = 0; i < theProblem->geometry->theNodes->nNodes; i++)
+    for (int i = 0; i < nNodes; i++)
     {
         theGlobalForce[0] += theForces[2 * i];
         theGlobalForce[1] += theForces[2 * i + 1];
@@ -655,10 +401,13 @@ int main(int argc, char *argv[])
     if (plot == TRUE)
     {
         char command[100] = "python3 ../src/plot.py";
-        // TODO Add the options to the command
-        if (example_UForm == TRUE) { strcat(command, " -e"); }
-        if (animation == TRUE)     { strcat(command, " -a"); }
-        printf(" ==== Command : %s \n", command);
+
+        if (animation) { strcat(command, " -a"); }
+
+        if      (example_UForm)      { strcat(command, " -e"); }
+        else if (example_beam)       { strcat(command, " -b"); }
+        else if (example_simplified) { strcat(command, " -s"); }
+        
         system(command);
     }
 
@@ -666,7 +415,13 @@ int main(int argc, char *argv[])
     /* 6 : Visualisation */ 
     /*********************/
 
-    if (!resultVisualizer) { return EXIT_SUCCESS; }
+    if (!resultVisualizer)
+    {
+        free(normDisplacement); normDisplacement = NULL;
+        femElasticityFree(theProblem); theProblem = NULL;
+        geoFree();
+        exit(EXIT_SUCCESS); return EXIT_SUCCESS;
+    }
 
     int mode = 1;
     int domain = 0;
@@ -690,10 +445,10 @@ int main(int argc, char *argv[])
         if (glfwGetKey(window, 'S') == GLFW_PRESS) { mode = 2; }
         if (glfwGetKey(window, 'X') == GLFW_PRESS) { mode = 3; }
         if (glfwGetKey(window, 'Y') == GLFW_PRESS) { mode = 4; }
-        if (glfwGetKey(window, 'A') == GLFW_PRESS) { mode = 5; }
-        if (glfwGetKey(window, 'B') == GLFW_PRESS) { mode = 6; }
-        if (glfwGetKey(window, 'C') == GLFW_PRESS) { mode = 7; }
-        if (glfwGetKey(window, 'U') == GLFW_PRESS) { mode = 8; }
+        if (glfwGetKey(window, 'U') == GLFW_PRESS) { mode = 5; }
+        if (glfwGetKey(window, 'I') == GLFW_PRESS) { mode = 6; }
+        if (glfwGetKey(window, 'O') == GLFW_PRESS) { mode = 7; }
+        if (glfwGetKey(window, 'P') == GLFW_PRESS) { mode = 8; }
         if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE)
         {
             domain++;
@@ -760,7 +515,6 @@ int main(int argc, char *argv[])
         }
         else if (mode == 8)
         {
-            printf("%.12f\n", femMax(vonMises, nNodes));
             glfemPlotField(theGeometry->theElements, vonMises);
             glfemPlotMesh(theGeometry->theElements); 
             sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
@@ -773,8 +527,8 @@ int main(int argc, char *argv[])
     } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) != 1);
     // Check if the ESC key was pressed or the window was closed
 
-    free(normDisplacement);
-    femElasticityFree(theProblem);
+    free(normDisplacement); normDisplacement = NULL;
+    femElasticityFree(theProblem); theProblem = NULL;
     geoFree();
     glfwTerminate();
 

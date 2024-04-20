@@ -8,12 +8,12 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # GLFW
-add_subdirectory(../../ProjectPreProcessor/glfw)
-include_directories(../../ProjectPreProcessor/glfw/include)
+add_subdirectory(glfw)
+include_directories(glfw/include)
 
 # link the aforementioned libraries
 add_executable(${EXEC_NAME} ../../Project/src/fem.c ../../ProjectPreProcessor/src/glfem.c src/main.c)
-target_link_libraries(${EXEC_NAME} ../../ProjectPreProcessor/glfw ${OPENGL_gl_LIBRARY})
+target_link_libraries(${EXEC_NAME} glfw ${OPENGL_gl_LIBRARY})
 
 if(APPLE)
     target_compile_options(${EXEC_NAME} PRIVATE "-Wdeprecated-declarations")

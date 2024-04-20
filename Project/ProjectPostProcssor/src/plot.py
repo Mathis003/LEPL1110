@@ -83,14 +83,13 @@ class Mesh:
         return a
 
 def generate_frame(i):
-
+    
     nameSolution = ""
-    if exampleUse:
-        nameSolution = "../../Rapport/data/animations/UV_example_{}.txt".format(i + 1)
-    else:
-        nameSolution = "../../Rapport/data/animations/UV_simplified_{}.txt".format(i + 1)
-
-    print(nameSolution)
+    if exampleUForm_Use: nameSolution = "../../Rapport/data/UV_example_{}.txt".format(i + 1)
+    elif beamUse:        nameSolution = "../../Rapport/data/UV_beam_{}.txt".format(i + 1)
+    elif simplifiedUse:  nameSolution = "../../Rapport/data/UV_simplified_{}.txt".format(i + 1)
+    else :               nameSolution = "../../Rapport/data/UV_{}.txt".format(i + 1)
+    
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
     factor = 1e3
@@ -99,7 +98,12 @@ def generate_frame(i):
     cb = mesh.plotfield(uv_norm, uv * factor, cmap="turbo")
 
     plt.colorbar(cb)
-    plt.title("Elastic Deformation of Bridge under\nHuge Force Density on Both Decks")
+
+    if exampleUForm_Use: plt.title('Elastic Deformation')
+    elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
+    elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
+    else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+    
     mesh.plot(uv * factor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
     plt.grid(alpha=0.2)
@@ -108,28 +112,45 @@ def generate_frame(i):
     
 if __name__ == "__main__":
 
+    # Note:
+    # This code is used to plot the results of the finite element analysis.
+    # It's general and can be used to plot the results of severals mesh and there solution but be careful to change the deformation factor by yourself and change the title if needed.
+
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-e', '--option_e', help="Display the example solution's plot", action='store_true')
+    parser.add_argument('-u', '--option_u', help="Display the U form example solution's plot", action='store_true')
+    parser.add_argument('-b', '--option_b', help="Display the beam solution's plot", action='store_true')
+    parser.add_argument('-s', '--option_s', help="Display the simplified bridge solution's plot", action='store_true')
     parser.add_argument('-a', '--option_a', help='Display an animation plot', action='store_true')
 
     args = parser.parse_args()
 
-    exampleUse = False
-    if args.option_e: exampleUse = True
+    exampleUForm_Use = False
+    if args.option_u: exampleUForm_Use = True
+
+    beamUse = False
+    if args.option_b: beamUse = True
+
+    simplifiedUse = False
+    if args.option_s: simplifiedUse = True
 
     animation = False
     if args.option_a: animation = True
 
     nameMesh = ""
-    if exampleUse: nameMesh = "../../Rapport/data/mesh_example.txt"
-    else : nameMesh = "../../Rapport/data/mesh_simplified.txt"
+    if exampleUForm_Use: nameMesh = "../../Rapport/data/mesh_example.txt"
+    elif beamUse:        nameMesh = "../../Rapport/data/mesh_beam.txt"
+    elif simplifiedUse:  nameMesh = "../../Rapport/data/mesh_simplified.txt"
+    else :               nameMesh = "../../Rapport/data/mesh.txt"
+
     mesh = Mesh(nameMesh)
 
-    nameSolution = ""
     if not animation:
-        if exampleUse: nameSolution = "../../Rapport/data/UV_example.txt"
-        else : nameSolution = "../../Rapport/data/UV.txt"
+        nameSolution = ""
+        if exampleUForm_Use: nameSolution = "../../Rapport/data/UV_example.txt"
+        elif beamUse:        nameSolution = "../../Rapport/data/UV_beam.txt"
+        elif simplifiedUse:  nameSolution = "../../Rapport/data/UV_simplified.txt"
+        else :               nameSolution = "../../Rapport/data/UV.txt"
 
         uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
         uv_norm = np.linalg.norm(uv, axis=1)
@@ -140,7 +161,11 @@ if __name__ == "__main__":
         mesh.plot(uv*factor, lw=0.2, c="k")
         plt.gca().set_aspect("equal")
         plt.grid(alpha=0.2)
-        plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+
+        if exampleUForm_Use: plt.title('Elastic Deformation')
+        elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
+        elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
+        else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
         # plt.savefig("../Project/data/elasticityBridge.pdf", bbox_inches='tight')
         plt.show()
 
@@ -149,8 +174,12 @@ if __name__ == "__main__":
         NB_IMAGES = 50
         fig, ax = plt.subplots()
         animation = FuncAnimation(fig, generate_frame, frames=range(NB_IMAGES), interval=200)
-        if exampleUse: plt.title('Elastic Deformation')
-        else : plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+
+        if exampleUForm_Use: plt.title('Elastic Deformation')
+        elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
+        elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
+        else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+
         plt.show()
 
 # %%

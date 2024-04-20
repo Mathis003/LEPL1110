@@ -220,9 +220,8 @@ int main(int argc, char *argv[])
     } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) != 1);
     // Check if the ESC key was pressed or the window was closed
 
-    free(meshSizeField);
-    meshSizeField = NULL;
-    femElasticityFree(theProblem);
+    free(meshSizeField); meshSizeField = NULL;
+    femElasticityFree(theProblem); theProblem = NULL;
     geoFree();
     glfwTerminate();
 

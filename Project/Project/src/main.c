@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
             femSolutionWrite(nNodes, 2, theSoluce, filename);
         }
     }
-    femElasticityFree(theProblem);
+    femElasticityFree(theProblem); theProblem = NULL;
     geoFree();
     return EXIT_SUCCESS;
 }

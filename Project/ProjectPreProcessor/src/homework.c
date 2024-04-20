@@ -755,7 +755,7 @@ void createBoundaryConditions(femProblem *theProblem, int bridgeSimplified)
     }
     else
     {
-        int nb_camion = 100;
+        int nb_camion = 2;
         int nb_pedestrian = 1;
 
         double weightCamionDensityBridge = nb_camion * 9.81 * (mass_camion * width_camion) / (length_camion * width_camion);
