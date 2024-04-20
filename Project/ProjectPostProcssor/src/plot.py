@@ -85,11 +85,12 @@ class Mesh:
 def generate_frame(i):
     
     nameSolution = ""
-    if exampleUForm_Use: nameSolution = "../../Rapport/data/UV_example_{}.txt".format(i + 1)
-    elif beamUse:        nameSolution = "../../Rapport/data/UV_beam_{}.txt".format(i + 1)
-    elif simplifiedUse:  nameSolution = "../../Rapport/data/UV_simplified_{}.txt".format(i + 1)
-    else :               nameSolution = "../../Rapport/data/UV_{}.txt".format(i + 1)
-    
+    if animation_position: nameSolution = "../../Rapport/data/animations/UV_animation_position_{}.txt".format(i + 1)
+    if exampleUForm_Use:   nameSolution = "../../Rapport/data/animations/UV_example_{}.txt".format(i + 1)
+    elif beamUse:          nameSolution = "../../Rapport/data/animations/UV_beam_{}.txt".format(i + 1)
+    elif simplifiedUse:    nameSolution = "../../Rapport/data/animations/UV_simplified_{}.txt".format(i + 1)
+    else :                 nameSolution = "../../Rapport/data/animations/UV_{}.txt".format(i + 1)
+
     uv = np.loadtxt(nameSolution, skiprows=1, delimiter=",")
     uv_norm = np.linalg.norm(uv, axis=1)
     
@@ -104,10 +105,12 @@ def generate_frame(i):
 
     plt.colorbar(cb)
 
-    if exampleUForm_Use: plt.title('Elastic Deformation')
-    elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
-    elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
-    else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
+    print(uv)
+
+    # if exampleUForm_Use: plt.title('Elastic Deformation')
+    # elif beamUse:        plt.title('Elastic Deformation of Beam under\nForce Density on Top')
+    # elif simplifiedUse:  plt.title('Elastic Deformation of Simplified Bridge under\nForce Density on Both Decks')
+    # else :               plt.title('Elastic Deformation of Bridge under\nForce Density on Both Decks')
     
     mesh.plot(uv * deformationFactor, lw=0.2, c="k")
     plt.gca().set_aspect("equal")
@@ -127,6 +130,7 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--option_b', help="Display the beam solution's plot", action='store_true')
     parser.add_argument('-s', '--option_s', help="Display the simplified bridge solution's plot", action='store_true')
     parser.add_argument('-a', '--option_a', help='Display an animation plot', action='store_true')
+    parser.add_argument('-x', '--option_x', help='Display an animation position plot', action='store_true')
 
     args = parser.parse_args()
 
@@ -141,6 +145,14 @@ if __name__ == "__main__":
 
     animation = False
     if args.option_a: animation = True
+
+    animation_position = False
+    if args.option_x: 
+        animation = True
+        animation_position = True
+        simplifiedUse = True
+        beamUse = False
+        exampleUForm_Use = False
 
     nameMesh = ""
     if exampleUForm_Use: nameMesh = "../../Rapport/data/mesh_example.txt"

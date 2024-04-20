@@ -54,9 +54,10 @@ int main(int argc, char *argv[])
                 break;
             case 'a':
                 animation = TRUE;
+                break;
             case 'x':
                 animationPosition = TRUE;
-                animation = TRUE;
+                animation         = TRUE;
                 break;
             case 'h':
                 printf("Usage: %s [-s] [-u] [-b] [-t] [-a] [-x] [-h]\n", argv[0]);
@@ -82,9 +83,11 @@ int main(int argc, char *argv[])
     char *problemPath;
     char *solutionPath;
 
-    if      (exampleBeam_Usage)      { meshPath = "../../Rapport/data/mesh_beam.txt";       problemPath = "../../Rapport/data/problem_beam.txt";        solutionPath = "../../Rapport/data/UV_beam.txt"; }
+    if (animationPosition) { bridgeSimplified_Usage = TRUE; }
+
+    if      (bridgeSimplified_Usage) { meshPath = "../../Rapport/data/mesh_simplified.txt"; problemPath = "../../Rapport/data/problem_simplified.txt";  solutionPath = "../../Rapport/data/UV_simplified.txt"; }
+    else if (exampleBeam_Usage)      { meshPath = "../../Rapport/data/mesh_beam.txt";       problemPath = "../../Rapport/data/problem_beam.txt";        solutionPath = "../../Rapport/data/UV_beam.txt"; }
     else if (exampleUForm_Usage)     { meshPath = "../../Rapport/data/mesh_example.txt";    problemPath = "../../Rapport/data/problem_example.txt";     solutionPath = "../../Rapport/data/UV_example.txt"; }
-    else if (bridgeSimplified_Usage) { meshPath = "../../Rapport/data/mesh_simplified.txt"; problemPath = "../../Rapport/data/problem_simplified.txt";  solutionPath = "../../Rapport/data/UV_simplified.txt"; }
     else                             { meshPath = "../../Rapport/data/mesh.txt";            problemPath = "../../Rapport/data/problem.txt";             solutionPath = "../../Rapport/data/UV.txt"; }
     
     geoMeshRead(meshPath, discretType);
@@ -107,18 +110,18 @@ int main(int argc, char *argv[])
     }
     else
     {
-        const int NB_IMAGES_ANIMATION = 50;
-        double FACTOR, *theSoluce;
-        char filename[100];
+        int NB_IMAGES_ANIMATION = 50;
+        double FACTOR = 1.0 / NB_IMAGES_ANIMATION; // Factor to increase the load
         
-        // Factor to increase the load
-        FACTOR = 1.0 / NB_IMAGES_ANIMATION;
+        double *theSoluce;
+        char filename[100];
 
         // Create the directory if it doesn't exist
         if (access("../data/animations", F_OK) == -1) { system("mkdir -p ../../Rapport/data/animations"); }
 
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
+            femSolverInit(theProblem->solver);
             if (animationPosition) { theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i); }
             else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, -1); }
 
@@ -126,8 +129,10 @@ int main(int argc, char *argv[])
             else if (exampleBeam_Usage)      { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }
             else if (bridgeSimplified_Usage) { sprintf(filename, "../../Rapport/data/animations/UV_simplified_%d.txt", i); }
             else if (animationPosition)      { sprintf(filename, "../../Rapport/data/animations/UV_animation_position_%d.txt", i); }
-            else                             { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }         
+            else                             { sprintf(filename, "../../Rapport/data/animations/UV_%d.txt", i); }
+            
             femSolutionWrite(nNodes, 2, theSoluce, filename);
+            printf("Solution %d created\n", i);
         }
     }
     femElasticityFree(theProblem); theProblem = NULL;

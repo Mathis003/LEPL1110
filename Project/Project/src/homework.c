@@ -118,11 +118,13 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR, int cur
 
             // Animation
             finalValue = value;
-            if (currAnim >= 0)
+            if (currAnim > 0)
             {
+                printf("currAnim: %d\n", currAnim);
                 finalValue = adaptForceForMotionCar(value, x[0], currAnim, 50);
-                // finalValue += adaptForceForMotionCarReversed(value, x[0], currAnim, 50);
+                finalValue += adaptForceForMotionCarReversed(value, x[0], currAnim, 50);
             }
+            printf("finalValue: %f\n", finalValue);
 
             for (iInteg = 0; iInteg < theRule->n; iInteg++)
             {
@@ -208,8 +210,6 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
     femGeometry *theGeometry = theProblem->geometry;
     femNodes *theNodes       = theGeometry->theNodes;
 
-    femConstrainedNode *theConstrainedNode;
-    femBoundaryType type;
     int *number, renumberNode, iNode, Ux, Uy, size;
     double value, value_x, value_y, myValue_n, myValue_t, nx, ny, tx, ty;
     
@@ -218,9 +218,9 @@ void femElasticityApplyDirichlet(femProblem *theProblem, double FACTOR)
 
     for (iNode = 0; iNode < theNodes->nNodes; iNode++)
     {
-        theConstrainedNode = &theProblem->constrainedNodes[iNode];
+        femConstrainedNode *theConstrainedNode = &theProblem->constrainedNodes[iNode];
         if (theConstrainedNode->type == UNDEFINED) { continue; }
-        type = theConstrainedNode->type;
+        femBoundaryType type = theConstrainedNode->type;
 
         renumberNode = number[iNode];
 

@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
     /****************************************************/
 
     double deformationFactor;
-    if      (example_UForm == TRUE)      { deformationFactor = 1e7; }
+    if      (example_UForm == TRUE)      { deformationFactor = 1e6; }
     else if (example_beam == TRUE)       { deformationFactor = 1e2; }
     else if (example_simplified == TRUE) { deformationFactor = 1e4; }
     else                                 { deformationFactor = 1e4; }
