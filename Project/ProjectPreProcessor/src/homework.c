@@ -382,8 +382,8 @@ void geoMeshGenerate(femDiscreteType discreteType, int bridgeSimplified)
     int *idPylons     = (int *) malloc(6 * sizeof(int));
     int *idTopBall    = (int *) malloc(2 * sizeof(int));
     int *idStayCables = (int *) malloc(36 * sizeof(int));
-    double *positionStayCablesX = (int *) malloc(36 * sizeof(double));
-    double *positionStayCablesY = (int *) malloc(36 * sizeof(double));
+    double *positionStayCablesX = (double *) malloc(36 * sizeof(double));
+    double *positionStayCablesY = (double *) malloc(36 * sizeof(double));
 
     if (idWindows == NULL)           { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }
     if (idPiles == NULL)             { Error("Memory Allocation Failed."); exit(EXIT_FAILURE); return; }

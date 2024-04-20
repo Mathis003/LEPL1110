@@ -21,7 +21,6 @@ femDiscreteType discretType = FEM_DISCRETE_TYPE_LINEAR; // FEM_DISCRETE_TYPE_LIN
 femSolverType typeSolver    = FEM_BAND;  // FEM_FULL or FEM_BAND
 femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FEM_RCMK
 
-
 /* FINAL PATH */
 
 /* "../data/mesh.txt" */
@@ -31,12 +30,12 @@ femRenumType renumType      = FEM_RCMK;  // FEM_NO or FEM_XNUM or FEM_YNUM or FE
 int main(int argc, char *argv[])
 {
     int opt;
-    int bridgeSimplified_Usage   = FALSE;
-    int exampleUForm_Usage = FALSE;
-    int exampleBeam_Usage  = FALSE;
-    int animation          = FALSE;
-    int animationPosition  = FALSE;
-    int showRunTime        = FALSE;
+    int bridgeSimplified_Usage = FALSE;
+    int exampleUForm_Usage     = FALSE;
+    int exampleBeam_Usage      = FALSE;
+    int animation              = FALSE;
+    int animationPosition      = FALSE;
+    int showRunTime            = FALSE;
     while ((opt = getopt(argc, argv, "subtaxh")) != -1)
     {
         switch (opt)
@@ -100,7 +99,7 @@ int main(int argc, char *argv[])
         clock_t start;
         if (showRunTime) { printf("Solving the system...\n"); start = clock(); }
 
-        double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0, NAN);
+        double *theSoluce = femElasticitySolve(theProblem, renumType, 1.0, -1);
 
         if( showRunTime) { printf("Run time: %f seconds\n", (double)(clock() - start) / CLOCKS_PER_SEC); }
 
@@ -121,7 +120,7 @@ int main(int argc, char *argv[])
         for (int i = 1; i <= NB_IMAGES_ANIMATION; i++)
         {
             if (animationPosition) { theSoluce = femElasticitySolve(theProblem, renumType, 1.0, i); }
-            else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, NAN); }
+            else                   { theSoluce = femElasticitySolve(theProblem, renumType, FACTOR * i, -1); }
 
             if      (exampleUForm_Usage)     { sprintf(filename, "../../Rapport/data/animations/UV_example_%d.txt", i); }
             else if (exampleBeam_Usage)      { sprintf(filename, "../../Rapport/data/animations/UV_beam_%d.txt", i); }

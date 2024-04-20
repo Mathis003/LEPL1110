@@ -118,10 +118,10 @@ void femElasticityAssembleNeumann(femProblem *theProblem, double FACTOR, int cur
 
             // Animation
             finalValue = value;
-            if (currAnim != NAN)
+            if (currAnim >= 0)
             {
                 finalValue = adaptForceForMotionCar(value, x[0], currAnim, 50);
-                finalValue += adaptForceForMotionCarReversed(value, x[0], currAnim, 50);
+                // finalValue += adaptForceForMotionCarReversed(value, x[0], currAnim, 50);
             }
 
             for (iInteg = 0; iInteg < theRule->n; iInteg++)

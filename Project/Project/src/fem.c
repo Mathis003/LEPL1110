@@ -1955,9 +1955,9 @@ Queue *rcm(femMesh *theMesh, int nNodes)
 	int *inserted = (int *) malloc(nNodes * sizeof(int));
     int *adj = createAdjacencyMatrix(theMesh);
 
-    if (degrees == NULL)  { Error("Memory allocation for 'degrees' failed\n\n"); exit(EXIT_FAILURE); return; }
-    if (inserted == NULL) { Error("Memory allocation for 'inserted' failed\n\n"); exit(EXIT_FAILURE); return; }
-    if (adj == NULL)      { Error("Memory allocation for 'adj' failed\n\n"); exit(EXIT_FAILURE); return; }
+    if (degrees == NULL)  { Error("Memory allocation for 'degrees' failed\n\n"); exit(EXIT_FAILURE); return NULL; }
+    if (inserted == NULL) { Error("Memory allocation for 'inserted' failed\n\n"); exit(EXIT_FAILURE); return NULL; }
+    if (adj == NULL)      { Error("Memory allocation for 'adj' failed\n\n"); exit(EXIT_FAILURE); return NULL; }
 
 	for (int i = 0; i < nNodes; i++) { inserted[i] = 0; R->elements[i] = -1; }
 
@@ -2017,8 +2017,8 @@ Queue *rcm(femMesh *theMesh, int nNodes)
 
 double adaptForceForMotionCar(double force, double node_position, int currAnim, int nTotalAnim)
 {
-    double bridge_length   = 32.0;
-    double vehicule_lenght = 4.0;
+    const double bridge_length   = 32.0;
+    const double vehicule_lenght = 4.0;
     double x = vehicule_lenght / 2 + currAnim * (bridge_length - vehicule_lenght) / (nTotalAnim - 1);
 
     // Shift of "- bridge_length" because the geometry is centered at 0 and the left side of the bridge is at -32
@@ -2031,9 +2031,9 @@ double adaptForceForMotionCar(double force, double node_position, int currAnim, 
 
 double adaptForceForMotionCarReversed(double force, double node_position, int currAnim, int nTotalAnim)
 {
-    double bridge_length = 32.0;
-    double camionnette_length = 6.0;
-    double x = bridge_length - (camionnette_length / 2 + currAnim * (bridge_length - camionnette_length) / (nTotalAnim - 1));
+    const double bridge_length      = 32.0;
+    const double camionnette_length = 6.0;
+    double x = camionnette_length / 2 + currAnim * (bridge_length - camionnette_length) / (nTotalAnim - 1);
 
     // Shift of "- bridge_length" because the geometry is centered at 0 and the left side of the bridge is at -32
     double position    = x - bridge_length;
