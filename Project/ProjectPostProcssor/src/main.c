@@ -252,6 +252,7 @@ int main(int argc, char *argv[])
                 break;
             case 'a':
                 animation = TRUE;
+                break;
             case 'u':
                 example_UForm = TRUE;
                 break;
@@ -328,9 +329,9 @@ int main(int argc, char *argv[])
     femNodes *theNodes = theGeometry->theNodes;
     int nNodes = theNodes->nNodes;
 
-    double *sigmaXX = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
-    double *sigmaYY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
-    double *sigmaXY = (double *) malloc(theGeometry->theNodes->nNodes * sizeof(double));
+    double *sigmaXX = (double *) malloc(nNodes * sizeof(double));
+    double *sigmaYY = (double *) malloc(nNodes * sizeof(double));
+    double *sigmaXY = (double *) malloc(nNodes * sizeof(double));
 
     if (sigmaXX == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
     if (sigmaYY == NULL) { Error("Allocation Error\n"); exit(EXIT_FAILURE); return EXIT_FAILURE; }
