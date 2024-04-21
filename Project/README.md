@@ -46,4 +46,4 @@ The `main.c` script supports various options to customize the build and executio
 ### Archive Validation
 
 A script named `validate.py` is included to check the conformity of the archive. You can use it to ensure that all necessary files are present and properly organized.
-This script come from the [\[Miguel-projects\](](https://github.com/MiguelDLC/femtools)
+This script come from this  repository: https://github.com/MiguelDLC/femtools
