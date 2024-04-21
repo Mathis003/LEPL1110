@@ -1,3 +1,10 @@
+## This script is used to validate the project and report files before submission.
+## It will check the file names, the content of the project and report files, and compile and execute the project.
+## It will then create a new zip file with the validated files and write it to the Validated folder.
+## The script will output a summary of the validation and any errors or warnings encountered.
+
+## Source: https://github.com/MiguelDLC/femtools
+
 #%%
 import os
 import zipfile
@@ -15,15 +22,9 @@ login2 = login2.lower()
 idname = "group" + lsgroup + '-' + login1 + '-' + login2
 print("Your file name must be : " + idname)
 
-# Configuration A MODIFIER PAR L'ETUDIANT !!!
-# =============================================
-# project_path = "group001-vlegat-jfremacle.zip"
-# rapport_path = "group001-vlegat-jfremacle-rapport.zip"
 project_path = idname + ".zip"
 rapport_path = idname + "-rapport.zip"
 Windows_TDM = (platform == "win32")  # True if using Windows + TDM-GCC, False otherwise
-# =============================================
-
 
 all_illegal = [
     "/gmsh/",
