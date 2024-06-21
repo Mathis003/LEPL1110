@@ -25,7 +25,8 @@ The preprocessor relies on the following libraries:
 
 ## Build Instructions
 
-To build the preprocessor, execute the following commands in your terminal:
+To build the preprocessor, you must have the Gmsh folder configured. Check ./Homeworks/Geomesh/README.md for complete instructions.
+Then, execute the following commands in your terminal:
 
 ```bash
 mkdir build
