@@ -21,3 +21,7 @@ This repository contains the implementation of a Finite Elements project for the
 ## Components
 
 To view the specifications for each component of the project, please refer to the README file associated with the respective component. Each README provides detailed information, including build instructions, usage guidelines, and specific options available for the preprocessor, processor, and postprocessor. By consulting these documents, you can gain a comprehensive understanding of the functionalities and requirements of each part of the project.
+
+## main.c
+
+This file allows you to automatically run the three components with specific parameters. Refer to the documentation within the code to learn how to use it.
