@@ -12,7 +12,7 @@ add_subdirectory(glfw)
 include_directories(glfw/include)
 
 # Link the aforementioned libraries
-add_executable(${EXEC_NAME} ../../Project/src/fem.c ../../ProjectPreProcessor/src/glfem.c src/main.c)
+add_executable(${EXEC_NAME} ../../ProjectProcessor/src/fem.c ../../ProjectPreProcessor/src/glfem.c src/main.c)
 target_link_libraries(${EXEC_NAME} glfw ${OPENGL_gl_LIBRARY})
 
 if(APPLE)

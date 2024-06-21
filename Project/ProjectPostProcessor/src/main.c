@@ -12,8 +12,8 @@
 
 #include <getopt.h>
 
-#include "../../Project/src/fem.h"
-#include "../../Project/src/homework.c"
+#include "../../ProjectProcessor/src/fem.h"
+#include "../../ProjectProcessor/src/homework.c"
 
 #include "../../ProjectPreProcessor/src/glfem.h"
 

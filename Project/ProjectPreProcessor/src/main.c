@@ -10,7 +10,7 @@
 *
 */
 
-#include "../../Project/src/fem.h"
+#include "../../ProjectProcessor/src/fem.h"
 #include "gmsh.h"
 #include "glfem.h"
 
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
     // Check if the ESC key was pressed or the window was closed
 
     free(meshSizeField); meshSizeField = NULL;
-    femElasticityFree(theProblem); theProblem = NULL;
+    // femElasticityFree(theProblem); theProblem = NULL; // Create a "zsh: segmentation fault  ./myFem" sometimes
     geoFree();
     glfwTerminate();
 

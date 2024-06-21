@@ -11,7 +11,7 @@ The functions are used to :
     * import the mesh and generate the mesh.
 */
 
-#include "../../Project/src/fem.h"
+#include "../../ProjectProcessor/src/fem.h"
 
 #include "gmshc.h"
 
