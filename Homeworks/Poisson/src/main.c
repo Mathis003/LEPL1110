@@ -9,8 +9,6 @@
 
 #include "glfem.h"
 
-
-
 int main(void)
 {   
     // char *path_filename = "../data/mesh2520.txt";
