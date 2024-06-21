@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         }
     }
     
-    char *nameDirectory[] = {"Project/PreProcessing/build/", "../../Processing/build/", "../../PostProcessing/build/"};
+    char *nameDirectory[] = {"ProjectPreProcessor/build/", "../../ProjectProcessor/build/", "../../ProjectPostProcessor/build/"};
     char *stages[] = {"Pre-Processing", "Processing", "Post-Processing"};
     int nbProgram = 3;
 

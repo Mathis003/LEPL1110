@@ -1,0 +1,25 @@
+Type of problem    :  Planar stresses  
+Young modulus      :  2.0000000e+11  
+Poisson ratio      :  3.0000000e-01  
+Mass density       :  7.8500000e+03  
+Gravity-X          :  0.0000000e+00  
+Gravity-Y          : -9.8100000e+00  
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : PILAR R 1
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : PILAR D 1
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : PILAR L 1
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : PILAR R 2
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : PILAR D 2
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : PILAR L 2
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 1
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 2
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 3
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 4
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 5
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 6
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 7
+Boundary condition :  Neumann-Y          = -3.4335000e+03,            nan : SUB ROADWAY U 8
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : SUB ROADWAY L
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : SUB ROADWAY R
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : ROADWAY L
+Boundary condition :  Dirichlet-X        =  0.0000000e+00,            nan : ROADWAY R
+Boundary condition :  Neumann-Y          = -3.8050909e+04,            nan : ROADWAY U

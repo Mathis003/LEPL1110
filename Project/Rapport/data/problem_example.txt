@@ -1,0 +1,9 @@
+Type of problem    :  Planar stresses  
+Young modulus      :  2.1100000e+11  
+Poisson ratio      :  3.0000000e-01  
+Mass density       :  7.8500000e+01  
+Gravity-X          :  0.0000000e+00  
+Gravity-Y          : -9.8100000e+00  
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : Symmetry
+Boundary condition :  Dirichlet-XY       =  0.0000000e+00,  0.0000000e+00 : Bottom
+Boundary condition :  Neumann-Y          = -1.0000000e+02,            nan : Top
