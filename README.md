@@ -28,6 +28,7 @@ This repository is the result of our hard work and dedication. While we strive f
 
 ## Additional Information
 
+- **Setup/Installation/Usage:** Detailed Setup/Installation/Usage instructions and examples are available in the respective README files.
 - **Contributions:** Contributions are welcome. If you find any issues or have suggestions for improvements, please feel free to create a pull request or open an issue.
 
 We hope you find this repository helpful and informative as you explore the fascinating world of Finite Elements. If you have any questions or need further assistance, please do not hesitate to contact us.
